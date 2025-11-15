@@ -1,0 +1,8 @@
+napotkane problemy rozwiazane:
+- niestworzenie apps jako folderu dla modulow i nawet po jego stworzeniu trzeba bylo dodawac .apps dla kazdego pliku apps.py w modulach np:
+class RandomizerConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.randomizer'
+    
+a było name = 'randomizer'    
+
