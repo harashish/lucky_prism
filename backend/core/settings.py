@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'apps.randomizer.apps.RandomizerConfig',
     'apps.gamification.apps.GamificationConfig',
     'apps.goals.apps.GoalsConfig',
+    'apps.challenges.apps.ChallengesConfig',
 ]
 
 MIDDLEWARE = [
