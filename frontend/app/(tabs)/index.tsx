@@ -1,10 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-// UWAGA: Moduły takie jak 'react-native' są podstawowymi pakietami w środowisku Expo/React Native. 
-// Błąd kompilacji sugerował, że środowisko testowe miało problem z ich rozpoznaniem.
-// Jeśli po tej zmianie błąd nadal się pojawia, oznacza to problem z konfiguracją lokalną,
-// a nie z samym kodem. Ten kod jest standardowym i poprawnym React Native.
-
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
@@ -21,7 +16,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // Używamy jasnego tła
     backgroundColor: '#f5f5f5', 
     alignItems: 'center',
     justifyContent: 'center',
