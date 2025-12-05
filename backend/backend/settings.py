@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-6kyakyhk^0y)jd85+)8@emd+dyxg!bl#n&!&)0w30@w@l*ck*q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["10.180.177.57", "localhost", "127.0.0.1"]
+
 
 
 # Application definition
@@ -49,13 +51,13 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     # apps
-    'apps.users',
     'apps.challenges',
     'apps.habits',
     'apps.todos',
     'apps.goals',
-    'apps.modules',
     'apps.notes',
+    'apps.common',
+    'apps.gamification',
 ]
 
 MIDDLEWARE = [

@@ -1,20 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import { useChallengeStore } from "../stores/useChallengeStore";
+import { View, TouchableOpacity, ScrollView, StyleSheet, SectionList } from "react-native";
+import { useChallengeStore, ChallengeWithUserInfo } from "../stores/useChallengeStore";
 import ChallengeItem from "../../components/ChallengeItem";
 import { useRouter } from "expo-router";
+import AppText from "../../components/AppText";
+import HeaderText from "../../components/HeaderText";
+import { colors } from "../../constants/theme";
 
 const ChallengeListScreen = () => {
   const router = useRouter();
-  const { challenges, tags, loadChallenges, loadTags } = useChallengeStore();
+  const { 
+    challenges, 
+    tags, 
+    userChallenges, 
+    loadChallenges, 
+    loadTags, 
+    loadUserChallenges 
+  } = useChallengeStore();
+
   const [selectedType, setSelectedType] = useState<"Daily" | "Weekly">("Daily");
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
+  const userId = 1;
+
+  const fetchData = async () => {
+    await loadChallenges();
+    await loadTags();
+    await loadUserChallenges(userId);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      await loadChallenges();
-      await loadTags();
-    };
     fetchData();
   }, []);
 
@@ -29,74 +44,117 @@ const ChallengeListScreen = () => {
     (selectedTags.length === 0 || selectedTags.every(tid => c.tags.some(t => t.id === tid)))
   );
 
+  const userChallengeIds: number[] = userChallenges.map(uc => uc.challenge.id);
+
+  const unassignedChallenges: ChallengeWithUserInfo[] = filteredChallenges
+    .filter(c => !userChallengeIds.includes(c.id))
+    .map(c => ({ ...c }));
+
+  const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
+    .map(uc => ({ ...uc.challenge, userChallengeId: uc.id }));
+
+  const sections = [
+    { title: "All challenges", data: unassignedChallenges },
+    { title: "Your challenges", data: assignedChallenges },
+  ];
+
   return (
-    <View style={{ flex: 1, padding: 10 }}>
-      {/* Typy */}
-      <View style={{ flexDirection: "row", marginBottom: 10 }}>
-        {["Daily", "Weekly"].map(t => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => setSelectedType(t as "Daily" | "Weekly")}
-            style={{
-              padding: 10,
-              marginRight: 5,
-              borderRadius: 10,
-              backgroundColor: selectedType === t ? "#4caf50" : "#ccc"
-            }}
-          >
-            <Text>{t}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+    <View style={{ flex: 1, padding: 10, backgroundColor: colors.background }}>
+    {/* Typy */}
+<View style={{ flexDirection: "row", marginBottom: 10 }}>
+  {["Daily", "Weekly"].map((t, i) => (
+    <TouchableOpacity
+      key={t}
+      onPress={() => setSelectedType(t as "Daily" | "Weekly")}
+      style={{
+        flex: 1,
+        padding: 15,
+        marginRight: i === 0 ? 5 : 0, // odstęp między kafelkami
+        marginLeft: i === 1 ? 5 : 0,
+        borderRadius: 10,
+        backgroundColor: selectedType === t ? colors.buttonActive : colors.button,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <AppText style={{ color: colors.text, fontWeight: "bold" }}>{t}</AppText>
+    </TouchableOpacity>
+  ))}
+</View>
 
-      {/* Filtr tagów */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-        {tags.map(tag => (
-          <TouchableOpacity
-            key={tag.id}
-            onPress={() => toggleTag(tag.id)}            // zwykły klik → filtr
-            onLongPress={() => router.push(`/editTag/${tag.id}`)} // long press → edycja
-            delayLongPress={300}
-            style={{
-              padding: 8,
-              marginRight: 5,
-              borderRadius: 10,
-              backgroundColor: selectedTags.includes(tag.id) ? "#2196f3" : "#ddd"
-            }}
-          >
-            <Text>{tag.name}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity
-          onPress={() => router.push("/addTag")}
-          style={styles.addTagButton}
-        >
-          <Text style={{ fontSize: 24, color: "#fff" }}>＋</Text>
-        </TouchableOpacity>
-      </ScrollView>
+{/* Tagi */}
+<ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  style={{ marginBottom: 10, height: 50 }} // <- ustalona wysokość ScrollView
+  contentContainerStyle={{ alignItems: "center", paddingLeft: 0, paddingRight: 5 }}
+>
+  {tags.map(tag => (
+    <TouchableOpacity
+      key={tag.id}
+      onPress={() => toggleTag(tag.id)}
+      onLongPress={() => router.push(`/editTag/${tag.id}`)}
+      delayLongPress={300}
+      style={{
+        paddingVertical: 8, // wewnętrzny padding tagu
+        paddingHorizontal: 12,
+        marginRight: 5,
+        borderRadius: 10,
+        backgroundColor: selectedTags.includes(tag.id) ? colors.buttonActive : colors.button,
+      }}
+    >
+      <AppText style={{ color: colors.text }}>{tag.name}</AppText>
+    </TouchableOpacity>
+  ))}
 
-      {/* Lista challengy */}
-      <FlatList
-        data={filteredChallenges}
+  <TouchableOpacity
+    onPress={() => router.push("/addTag")}
+    style={{
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.buttonActive,
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <AppText style={{ fontSize: 24, color: "#fff" }}>＋</AppText>
+  </TouchableOpacity>
+</ScrollView>
+
+      {/* Lista challenge */}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <ChallengeItem item={item} />}
+        renderItem={({ item }) => (
+          <ChallengeItem
+            item={item}
+            userId={userId}
+            alreadyAssigned={!!item.userChallengeId}
+            onAssigned={fetchData}
+          />
+        )}
+        renderSectionHeader={({ section: { title } }) => (
+          <HeaderText style={{ fontSize: 22, fontWeight: "bold", marginVertical: 10, color: colors.text }}>
+            {title}
+          </HeaderText>
+        )}
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* Floating button do dodawania challengy */}
+      {/* Floating Button */}
       <TouchableOpacity
         style={styles.floatingButton}
-        onPress={async () => {
-          await loadChallenges(); // dodatkowe odświeżenie przy wejściu
-          router.push("/addChallenge");
-        }}
+        onPress={() => router.push("/addChallenge")}
       >
-        <Text style={{ fontSize: 32, color: "#fff" }}>＋</Text>
+        <AppText style={{ fontSize: 32, color: "#fff" }}>＋</AppText>
       </TouchableOpacity>
     </View>
   );
 };
 
 export default ChallengeListScreen;
+
 
 const styles = StyleSheet.create({
   floatingButton: {
@@ -106,7 +164,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#4caf50",
+    backgroundColor: colors.buttonActive,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -119,8 +177,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#2196f3",
+    backgroundColor: colors.buttonActive,
     justifyContent: "center",
     alignItems: "center",
-  }
+  },
 });

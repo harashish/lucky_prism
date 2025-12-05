@@ -1,3 +1,38 @@
+# apps/todos/models.py
+
 from django.db import models
 
-# Create your models here.
+class TodoCategory(models.Model):
+    name = models.CharField(max_length=30)
+    difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
+
+class TodoTask(models.Model):
+    user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
+    content = models.TextField()
+    is_default = models.BooleanField(default=False)
+    custom_difficulty = models.ForeignKey(
+        "common.DifficultyType",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True
+    )
+    category = models.ForeignKey(TodoCategory, on_delete=models.PROTECT)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class TodoHistory(models.Model):
+    task = models.ForeignKey(TodoTask, on_delete=models.CASCADE)
+    completion_date = models.DateTimeField(auto_now_add=True)
+    xp_gained = models.IntegerField()
+
+    def complete(self):
+        diff = self.task.custom_difficulty or self.task.category.difficulty
+        xp = diff.xp_value
+        self.xp_gained = xp
+        self.save()
+
+        self.task.user.add_xp(xp, source="todo", source_id=self.id)
+
+

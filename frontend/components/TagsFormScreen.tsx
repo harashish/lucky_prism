@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
-import axios from "axios";
+import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-
-type Tag = {
-  id: number;
-  name: string;
-};
+import AppText from "../components/AppText";
+import { colors, radius } from "../constants/theme";
+import { api } from "../app/api/apiClient"; // import instancji Axios
 
 type Props = {
-  editingTagId?: number; // jeśli istnieje → edycja
+  editingTagId?: number;
 };
 
 const TagsFormScreen = ({ editingTagId }: Props) => {
@@ -23,10 +20,10 @@ const TagsFormScreen = ({ editingTagId }: Props) => {
       const fetchTag = async () => {
         setLoading(true);
         try {
-          const res = await axios.get(`http://127.0.0.1:8000/api/tags/${editingTagId}/`);
+          const res = await api.get(`/challenges/tags/${editingTagId}/`);
           setName(res.data.name);
         } catch (err: any) {
-          console.error("Błąd pobierania tagu:", err.response?.data || err.message);
+          console.error(err);
           setError("Nie udało się pobrać tagu");
         } finally {
           setLoading(false);
@@ -45,75 +42,94 @@ const TagsFormScreen = ({ editingTagId }: Props) => {
     setError(null);
     try {
       if (editingTagId) {
-        await axios.patch(`http://127.0.0.1:8000/api/tags/${editingTagId}/`, { name });
-        console.log("Zaktualizowano tag");
+        await api.patch(`/challenges/tags/${editingTagId}/`, { name });
       } else {
-        await axios.post("http://127.0.0.1:8000/api/tags/", { name });
-        console.log("Dodano tag");
+        await api.post("/challenges/tags/", { name });
       }
       router.back();
     } catch (err: any) {
-      console.error("Błąd zapisu tagu:", err.response?.data || err.message);
+      console.error(err);
       setError("Nie udało się zapisać tagu");
     } finally {
       setLoading(false);
     }
   };
 
-const deleteTag = async () => {
-  if (!editingTagId) return;
-  setLoading(true);
-  setError(null);
+  const deleteTag = async () => {
+    if (!editingTagId) return;
+    setLoading(true);
+    setError(null);
 
-  try {
-    await axios.delete(`http://127.0.0.1:8000/api/tags/${editingTagId}/`);
-    console.log("Usunięto tag");
-    router.back();
-  } catch (err: any) {
-    console.error("Błąd usuwania tagu:", err.response?.data || err.message);
-
-    // Sprawdzenie czy backend blokuje usunięcie powiązanego tagu
-    if (err.response?.status === 400 && err.response.data?.detail) {
-      setError("Nie można usunąć tagu, który jest powiązany z challenge.");
-    } else {
-      setError("Nie udało się usunąć tagu");
+    try {
+      await api.delete(`/challenges/tags/${editingTagId}/`);
+      router.back();
+    } catch (err: any) {
+      if (err.response?.status === 400 && err.response.data?.detail) {
+        setError("Nie można usunąć tagu, który jest powiązany z challenge.");
+      } else {
+        setError("Nie udało się usunąć tagu");
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
-    <ScrollView style={{ flex: 1, padding: 10 }}>
-      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
+    <ScrollView style={{ flex: 1, padding: 16, backgroundColor: colors.background }}>
+      {error && <AppText style={{ color: "#f44336", marginBottom: 12 }}>{error}</AppText>}
 
-      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
-        {editingTagId ? "Edytuj tag" : "Dodaj tag"}
-      </Text>
+      <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: 16, color: colors.text }}>
+        {editingTagId ? "Edit tag" : "Add tag"}
+      </AppText>
 
-      <Text>Nazwa tagu:</Text>
+      <AppText style={{ color: colors.text, marginBottom: 6 }}>Tag name:</AppText>
       <TextInput
         value={name}
         onChangeText={setName}
-        style={{ borderWidth: 1, padding: 5, marginBottom: 10 }}
+        //placeholder="Tag name"
+        placeholderTextColor="#7a7891"
+        style={{
+          borderWidth: 1,
+          borderColor: colors.inputBorder,
+          borderRadius: radius.md,
+          padding: 10,
+          marginBottom: 16,
+          color: colors.text,
+        }}
       />
 
       <TouchableOpacity
         onPress={saveTag}
-        style={{ backgroundColor: "#4caf50", padding: 15, borderRadius: 10, alignItems: "center", marginBottom: editingTagId ? 10 : 0 }}
+        style={{
+          backgroundColor: colors.buttonActive,
+          padding: 16,
+          borderRadius: radius.md,
+          alignItems: "center",
+          marginBottom: editingTagId ? 12 : 0
+        }}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff" }}>{editingTagId ? "Zapisz zmiany" : "Dodaj tag"}</Text>}
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+            {editingTagId ? "Save" : "Add tag"}
+          </AppText>
+        )}
       </TouchableOpacity>
 
       {editingTagId && (
         <TouchableOpacity
           onPress={deleteTag}
-          style={{ backgroundColor: "#f44336", padding: 15, borderRadius: 10, alignItems: "center" }}
+          style={{
+            backgroundColor: colors.deleteButton,
+            padding: 16,
+            borderRadius: radius.md,
+            alignItems: "center",
+          }}
           disabled={loading}
         >
-          <Text style={{ color: "#fff" }}>Usuń tag</Text>
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>Delete tag</AppText>
         </TouchableOpacity>
       )}
     </ScrollView>

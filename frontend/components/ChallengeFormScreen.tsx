@@ -1,9 +1,10 @@
-// challengeForm.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
-import { useChallengeStore, ChallengeTag, DifficultyType, ChallengeType, Challenge } from "../app/stores/useChallengeStore";
-import axios from "axios";
+import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useChallengeStore, Challenge, ChallengeType, DifficultyType } from "../app/stores/useChallengeStore";
+import { colors, spacing, radius } from "../constants/theme";
+import AppText from "../components/AppText";
+import { api } from "../app/api/apiClient"; // import instancji Axios
 
 const ChallengeFormScreen = () => {
   const router = useRouter();
@@ -15,71 +16,70 @@ const ChallengeFormScreen = () => {
   const [type, setType] = useState<ChallengeType | null>(null);
   const [difficulty, setDifficulty] = useState<DifficultyType | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [availableTypes, setAvailableTypes] = useState<ChallengeType[]>([]);
+  const [availableDifficulties, setAvailableDifficulties] = useState<DifficultyType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const editingChallengeId = params?.id ? parseInt(params.id as string, 10) : null;
 
-  useEffect(() => {
-    loadTags();
-  }, []);
+  // load tags on mount
+  useEffect(() => { loadTags(); }, []);
 
+  // load challenge if editing
   useEffect(() => {
-    // jeśli edytujemy, wypełnij pola
     if (editingChallengeId) {
-      const fetchChallenge = async () => {
-        try {
-          const res = await axios.get(`http://127.0.0.1:8000/api/challenges/${editingChallengeId}/`);
+      api.get(`/challenges/${editingChallengeId}/`)
+        .then(res => {
           const c: Challenge = res.data;
           setTitle(c.title);
           setDescription(c.description);
           setType(c.type);
           setDifficulty(c.difficulty);
           setSelectedTags(c.tags.map(t => t.id));
-        } catch (err) {
-          console.error("Błąd pobierania challenge:", err);
-        }
-      };
-      fetchChallenge();
+        })
+        .catch(err => console.error(err));
     }
   }, [editingChallengeId]);
 
+  // fetch types and difficulties
+  useEffect(() => {
+    const fetchMeta = async () => {
+      try {
+        const [typesRes, diffRes] = await Promise.all([
+          api.get("/challenges/types/"),
+          api.get("/challenges/difficulties/")
+        ]);
+        setAvailableTypes(typesRes.data);
+        setAvailableDifficulties(diffRes.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchMeta();
+  }, []);
+
   const toggleTag = (id: number) => {
-    setSelectedTags(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+    setSelectedTags(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-const deleteChallenge = async () => {
-  if (!editingChallengeId) return;
-
-  setLoading(true);
-  try {
-    console.log("Wysyłam DELETE:", editingChallengeId);
-
-    const res = await axios.delete(
-      `http://127.0.0.1:8000/api/challenges/${editingChallengeId}/`
-    );
-
-    console.log("DELETE response:", res.status, res.data);
-    
-    // odśwież listę w Zustand
-    loadChallenges();
-
-    // wróć do listy
-    router.push("/ChallengeListScreen");
-  } catch (err: any) {
-    console.error("Błąd usuwania challenge:", err.response?.data || err.message);
-    setError("Nie udało się usunąć challenge");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  const deleteChallenge = async () => {
+    if (!editingChallengeId) return;
+    setLoading(true);
+    try {
+      await api.delete(`/challenges/${editingChallengeId}/`);
+      loadChallenges();
+      router.push("/ChallengeListScreen");
+    } catch {
+      setError("Nie udało się usunąć challenge");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const saveChallenge = async () => {
     if (!title || !type || !difficulty || selectedTags.length === 0) {
-      setError("Uzupełnij wszystkie pola i wybierz przynajmniej jeden tag");
+      setError("Uzupełnij wszystkie pola");
       return;
     }
 
@@ -87,142 +87,169 @@ const deleteChallenge = async () => {
     setError(null);
 
     try {
+      const payload = {
+        title,
+        description,
+        type_id: type.id,
+        difficulty_id: difficulty.id,
+        tags_ids: selectedTags
+      };
+
       if (editingChallengeId) {
-        // edycja - PATCH
-        await axios.patch(`http://127.0.0.1:8000/api/challenges/${editingChallengeId}/`, {
-          title,
-          description,
-          type_id: type.id,
-          difficulty_id: difficulty.id,
-          tags_ids: selectedTags
-        });
-        console.log("Zaktualizowano challenge");
+        await api.patch(`/challenges/${editingChallengeId}/`, payload);
       } else {
-        // dodawanie - POST
-        await axios.post("http://127.0.0.1:8000/api/challenges/", {
-          title,
-          description,
-          type_id: type.id,
-          difficulty_id: difficulty.id,
-          tags_ids: selectedTags
-        });
-        console.log("Dodano challenge");
+        await api.post("/challenges/", payload);
       }
 
       loadChallenges();
       router.push("/ChallengeListScreen");
-    } catch (err: any) {
-  console.error("AXIOS ERROR OBJECT:", err);
-  console.error("AXIOS ERROR RESPONSE:", err.response?.data);
-  console.error("AXIOS ERROR STATUS:", err.response?.status);
-  setError("Nie udało się zapisać challenge: " + err.response?.data?.detail || err.message);
-} finally {
+    } catch {
+      setError("Błąd zapisu");
+    } finally {
       setLoading(false);
     }
-
   };
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1, padding: 10 }}>
-      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
+    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+      {error && <AppText style={{ color: "red", marginBottom: spacing.m }}>{error}</AppText>}
 
-      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
-        {editingChallengeId ? "Edytuj challenge" : "Dodaj challenge"}
-      </Text>
+      <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
+        {editingChallengeId ? "Edit challenge" : "Add challenge"}
+      </AppText>
 
-
-      <Text>Nazwa:</Text>
+      {/* Nazwa */}
+      <AppText style={{ marginBottom: 6 }}>Name:</AppText>
       <TextInput
         value={title}
         onChangeText={setTitle}
-        style={{ borderWidth: 1, padding: 5, marginBottom: 10 }}
+        style={{
+          borderWidth: 1,
+          borderColor: colors.inputBorder,
+          color: colors.text,
+          padding: spacing.s,
+          borderRadius: radius.md,
+          marginBottom: spacing.m,
+        }}
+        placeholderTextColor="#7a7891"
       />
 
-      <Text>Opis:</Text>
+      {/* Opis */}
+      <AppText style={{ marginBottom: 6 }}>Description:</AppText>
       <TextInput
         value={description}
         onChangeText={setDescription}
         multiline
-        style={{ borderWidth: 1, padding: 5, marginBottom: 10 }}
+        style={{
+          borderWidth: 1,
+          borderColor: colors.inputBorder,
+          color: colors.text,
+          padding: spacing.s,
+          borderRadius: radius.md,
+          marginBottom: spacing.m,
+          minHeight: 90
+        }}
+        placeholderTextColor="#7a7891"
       />
 
-      <Text>Typ:</Text>
-      <View style={{ flexDirection: "row", marginBottom: 10 }}>
-        {["Daily", "Weekly"].map(t => (
+      {/* Typ */}
+      <AppText style={{ marginBottom: 6 }}>Type:</AppText>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
+        {availableTypes.map(t => (
           <TouchableOpacity
-            key={t}
-            onPress={() => setType({ id: t === "Daily" ? 1 : 2, name: t })}
+            key={t.id}
+            onPress={() => setType(t)}
             style={{
-              padding: 10,
-              marginRight: 5,
-              borderRadius: 10,
-              backgroundColor: type?.name === t ? "#4caf50" : "#ccc"
+              padding: spacing.s,
+              borderRadius: radius.md,
+              marginRight: spacing.s,
+              marginBottom: spacing.s,
+              backgroundColor: type?.id === t.id ? colors.buttonActive : colors.button
             }}
           >
-            <Text>{t}</Text>
+            <AppText>{t.name}</AppText>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text>Trudność:</Text>
-      <View style={{ flexDirection: "row", marginBottom: 10 }}>
-        {[
-          { id: 1, name: "Easy", xp_value: 10 },
-          { id: 2, name: "Medium", xp_value: 25 },
-          { id: 3, name: "Hard", xp_value: 50 }
-        ].map(d => (
+      {/* Trudność */}
+      <AppText style={{ marginBottom: 6 }}>Difficulty:</AppText>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
+        {availableDifficulties.map(d => (
           <TouchableOpacity
             key={d.id}
             onPress={() => setDifficulty(d)}
             style={{
-              padding: 10,
-              marginRight: 5,
-              borderRadius: 10,
-              backgroundColor: difficulty?.id === d.id ? "#2196f3" : "#ccc"
+              padding: spacing.s,
+              borderRadius: radius.md,
+              marginRight: spacing.s,
+              marginBottom: spacing.s,
+              backgroundColor: difficulty?.id === d.id ? colors.buttonActive : colors.button
             }}
           >
-            <Text>{d.name} ({d.xp_value} XP)</Text>
+            <AppText>{d.name} ({d.xp_value} XP)</AppText>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text>Tagi:</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+      {/* Tagi */}
+      <AppText style={{ marginBottom: 6 }}>Tags:</AppText>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.l }}>
         {tags.map(tag => (
           <TouchableOpacity
             key={tag.id}
             onPress={() => toggleTag(tag.id)}
             style={{
-              padding: 8,
-              marginRight: 5,
-              borderRadius: 10,
-              backgroundColor: selectedTags.includes(tag.id) ? "#2196f3" : "#ddd"
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: radius.md,
+              marginRight: spacing.s,
+              marginBottom: spacing.s,
+              backgroundColor: selectedTags.includes(tag.id)
+                ? colors.buttonActive
+                : colors.button
             }}
           >
-            <Text>{tag.name}</Text>
+            <AppText>{tag.name}</AppText>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
-<TouchableOpacity
-      onPress={saveChallenge}
-      style={{ backgroundColor: "#4caf50", padding: 15, borderRadius: 10, alignItems: "center", marginBottom: editingChallengeId ? 10 : 0 }}
-      disabled={loading}
-    >
-      {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff" }}>{editingChallengeId ? "Zapisz zmiany" : "Dodaj challenge"}</Text>}
-    </TouchableOpacity>
-
-    {editingChallengeId && (
+      {/* Zapisz */}
       <TouchableOpacity
-        onPress={deleteChallenge}
-        style={{ backgroundColor: "#f44336", padding: 15, borderRadius: 10, alignItems: "center" }}
-        disabled={loading}
+        onPress={saveChallenge}
+        style={{
+          backgroundColor: colors.buttonActive,
+          padding: spacing.m,
+          borderRadius: radius.md,
+          alignItems: "center",
+          marginBottom: editingChallengeId ? spacing.m : 0
+        }}
       >
-        <Text style={{ color: "#fff" }}>Usuń challenge</Text>
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editingChallengeId ? "Save" : "Add challenge"}</AppText>
+        }
       </TouchableOpacity>
-    )}
-  </ScrollView>
+
+      {/* Usuń */}
+      {editingChallengeId && (
+        <TouchableOpacity
+          onPress={deleteChallenge}
+          style={{
+            backgroundColor: colors.deleteButton,
+            padding: spacing.m,
+            borderRadius: radius.md,
+            alignItems: "center",
+            marginBottom: spacing.l
+          }}
+        >
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>Delete challenge</AppText>
+        </TouchableOpacity>
+      )}
+    </ScrollView>
   );
 };
 
 export default ChallengeFormScreen;
+

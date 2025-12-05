@@ -1,5 +1,8 @@
+# apps/challenges/serializers.py
 from rest_framework import serializers
-from .models import ChallengeDefinition, ChallengeTag, ChallengeType, DifficultyType
+from .models import ChallengeDefinition, ChallengeTag, ChallengeType, UserChallenge
+from apps.common.models import DifficultyType
+
 
 class ChallengeTagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,3 +49,13 @@ class ChallengeDefinitionSerializer(serializers.ModelSerializer):
         if tags_data:
             challenge.tags.set(tags_data)
         return challenge
+class UserChallengeSerializer(serializers.ModelSerializer):
+    challenge = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserChallenge
+        fields = ["id", "challenge", "start_date"]
+
+    def get_challenge(self, obj):
+        from .serializers import ChallengeDefinitionSerializer
+        return ChallengeDefinitionSerializer(obj.definition).data
