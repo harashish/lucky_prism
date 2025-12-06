@@ -1,4 +1,4 @@
-// constants/theme.ts
+// frontend/constants/theme.ts
 
 export const colors = {
   text: "#dfdef3",

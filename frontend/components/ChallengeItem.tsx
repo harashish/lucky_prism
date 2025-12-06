@@ -1,3 +1,5 @@
+// frontend/components/ChallengeItem.tsx
+
 import React, { useState } from "react";
 import { View, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { router } from "expo-router";

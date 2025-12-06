@@ -1,3 +1,5 @@
+// frontend/app/(tabs)/ChallengeListScreen.tsx
+
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, StyleSheet, SectionList } from "react-native";
 import { useChallengeStore, ChallengeWithUserInfo } from "../stores/useChallengeStore";

@@ -1,3 +1,5 @@
+inzynierka_s28087.code-workspace
+
 backend/.venv
 backend/*.sqlite3          # Pokrywa db.sqlite3
 backend/staticfiles/

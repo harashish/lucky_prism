@@ -1,3 +1,5 @@
+// frontend/app/(tabs)/GamificationScreen.tsx
+
 import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import axios from "axios";

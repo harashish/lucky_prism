@@ -1,3 +1,5 @@
+// frontend/components/TagsFormScreen.tsx
+
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
