@@ -24,8 +24,21 @@ class GoalHistory(models.Model):
     xp_gained = models.IntegerField()
 
     def complete(self):
-        xp = self.goal.difficulty.xp_value + self.goal.period.default_xp
+        # 1. Oblicz procent trudności (difficulty_percent)
+        difficulty_percent = 0
+        if self.goal.difficulty:
+            # Zakładamy, że xp_value w difficulty to np. 120 (co oznacza 120%)
+            difficulty_percent = (self.goal.difficulty.xp_value or 0) / 100
+
+        # 2. Pobierz bazowe XP za okres (period_xp)
+        period_xp = self.goal.period.default_xp or 0
+
+        # 3. Oblicz końcowe XP (mnożenie i rzutowanie na int)
+        xp = int(period_xp * difficulty_percent)
+
+        # 4. Zapisz wynik w instancji
         self.xp_gained = xp
         self.save()
 
+        # 5. Przekaż XP użytkownikowi
         self.goal.user.add_xp(xp, source="goal", source_id=self.id)

@@ -5,6 +5,10 @@ from django.db import models
 class TodoCategory(models.Model):
     name = models.CharField(max_length=30)
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
+    color = models.CharField(max_length=20, blank=True, null=True)  # opcjonalnie kolor
+
+    def __str__(self):
+        return f"{self.name}"
 
 class TodoTask(models.Model):
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
@@ -16,11 +20,16 @@ class TodoTask(models.Model):
         null=True,
         blank=True
     )
-    category = models.ForeignKey(TodoCategory, on_delete=models.PROTECT)
-
+    category = models.ForeignKey(TodoCategory, on_delete=models.PROTECT, related_name="tasks")
+    is_completed = models.BooleanField(default=False)   # status (przydatne dla listy)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.content[:40]}"
 
 class TodoHistory(models.Model):
     task = models.ForeignKey(TodoTask, on_delete=models.CASCADE)
@@ -29,10 +38,10 @@ class TodoHistory(models.Model):
 
     def complete(self):
         diff = self.task.custom_difficulty or self.task.category.difficulty
-        xp = diff.xp_value
+        xp = diff.xp_value if diff else 0
         self.xp_gained = xp
         self.save()
-
+        # nadaj XP userowi
         self.task.user.add_xp(xp, source="todo", source_id=self.id)
 
 

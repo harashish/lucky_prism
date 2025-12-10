@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import ChallengeDefinition, ChallengeTag, ChallengeType, UserChallenge
 from apps.common.models import DifficultyType
+from apps.common.serializers import DifficultyTypeSerializer
 
 
 class ChallengeTagSerializer(serializers.ModelSerializer):
@@ -14,10 +15,10 @@ class ChallengeTypeSerializer(serializers.ModelSerializer):
         model = ChallengeType
         fields = ['id', 'name']
 
-class DifficultyTypeSerializer(serializers.ModelSerializer):
+'''class DifficultyTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DifficultyType
-        fields = ['id', 'name', 'xp_value']
+        fields = ['id', 'name', 'xp_value']'''
 
 class ChallengeDefinitionSerializer(serializers.ModelSerializer):
     type = ChallengeTypeSerializer(read_only=True)

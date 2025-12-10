@@ -97,9 +97,20 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
     }
   },
 
-  addUserChallenge: async (userId: number, challengeId: number) => {
+  /*addUserChallenge: async (userId: number, challengeId: number) => {
     try {
       await api.post(`/challenges/user-challenges/`, { user: userId, challenge: challengeId });
+      // odśwież listę przypisanych challenge po dodaniu
+      await get().loadUserChallenges(userId);
+    } catch (e: any) {
+      console.error("Error adding user challenge:", e.response?.data || e.message || e);
+    }
+  },*/
+
+addUserChallenge: async (userId: number, challengeId: number) => {
+    try {
+      // Zmiana z '/challenges/user-challenges/' na '/challenges/assign/'
+      await api.post(`/challenges/assign/`, { user: userId, challenge: challengeId });
       // odśwież listę przypisanych challenge po dodaniu
       await get().loadUserChallenges(userId);
     } catch (e: any) {
