@@ -18,9 +18,10 @@ export default function TabsLayout() {
         headerTitleStyle: { color: colors.text },
       }}
     >
-      <Tabs.Screen name="ChallengeListScreen" options={{ title: "Challenges" }} />
+      <Tabs.Screen name="ChallengesListScreen" options={{ title: "Challenges" }} />
       <Tabs.Screen name="GoalsScreen" options={{ title: "Goals" }} />
       <Tabs.Screen name="HabitsScreen" options={{ title: "Habits" }} />
+      <Tabs.Screen name="TodosScreen" options={{ title: "Todos" }} />
       <Tabs.Screen name="GamificationScreen" options={{ title: "Level" }} />
     </Tabs>
   );

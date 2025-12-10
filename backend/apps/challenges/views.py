@@ -18,10 +18,6 @@ class ChallengeTypeListCreate(generics.ListCreateAPIView):
     queryset = ChallengeType.objects.all()
     serializer_class = ChallengeTypeSerializer
 
-class DifficultyTypeListCreate(generics.ListCreateAPIView):
-    queryset = DifficultyType.objects.all()
-    serializer_class = DifficultyTypeSerializer
-
 class ChallengeTagListCreate(generics.ListCreateAPIView):
     queryset = ChallengeTag.objects.all()
     serializer_class = ChallengeTagSerializer

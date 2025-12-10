@@ -50,7 +50,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
 
   loadDifficulties: async () => {
     try {
-      const res = await api.get("/challenges/difficulties/");
+      const res = await api.get("/common/difficulties/");
       set({ difficulties: res.data });
     } catch (e: any) {
       console.error("Error loading difficulties:", e.response?.data || e.message || e);

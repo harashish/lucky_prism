@@ -63,7 +63,7 @@ const GoalFormScreen = () => {
 
   const fetchDifficulties = async () => {
     try {
-      const res = await api.get("/challenges/difficulties/"); // re-use difficulties endpoint
+      const res = await api.get("/common/difficulties/"); // re-use difficulties endpoint
       setAvailableDifficulties(res.data);
     } catch (e) {
       console.error(e);

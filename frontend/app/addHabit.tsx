@@ -1,2 +1,5 @@
 import HabitFormScreen from "../components/HabitFormScreen";
-export default function AddHabit() { return <HabitFormScreen />; }
+
+export default function AddHabit() { 
+    return <HabitFormScreen />; 
+}

@@ -1,4 +1,4 @@
-// frontend/app/(tabs)/ChallengeListScreen.tsx
+// frontend/app/(tabs)/ChallengesListScreen.tsx
 
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, StyleSheet, SectionList } from "react-native";
@@ -9,7 +9,7 @@ import AppText from "../../components/AppText";
 import HeaderText from "../../components/HeaderText";
 import { colors } from "../../constants/theme";
 
-const ChallengeListScreen = () => {
+const ChallengesListScreen = () => {
   const router = useRouter();
   const { 
     challenges, 
@@ -155,7 +155,7 @@ const ChallengeListScreen = () => {
   );
 };
 
-export default ChallengeListScreen;
+export default ChallengesListScreen;
 
 
 const styles = StyleSheet.create({

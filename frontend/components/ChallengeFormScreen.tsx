@@ -50,7 +50,7 @@ const ChallengeFormScreen = () => {
       try {
         const [typesRes, diffRes] = await Promise.all([
           api.get("/challenges/types/"),
-          api.get("/challenges/difficulties/")
+          api.get("/common/difficulties/")
         ]);
         setAvailableTypes(typesRes.data);
         setAvailableDifficulties(diffRes.data);
