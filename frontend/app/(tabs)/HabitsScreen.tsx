@@ -39,10 +39,10 @@ export default function HabitsScreen() {
     if (res.already_completed) {
       Alert.alert(
         "Info",
-        "Ten habit był już oznaczony na dziś.\nXP nie jest cofane."
+        "This habit was already marked for today. XP is not rolled back."
       );
     } else if (res.xp_added > 0) {
-      Alert.alert("XP", `Otrzymano ${res.xp_added} XP`);
+      Alert.alert("Done", `+${res.xp_added} XP`);
     }
 
     await loadMonth(userId, month);
@@ -56,12 +56,12 @@ export default function HabitsScreen() {
     const res = await toggleDay(habitId, date, newStatus);
 
     if (!res) {
-      Alert.alert("Błąd", "Nie udało się zapisać dnia");
+      Alert.alert("Błąd", "Cannot save day");
       return;
     }
 
     if (res.xp_added > 0) {
-      Alert.alert("XP", `Otrzymano ${res.xp_added} XP`);
+      Alert.alert("Done", `+${res.xp_added} XP`);
     }
 
     await loadMonth(userId, month);

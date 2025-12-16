@@ -8,7 +8,8 @@ import { colors, spacing, radius } from "../constants/theme";
 import { useHabitStore } from "../app/stores/useHabitStore";
 import { api } from "../app/api/apiClient";
 
-const colorPalette = ["#c4a7e7", "#908bab", "#39a0a1", "#e07a5f", "#f2cc8f", "#a7c66b", "#ff6b6b"];
+//const colorPalette = ["#c4a7e7", "#908bab", "#39a0a1", "#e07a5f", "#f2cc8f", "#a7c66b", "#ff6b6b"];
+  const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
 
 export default function HabitFormScreen() {
   const router = useRouter();

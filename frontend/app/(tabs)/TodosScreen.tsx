@@ -25,6 +25,9 @@ export default function TodosScreen() {
   const [showDifficulty, setShowDifficulty] = useState(false);
   const [editingTodo, setEditingTodo] = useState<any | null>(null);
 
+  const [showCompleted, setShowCompleted] = useState(false);
+  
+
   // LOAD CATEGORIES + SELECT FIRST
   useEffect(() => {
     (async () => {
@@ -85,6 +88,7 @@ export default function TodosScreen() {
         />
       )}
 
+
       {/* CATEGORIES */}
       <View style={{ flexDirection: "row", marginBottom: 12, padding: 12 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -122,20 +126,24 @@ export default function TodosScreen() {
         </ScrollView>
       </View>
 
+            <TouchableOpacity onPress={() => setShowCompleted(prev => !prev)} style={{ padding: 8, marginBottom: 12, backgroundColor: colors.buttonActive, borderRadius: 10, alignItems: 'center' }}>
+  <AppText style={{ color: "#fff" }}>{showCompleted ? "Show todo" : "Show completed"}</AppText>
+</TouchableOpacity>
+
 <KeyboardAvoidingView
   style={{ flex: 1 }}
   behavior={Platform.OS === "ios" ? "padding" : "height"}
   keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 80} // możesz dostosować
 >
   <FlatList
-    data={tasks.filter(t => !t.is_completed)}
+    data={tasks.filter(t => showCompleted ? t.is_completed : !t.is_completed)}
     keyExtractor={(item) => item.id.toString()}
     renderItem={({ item }) => (
       <TodoItem
         item={item}
         onComplete={async (taskId) => {
           const res = await completeTask(taskId);
-          if (res) Alert.alert("Zrobione", `+${res.xp_gained} XP`);
+          if (res) Alert.alert("Done", `+${res.xp_gained} XP`);
         }}
         onDelete={async (taskId) => {
           const ok = await deleteTask(taskId);

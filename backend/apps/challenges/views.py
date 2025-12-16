@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
 from django.utils import timezone
-from django.db.models import Q
 import random
 
 from .models import ChallengeDefinition, UserChallenge, ChallengeType, ChallengeTag
@@ -202,7 +201,17 @@ class ChallengeDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChallengeDefinitionSerializer
 
 
-
 class ChallengeTagDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ChallengeTag.objects.all()
     serializer_class = ChallengeTagSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        tag = self.get_object()
+
+        if ChallengeDefinition.objects.filter(tags=tag).exists():
+            return Response(
+                {"detail": "Nie można usunąć taga przypisanego do wyzwań."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return super().destroy(request, *args, **kwargs)

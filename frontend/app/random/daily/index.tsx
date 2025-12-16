@@ -19,12 +19,12 @@ export default function DailyPickScreen() {
   const toggleTag = (id:number) => setSelectedTags(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
 
   const onLosuj = async () => {
-    if (!tags.length) return Alert.alert("Brak tagów");
+    if (!tags.length) return Alert.alert("no tags");
     const picked = await randomChallenge(userId, "Daily", selectedTags);
-    if (!picked) return Alert.alert("Brak dostępnych challenge'ów");
+    if (!picked) return Alert.alert("no challenges with selected tags");
 
     setSpinning(true);
-    setSpinItems(["...", "Losuję", "Szukam", "Chwila", "OK"]);
+    setSpinItems(["...", "Randomizing", "Searching", "Wait", "OK"]);
     setTimeout(() => {
       setSpinning(false);
       router.push({ pathname:"/random/result", params:{ item: JSON.stringify(picked), source:"challenge" }});
@@ -48,10 +48,10 @@ return (
         onPress={onLosuj} 
         style={{ backgroundColor: colors.buttonActive, padding:16, borderRadius:10, marginBottom:12, width: "80%", alignItems:"center" }}
       >
-        <AppText style={{ color:"#fff", fontWeight:"bold" }}>Losuj!</AppText>
+        <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize!</AppText>
       </TouchableOpacity>
 
-      <AppText style={{ marginBottom:8 }}>Filtruj po tagach:</AppText>
+      <AppText style={{ marginBottom:8 }}>Filter by tags:</AppText>
 
       <View style={{ flexDirection:"row", flexWrap:"wrap", justifyContent:"center", alignItems:"center" }}>
         {tags.map(t => (

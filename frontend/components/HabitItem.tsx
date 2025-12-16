@@ -31,9 +31,20 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <AppText style={{ fontWeight: "bold" }}>{item.title}</AppText>
 
-        <Pressable onPress={() => onToggleToday(item.id)} style={components.completeButton}>
-          <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
-        </Pressable>
+        <Pressable 
+  onPress={() => onToggleToday(item.id)} 
+  style={{
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: item.color || colors.buttonActive,
+    justifyContent: "center",
+    alignItems: "center",
+  }}
+>
+  <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+</Pressable>
+
       </View>
 
       {expanded && (

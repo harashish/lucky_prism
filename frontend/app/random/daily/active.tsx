@@ -25,7 +25,7 @@ const onSpróbujInny = async () => {
 
   await fetchActive(userId);
   const { activeDaily: latestActive } = useChallengeStore.getState();
-  router.replace(latestActive ? "/random/daily/active" : "/random/daily");
+  router.push(latestActive ? "/random/daily/active" : "/random/daily");
 };
 const onWykonano = async () => {
   if (!activeDaily) return;
@@ -36,7 +36,7 @@ const onWykonano = async () => {
 
   await fetchActive(userId);
   const { activeDaily: latestActive } = useChallengeStore.getState();
-  router.replace("/(tabs)/RandomHomeScreen"); // albo jeśli chcesz natychmiast activeDaily, użyj latestActive
+  router.push("/(tabs)/RandomHomeScreen"); // albo jeśli chcesz natychmiast activeDaily, użyj latestActive
 };
 
 

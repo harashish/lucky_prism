@@ -10,13 +10,13 @@ export default function CategoryForm() {
   const { id } = useLocalSearchParams();
   const editing = !!id;
   const router = useRouter();
-  const { addCategory, saveCategory } = useTodoStore();
+  const { addCategory, saveCategory, deleteCategory } = useTodoStore();
 
   const [name, setName] = useState("");
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [color, setColor] = useState<string | null>(null);
-  const colorPalette = ["#908bab", "#39a0a1", "#e07a5f", "#f2cc8f", "#a7c66b", "#ff6b6b"];
+  const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
 
   useEffect(() => {
     (async () => {
@@ -34,15 +34,15 @@ export default function CategoryForm() {
           setDifficultyId(res.data.difficulty?.id || null);
           setColor(res.data.color || null);
         } catch (e) {
-          Alert.alert("Błąd", "Nie udało się załadować kategorii");
+          Alert.alert("Error", "Failed to load category");
         }
       })();
     }
   }, [id]);
 
   const save = async () => {
-    if (!name.trim()) return Alert.alert("Nazwa", "Wpisz nazwę kategorii");
-    if (!difficultyId) return Alert.alert("Trudność", "Wybierz poziom trudności");
+    if (!name.trim()) return Alert.alert("Name", "Please enter a category name");
+    if (!difficultyId) return Alert.alert("Difficulty", "Please select a difficulty level");
 
     const payload: any = {
       name: name.trim(),
@@ -54,17 +54,36 @@ export default function CategoryForm() {
     if (editing) ok = await saveCategory(Number(id), payload);
     else ok = await addCategory(payload);
 
-    if (!ok) return Alert.alert("Błąd", "Nie udało się zapisać kategorii");
-    router.replace("/TodosScreen");
+    if (!ok) return Alert.alert("Error", "Failed to save category");
+    router.push("/TodosScreen");
+  };
+
+  const handleDelete = async () => {
+    const confirm = await new Promise(resolve => {
+      Alert.alert(
+        "Delete category?",
+        "This will delete all tasks in this category",
+        [
+          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+          { text: "Delete", style: "destructive", onPress: () => resolve(true) }
+        ]
+      );
+    });
+
+    if (!confirm) return;
+
+    const ok = await deleteCategory(Number(id));
+    if (!ok) return Alert.alert("Error", "Failed to delete category");
+    router.push("/TodosScreen");
   };
 
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
-      <AppText style={{ marginBottom: 8 }}>Nazwa kategorii</AppText>
+      <AppText style={{ marginBottom: 8 }}>Category Name</AppText>
       <TextInput
         value={name}
         onChangeText={setName}
-        placeholder="Nazwa"
+        placeholder="Name"
         placeholderTextColor="#7a7891"
         style={{
           padding: 12,
@@ -75,7 +94,7 @@ export default function CategoryForm() {
         }}
       />
 
-      <AppText style={{ marginBottom: 8 }}>Trudność (XP per item)</AppText>
+      <AppText style={{ marginBottom: 8 }}>Difficulty (XP per item)</AppText>
       <View style={{ marginBottom: 20 }}>
         {difficulties.map((d) => (
           <TouchableOpacity
@@ -95,32 +114,40 @@ export default function CategoryForm() {
         ))}
       </View>
 
-      
-<AppText style={{ marginBottom: 8 }}>Kolor (opcjonalnie)</AppText>
-<View style={{ flexDirection: "row", marginBottom: 20 }}>
-  {colorPalette.map(c => (
-    <TouchableOpacity
-      key={c}
-      onPress={() => setColor(c)}
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: 8,
-        backgroundColor: c,
-        marginRight: 8,
-        borderWidth: color === c ? 2 : 0,
-        borderColor: "#fff"
-      }}
-    />
-  ))}
-</View>
+      <AppText style={{ marginBottom: 8 }}>Color (optional)</AppText>
+      <View style={{ flexDirection: "row", marginBottom: 20 }}>
+        {colorPalette.map(c => (
+          <TouchableOpacity
+            key={c}
+            onPress={() => setColor(c)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              backgroundColor: c,
+              marginRight: 8,
+              borderWidth: color === c ? 2 : 0,
+              borderColor: "#fff"
+            }}
+          />
+        ))}
+      </View>
 
       <TouchableOpacity
         onPress={save}
-        style={{ padding: 14, borderRadius: 10, backgroundColor: colors.buttonActive, alignItems: "center" }}
+        style={{ padding: 14, borderRadius: 10, backgroundColor: colors.buttonActive, alignItems: "center", marginBottom: editing ? 12 : 0 }}
       >
-        <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editing ? "Zapisz" : "Dodaj"}</AppText>
+        <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editing ? "Save" : "Add"}</AppText>
       </TouchableOpacity>
+
+      {editing && (
+        <TouchableOpacity
+          onPress={handleDelete}
+          style={{ padding: 14, borderRadius: 10, backgroundColor: "#d9534f", alignItems: "center" }}
+        >
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>Delete Category</AppText>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }

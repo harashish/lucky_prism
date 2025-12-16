@@ -6,14 +6,13 @@ import { colors } from "../../../constants/theme";
 import { useRouter } from "expo-router";
 import RandomSpin from "../spin";
 
-export default function TodoPickScreen(){
+export default function TodoPickScreen() {
   const router = useRouter();
   const userId = 1;
 
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
-  // **stany dla spinnera**
   const [spinning, setSpinning] = useState(false);
   const [spinItems, setSpinItems] = useState<string[]>([]);
 
@@ -28,17 +27,17 @@ export default function TodoPickScreen(){
   }, []);
 
   const onLosuj = async () => {
-    if (!selectedCategory) return Alert.alert("Wybierz kategorię");
+    if (!selectedCategory) return Alert.alert("Choose a category");
 
     setSpinning(true);
-    setSpinItems(["...", "Losuję", "Szukam", "Chwila"]);
+    setSpinItems(["...", "Randomizing", "Searching", "Wait", "OK"]);
 
     try {
       const res = await api.get("/todos/tasks/", { params: { user_id: userId, category_id: selectedCategory }});
       let arr = res.data.filter((t:any) => !t.is_completed);
       if (!arr.length) {
         setSpinning(false);
-        Alert.alert("Brak zadań w tej kategorii");
+        Alert.alert("no tasks in this category");
         return;
       }
 
@@ -51,25 +50,48 @@ export default function TodoPickScreen(){
 
     } catch(e){ 
       setSpinning(false);
-      Alert.alert("Błąd", "Nie udało się pobrać zadań"); 
+      Alert.alert("Błąd", "can't load tasks" ); 
     }
   };
 
   if (spinning) return <RandomSpin items={spinItems.length ? spinItems : ["..."]} onFinish={() => {}} />;
 
   return (
-    <View style={{ flex:1, padding:16, backgroundColor: colors.background }}>
-      <TouchableOpacity onPress={onLosuj} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold" }}>Losuj!</AppText>
-      </TouchableOpacity>
+    <View style={{ flex:1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center", // centrowanie pionowe
+          alignItems: "center",     // centrowanie poziome
+          padding: 16
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <TouchableOpacity 
+          onPress={onLosuj} 
+          style={{ backgroundColor: colors.buttonActive, padding:16, borderRadius:10, marginBottom:12, width:"80%", alignItems:"center" }}
+        >
+          <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize!</AppText>
+        </TouchableOpacity>
 
-      <AppText style={{ marginBottom:8 }}>Wybierz kategorię:</AppText>
-      <ScrollView contentContainerStyle={{ flexDirection:"row", flexWrap:"wrap" }}>
-        {categories.map(c=>(
-          <TouchableOpacity key={c.id} onPress={()=>setSelectedCategory(c.id)} style={{ padding:8, margin:6, borderRadius:8, backgroundColor: selectedCategory===c.id ? colors.buttonActive : colors.card }}>
-            <AppText>{c.name}</AppText>
-          </TouchableOpacity>
-        ))}
+        <AppText style={{ marginBottom:8 }}>Choose a category:</AppText>
+
+        <View style={{ flexDirection:"row", flexWrap:"wrap", justifyContent:"center", alignItems:"center" }}>
+          {categories.map(c => (
+            <TouchableOpacity 
+              key={c.id} 
+              onPress={()=>setSelectedCategory(c.id)} 
+              style={{ 
+                padding:8, 
+                margin:6, 
+                borderRadius:8, 
+                backgroundColor: selectedCategory===c.id ? colors.buttonActive : colors.card 
+              }}
+            >
+              <AppText>{c.name}</AppText>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );

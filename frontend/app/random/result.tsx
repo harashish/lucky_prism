@@ -96,10 +96,10 @@ export default function RandomResultScreen(){
             <AppText>OK</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={onLosujDalej} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>
-            <AppText style={{ color:"#fff" }}>Losuj dalej</AppText>
+            <AppText style={{ color:"#fff" }}>Reroll</AppText>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace("/random/todo")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10 }}>
-            <AppText>Zmień kategorię</AppText>
+          <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10 }}>
+            <AppText>Change category</AppText>
           </TouchableOpacity>
         </>
       )}

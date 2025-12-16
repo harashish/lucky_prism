@@ -19,17 +19,18 @@ export default function WeeklyPickScreen() {
   const toggleTag = (id:number) => setSelectedTags(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
 
   const onLosuj = async () => {
-    if (!tags.length) return Alert.alert("Brak tagów");
-    if (selectedTags.length === 0) return Alert.alert("Wybierz przynajmniej jeden tag");
-
+    if (!tags.length) return Alert.alert("no tagsw");
     const picked = await randomChallenge(userId, "Weekly", selectedTags);
+    //if (selectedTags.length === 0) return Alert.alert("Choose at least one tag");
+
+    
     if (!picked) {
-      Alert.alert("Brak dostępnych challenge'ów tygodniowych dla wybranych tagów");
+      Alert.alert("no challenges with selected tags");
       return;
     }
 
     setSpinning(true);
-    setSpinItems(["...", "Losuję", "Szukam", "Chwila", "OK"]);
+    setSpinItems(["...", "Randomizing", "Searching", "Wait", "OK"]);
 
     setTimeout(() => {
       setSpinning(false);
@@ -54,10 +55,10 @@ export default function WeeklyPickScreen() {
           onPress={onLosuj} 
           style={{ backgroundColor: colors.buttonActive, padding:16, borderRadius:10, marginBottom:12, width: "80%", alignItems:"center" }}
         >
-          <AppText style={{ color:"#fff", fontWeight:"bold" }}>Losuj!</AppText>
+          <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize!</AppText>
         </TouchableOpacity>
 
-        <AppText style={{ marginBottom:8 }}>Filtruj po tagach:</AppText>
+        <AppText style={{ marginBottom:8 }}>Filter by tags:</AppText>
 
         <View style={{ flexDirection:"row", flexWrap:"wrap", justifyContent:"center", alignItems:"center" }}>
           {tags.map(t => (

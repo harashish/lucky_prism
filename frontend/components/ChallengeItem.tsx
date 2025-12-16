@@ -41,7 +41,7 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
     if (!item.userChallengeId || !userId) return;
     try {
       await api.post(`/challenges/user-challenges/${item.userChallengeId}/complete/`);
-      Alert.alert("Ukończono", `Otrzymano XP za "${item.title}"`);
+      Alert.alert("Ukończono", `  XP za "${item.title}"`);
 
       const { userChallenges } = useChallengeStore.getState();
       useChallengeStore.setState({

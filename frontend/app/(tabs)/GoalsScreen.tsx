@@ -91,16 +91,16 @@ export default function GoalsScreen() {
   /** Complete */
   const onComplete = async (goalId: number, title: string) => {
     Alert.alert(
-      "Ukończyć cel?",
-      `Czy na pewno ukończyć "${title}"?`,
+      "Are you sure?",
+      `Are you sure you completed "${title}"?`,
       [
-        { text: "Anuluj", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
-          text: "Tak",
+          text: "Yes",
           onPress: async () => {
             const res = await completeGoal(goalId);
             if (res) {
-              Alert.alert("Ukończono", `Zdobyto XP: ${res.total_xp}`);
+              Alert.alert("Done", `+${res.total_xp}XP`);
               loadUserGoals(userId, selectedPeriod);
             }
           },
@@ -238,7 +238,7 @@ export default function GoalsScreen() {
                       onPress={() => onComplete(item.id, item.title)}
                       style={components.completeButton}
                     >
-                      <AppText style={{ color: "#fff" }}>Ukończ</AppText>
+                      <AppText style={{ color: "#fff" }}>✔️</AppText>
                     </TouchableOpacity>
                   )}
                 </View>
