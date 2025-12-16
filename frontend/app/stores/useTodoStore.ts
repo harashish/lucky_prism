@@ -146,6 +146,23 @@ deleteTask: async (taskId) => {
     console.error(e);
     return false;
   }
-}
+},
+
+randomTask: async (userId = 1, categoryId?: number) => {
+  try {
+    const params: any = { user_id: userId };
+    if (categoryId) params.category_id = categoryId;
+
+    const res = await api.get<TodoTask[]>("/todos/tasks/", { params });
+    const list = res.data;
+    if (!list.length) return null;
+
+    return list[Math.floor(Math.random() * list.length)];
+  } catch (e: any) {
+    console.log("randomTask error:", e.response?.data || e.message);
+    return null;
+  }
+},
+
 
 }));

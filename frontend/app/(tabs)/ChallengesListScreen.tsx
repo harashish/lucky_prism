@@ -23,6 +23,11 @@ const ChallengesListScreen = () => {
   const [selectedType, setSelectedType] = useState<"Daily" | "Weekly">("Daily");
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
+  const { activeDaily, activeWeekly } = useChallengeStore();
+
+  const activeChallengeBox = activeDaily || activeWeekly[0]; // jeśli więcej weekly, bierzemy pierwszy
+
+
   const userId = 1;
 
   const fetchData = async () => {
@@ -43,7 +48,7 @@ const ChallengesListScreen = () => {
 
   const filteredChallenges = challenges.filter(c =>
     c.type.name === selectedType &&
-    (selectedTags.length === 0 || selectedTags.every(tid => c.tags.some(t => t.id === tid)))
+    (selectedTags.length === 0 || selectedTags.some(tid => c.tags.some(t => t.id === tid)))
   );
 
   const userChallengeIds: number[] = userChallenges.map(uc => uc.challenge.id);
@@ -52,12 +57,23 @@ const ChallengesListScreen = () => {
     .filter(c => !userChallengeIds.includes(c.id))
     .map(c => ({ ...c }));
 
-  const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
-    .map(uc => ({ ...uc.challenge, userChallengeId: uc.id }));
+const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
+  .filter(uc => uc.challenge.type.name === selectedType &&
+       (selectedTags.length === 0 || selectedTags.some(tid => uc.challenge.tags.some(t => t.id === tid)))
+  )
+  .map(uc => ({
+    ...uc.challenge,
+    userChallengeId: uc.id,
+    challenge_type: uc.challenge_type,
+    progress_percent: uc.progress_percent,
+  }));
+
+
 
   const sections = [
-    { title: "All challenges", data: unassignedChallenges },
     { title: "Your challenges", data: assignedChallenges },
+    { title: "All challenges", data: unassignedChallenges },
+
   ];
 
   return (

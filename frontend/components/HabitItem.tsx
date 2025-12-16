@@ -72,18 +72,28 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
 
           return (
             <Pressable
-              key={d.date}
-              onPress={async () => {
-                const newStatus = d.status === 2 ? 1 : 2;
-                await onToggleDay(item.id, d.date, newStatus);
-              }}
-              onLongPress={() => router.push(`/editHabit/${item.id}`)}
-              delayLongPress={300}
-            >
-              <View style={squareStyle}>
-                <AppText style={{ fontSize: 10, color: "#fff" }}>{new Date(d.date).getDate()}</AppText>
-              </View>
-            </Pressable>
+  key={d.date}
+  onPress={async () => {
+    // zablokuj przyszłe dni
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (d.date > todayStr) {
+      return;
+    }
+
+    // toggle tylko dla obecnych lub przeszłych dni
+    const newStatus = d.status === 2 ? 1 : 2;
+    await onToggleDay(item.id, d.date, newStatus);
+  }}
+  onLongPress={() => router.push(`/editHabit/${item.id}`)}
+  delayLongPress={300}
+>
+  <View style={squareStyle}>
+    <AppText style={{ fontSize: 10, color: "#fff" }}>
+      {new Date(d.date).getDate()}
+    </AppText>
+  </View>
+</Pressable>
+
           );
         })}
       </View>

@@ -8,15 +8,16 @@ import CustomDifficultyPicker from "./customDifficultyPicker";
 
 export default function EditTodoPopup({ item, onClose, onSaved }: any) {
   const [content, setContent] = useState(item.content);
-  const [difficultyId, setDifficultyId] = useState(item.custom_difficulty?.id || null);
+  const [difficulty, setDifficulty] = useState(item.custom_difficulty || null);
   const [showDifficulty, setShowDifficulty] = useState(false);
 
   const save = async () => {
     try {
-      await api.patch(`/todos/tasks/${item.id}/`, {
-        content,
-        custom_difficulty_id: difficultyId,
-      });
+await api.patch(`/todos/tasks/${item.id}/`, {
+  content,
+  custom_difficulty_id: difficulty?.id || null,
+});
+
       onSaved();
     } catch {
       Alert.alert("Błąd", "Nie udało się zapisać");
@@ -27,8 +28,8 @@ export default function EditTodoPopup({ item, onClose, onSaved }: any) {
     <Modal transparent animationType="fade" visible>
       {showDifficulty && (
         <CustomDifficultyPicker
-          onSelect={(id) => {
-            setDifficultyId(id);
+          onSelect={(d) => {
+            setDifficulty(d); // ustaw cały obiekt
             setShowDifficulty(false);
           }}
           onClose={() => setShowDifficulty(false)}
@@ -64,19 +65,19 @@ export default function EditTodoPopup({ item, onClose, onSaved }: any) {
             }}
           />
 
-          <TouchableOpacity
-            onPress={() => setShowDifficulty(true)}
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              backgroundColor: colors.buttonActive,
-              marginBottom: 20,
-            }}
-          >
-            <AppText style={{ color: "#fff" }}>
-              {difficultyId ? `Custom XP: ${difficultyId}` : "Ustaw trudność"}
-            </AppText>
-          </TouchableOpacity>
+<TouchableOpacity
+  onPress={() => setShowDifficulty(true)}
+  style={{
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: colors.buttonActive,
+    marginBottom: 20,
+  }}
+>
+  <AppText style={{ color: "#fff" }}>
+    {difficulty ? `${difficulty.name}` : "Ustaw trudność"}
+  </AppText>
+</TouchableOpacity>
 
           <TouchableOpacity
             onPress={save}
@@ -92,7 +93,7 @@ export default function EditTodoPopup({ item, onClose, onSaved }: any) {
 
           <TouchableOpacity
             onPress={onClose}
-            style={{ padding: 12, borderRadius: 10, backgroundColor: colors.card }}
+            style={{ padding: 12, borderRadius: 10, backgroundColor: colors.buttonActive }}
           >
             <AppText style={{ color: colors.text }}>Anuluj</AppText>
           </TouchableOpacity>

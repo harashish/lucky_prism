@@ -44,7 +44,7 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
             {difficulties.map(d => (
               <TouchableOpacity
                 key={d.id}
-                onPress={() => onSelect(d.id)}
+                onPress={() => onSelect(d)} // przekazujemy cały obiekt
                 style={{
                   padding: 12,
                   borderRadius: 8,
@@ -54,6 +54,7 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
               >
                 <AppText>{d.name} ({d.xp_value} XP)</AppText>
               </TouchableOpacity>
+
             ))}
           </ScrollView>
 

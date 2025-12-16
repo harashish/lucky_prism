@@ -22,6 +22,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="GoalsScreen" options={{ title: "Goals" }} />
       <Tabs.Screen name="HabitsScreen" options={{ title: "Habits" }} />
       <Tabs.Screen name="TodosScreen" options={{ title: "Todos" }} />
+      <Tabs.Screen name="RandomHomeScreen" options={{ title: "Random" }} />
       <Tabs.Screen name="GamificationScreen" options={{ title: "Level" }} />
     </Tabs>
   );

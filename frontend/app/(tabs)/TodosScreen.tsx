@@ -1,3 +1,5 @@
+// frontend/app/(tabs)/TodosScreen.tsx
+
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, FlatList, Alert } from "react-native";
 import AppText from "../../components/AppText";
@@ -57,19 +59,13 @@ export default function TodosScreen() {
     }
   };
 
-
-
-return (
-  <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-  >
+  return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-
+      
+      {/* Difficulty Popup */}
       {showDifficulty && (
         <CustomDifficultyPicker
-          onSelect={(id) => {
+          onSelect={(id: number) => {
             setCustomDifficulty(id);
             setShowDifficulty(false);
           }}
@@ -77,6 +73,7 @@ return (
         />
       )}
 
+      {/* Edit Todo Popup */}
       {editingTodo && (
         <EditTodoPopup
           item={editingTodo}
@@ -88,35 +85,77 @@ return (
         />
       )}
 
-      <FlatList
-        data={tasks.filter(t => !t.is_completed)}
-        keyExtractor={(item) => item.id.toString()}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => (
-          <TodoItem
-            item={item}
-            onLongPress={() => setEditingTodo(item)}
-            onComplete={async () => {
-              const res = await completeTask(item.id);
-              if (res) Alert.alert("Zrobione", `+${res.xp_gained} XP`);
-            }}
-            onDelete={async () => {
-              const ok = await deleteTask(item.id);
-              if (!ok) Alert.alert("Błąd", "Nie udało się usunąć");
-            }}
-          />
-        )}
-        contentContainerStyle={{ paddingBottom: 120 }}
-      />
+      {/* CATEGORIES */}
+      <View style={{ flexDirection: "row", marginBottom: 12, padding: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {categories.map(cat => (
+            <TouchableOpacity
+              key={cat.id}
+              onPress={() => setSelectedCategoryId(cat.id)}
+              onLongPress={() => router.push(`/editCategory/${cat.id}`)}
+              style={{
+                padding: 12,
+                marginRight: 8,
+                borderRadius: 10,
+                backgroundColor: selectedCategoryId === cat.id ? colors.buttonActive : cat.color || colors.card,
+                minWidth: 80,
+                alignItems: "center",
+              }}
+            >
+              <AppText>{cat.name}</AppText>
+              <AppText style={{ fontSize: 12 }}>{cat.difficulty?.xp_value ?? 0} XP</AppText>
+            </TouchableOpacity>
+          ))}
 
-      <BottomInputBar
-        quickText={quickText}
-        setQuickText={setQuickText}
-        onQuickAdd={onQuickAdd}
-        onOpenDifficulty={() => setShowDifficulty(true)}
+          <TouchableOpacity
+            onPress={() => router.push("/addCategory")}
+            style={{
+              padding: 12,
+              borderRadius: 10,
+              backgroundColor: colors.buttonActive,
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+          >
+            <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
+<KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 80} // możesz dostosować
+>
+  <FlatList
+    data={tasks.filter(t => !t.is_completed)}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={({ item }) => (
+      <TodoItem
+        item={item}
+        onComplete={async (taskId) => {
+          const res = await completeTask(taskId);
+          if (res) Alert.alert("Zrobione", `+${res.xp_gained} XP`);
+        }}
+        onDelete={async (taskId) => {
+          const ok = await deleteTask(taskId);
+          if (!ok) Alert.alert("Błąd", "Nie udało się usunąć zadania");
+        }}
+        onLongPress={() => setEditingTodo(item)}
       />
+    )}
+    contentContainerStyle={{ paddingBottom: 120 }}
+    keyboardShouldPersistTaps="handled"
+  />
+
+  <BottomInputBar
+    quickText={quickText}
+    setQuickText={setQuickText}
+    onQuickAdd={onQuickAdd}
+    onOpenDifficulty={() => setShowDifficulty(true)}
+  />
+</KeyboardAvoidingView>
+
     </View>
-  </KeyboardAvoidingView>
-);
-
+  );
 }

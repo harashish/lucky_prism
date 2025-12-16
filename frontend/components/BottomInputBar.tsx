@@ -58,7 +58,7 @@ export default function BottomInputBar({
             backgroundColor: colors.buttonActive
           }}
         >
-          <AppText style={{ color: "#fff" }}>→</AppText>
+          <AppText style={{ color: "#fff" }}>+</AppText>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

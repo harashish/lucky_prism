@@ -30,27 +30,29 @@ export default function GoalsScreen() {
   const [selectedPeriod, setSelectedPeriod] =
     useState<"week" | "month" | "year">("week");
 
+  const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
+
   useEffect(() => {
     loadPeriods();
     loadUserGoals(userId, selectedPeriod);
     loadHistory();
   }, [selectedPeriod]);
 
-  /** NOWA LOGIKA XP =============================== */
+  /** XP */
   const xpGain = (g: any) => {
     const diffPercent = (g.difficulty?.xp_value || 0) / 100;
     const periodBase = g.period?.default_xp || 0;
     return Math.round(periodBase * diffPercent);
   };
 
-  /** Ukończone goals ============================== */
+  /** Ukończone */
   const completedGoalIds = new Set(history.map((h) => h.goal));
 
   const goalsForPeriod = goals.filter(
     (g) => g.period?.name?.toLowerCase() === selectedPeriod
   );
 
-  /** PROGRESS #1 (procent ukończonych goalów w tym okresie) */
+  /** Goals progress */
   const completedCount = goalsForPeriod.filter((g) =>
     completedGoalIds.has(g.id)
   ).length;
@@ -60,44 +62,33 @@ export default function GoalsScreen() {
       ? 0
       : completedCount / goalsForPeriod.length;
 
-  /** TIME PROGRESS ================================ */
+  /** Time progress */
+  const now = dayjs();
 
-    const now = dayjs();
+  const weekStart = now.startOf("isoWeek");
+  const weekEnd = now.endOf("isoWeek");
 
-    // week
-    const weekStart = now.startOf("isoWeek");
-    const weekEnd = now.endOf("isoWeek");
+  const monthStart = now.startOf("month");
+  const monthEnd = now.endOf("month");
 
-    // month
-    const monthStart = now.startOf("month");
-    const monthEnd = now.endOf("month");
+  const yearStart = now.startOf("year");
+  const yearEnd = now.endOf("year");
 
-    // year
-    const yearStart = now.startOf("year");
-    const yearEnd = now.endOf("year");
+  let timeProgress = 0;
 
-    let timeProgress = 0;
+  if (selectedPeriod === "week") {
+    timeProgress = now.diff(weekStart) / weekEnd.diff(weekStart);
+  }
 
-    if (selectedPeriod === "week") {
-    const total = weekEnd.diff(weekStart);
-    const passed = now.diff(weekStart);
-    timeProgress = passed / total;
-    }
+  if (selectedPeriod === "month") {
+    timeProgress = now.diff(monthStart) / monthEnd.diff(monthStart);
+  }
 
-    if (selectedPeriod === "month") {
-    const total = monthEnd.diff(monthStart);
-    const passed = now.diff(monthStart);
-    timeProgress = passed / total;
-    }
+  if (selectedPeriod === "year") {
+    timeProgress = now.diff(yearStart) / yearEnd.diff(yearStart);
+  }
 
-    if (selectedPeriod === "year") {
-    const total = yearEnd.diff(yearStart);
-    const passed = now.diff(yearStart);
-    timeProgress = passed / total;
-    }
-
-
-  /** Ukończenie goal */
+  /** Complete */
   const onComplete = async (goalId: number, title: string) => {
     Alert.alert(
       "Ukończyć cel?",
@@ -119,10 +110,8 @@ export default function GoalsScreen() {
   };
 
   return (
-    <View
-      style={{ flex: 1, padding: 12, backgroundColor: colors.background }}
-    >
-      {/* Period selector */}
+    <View style={{ flex: 1, padding: 12, backgroundColor: colors.background }}>
+      {/* PERIOD SELECTOR */}
       <View
         style={{
           flexDirection: "row",
@@ -144,24 +133,78 @@ export default function GoalsScreen() {
               alignItems: "center",
             }}
           >
-            <AppText
-              style={{ fontWeight: "bold", textTransform: "capitalize" }}
-            >
+            <AppText style={{ fontWeight: "bold", textTransform: "capitalize" }}>
               {p}
             </AppText>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* LISTA GOALÓW */}
+      {/* PROGRESS SUMMARY */}
+      <View
+        style={{
+          backgroundColor: colors.card,
+          borderRadius: 12,
+          padding: 10,
+          marginBottom: 12,
+        }}
+      >
+        <AppText style={{ fontSize: 12, marginBottom: 4, opacity: 0.8 }}>
+          Goals progress: {Math.round(progress * 100)}%
+        </AppText>
+        <View
+          style={{
+            height: 6,
+            backgroundColor: colors.background,
+            borderRadius: 4,
+            marginBottom: 8,
+          }}
+        >
+          <View
+            style={{
+              height: 6,
+              width: `${Math.round(progress * 100)}%`,
+              backgroundColor: colors.buttonActive,
+              borderRadius: 4,
+            }}
+          />
+        </View>
+
+        <AppText style={{ fontSize: 12, marginBottom: 4, opacity: 0.8 }}>
+          Time ({selectedPeriod}): {Math.round(timeProgress * 100)}%
+        </AppText>
+        <View
+          style={{
+            height: 6,
+            backgroundColor: colors.background,
+            borderRadius: 4,
+          }}
+        >
+          <View
+            style={{
+              height: 6,
+              width: `${Math.round(timeProgress * 100)}%`,
+              backgroundColor: colors.buttonActive,
+              borderRadius: 4,
+            }}
+          />
+        </View>
+      </View>
+
+      {/* GOALS LIST */}
       <FlatList
         data={goalsForPeriod}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 140 }}
         renderItem={({ item }) => {
           const isCompleted = completedGoalIds.has(item.id);
+          const isExpanded = expandedGoalId === item.id;
 
           return (
             <TouchableOpacity
+              onPress={() =>
+                setExpandedGoalId(isExpanded ? null : item.id)
+              }
               onLongPress={() => router.push(`/editGoal/${item.id}`)}
               delayLongPress={300}
             >
@@ -200,25 +243,36 @@ export default function GoalsScreen() {
                   )}
                 </View>
 
-                <AppText
-                  style={{
-                    color: isCompleted ? "#777" : colors.text,
-                    textDecorationLine: isCompleted
-                      ? "line-through"
-                      : "none",
-                  }}
-                >
-                  {item.description}
-                </AppText>
+                {isExpanded && (
+                  <View style={{ marginTop: 8 }}>
+                    {item.description ? (
+                      <AppText
+                        style={{
+                          marginBottom: 4,
+                          color: isCompleted ? "#777" : colors.text,
+                        }}
+                      >
+                        {item.description}
+                      </AppText>
+                    ) : null}
 
-                <AppText
-                  style={{
-                    marginTop: 6,
-                    color: isCompleted ? "#777" : colors.text,
-                  }}
-                >
-                  {xpGain(item)} XP
-                </AppText>
+                    {item.motivation_reason ? (
+                      <AppText
+                        style={{
+                          fontSize: 12,
+                          opacity: 0.8,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Motivation: {item.motivation_reason}
+                      </AppText>
+                    ) : null}
+
+                    <AppText style={{ fontSize: 12, opacity: 0.7 }}>
+                      {xpGain(item)} XP
+                    </AppText>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           );
@@ -228,77 +282,15 @@ export default function GoalsScreen() {
             <AppText>Brak celów na ten okres</AppText>
           </View>
         )}
-        contentContainerStyle={{ paddingBottom: 140 }}
       />
 
-      {/* PROGRESS BAR #1 */}
-      <View
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: 120,
-        }}
-      >
-        <HeaderText style={{ marginBottom: 8 }}>
-          Goals Progress: {Math.round(progress * 100)}%
-        </HeaderText>
-        <View
-          style={{
-            height: 10,
-            backgroundColor: colors.card,
-            borderRadius: 6,
-          }}
-        >
-          <View
-            style={{
-              height: 10,
-              width: `${Math.round(progress * 100)}%`,
-              backgroundColor: colors.buttonActive,
-              borderRadius: 6,
-            }}
-          />
-        </View>
-      </View>
-
-      {/* PROGRESS BAR #2 (CZASOWY) */}
-      <View
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: 60,
-        }}
-      >
-        <HeaderText style={{ marginBottom: 8 }}>
-          Time Progress ({selectedPeriod}):{" "}
-          {Math.round(timeProgress * 100)}%
-        </HeaderText>
-        <View
-          style={{
-            height: 10,
-            backgroundColor: colors.card,
-            borderRadius: 6,
-          }}
-        >
-          <View
-            style={{
-              height: 10,
-              width: `${Math.round(timeProgress * 100)}%`,
-              backgroundColor: colors.buttonActive,
-              borderRadius: 6,
-            }}
-          />
-        </View>
-      </View>
-
-      {/* Floating add button */}
+      {/* FLOATING ADD */}
       <TouchableOpacity
         onPress={() => router.push("/addGoal")}
         style={{
           position: "absolute",
           right: 20,
-          bottom: 100,
+          bottom: 20,
           width: 60,
           height: 60,
           borderRadius: 30,

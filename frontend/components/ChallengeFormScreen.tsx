@@ -71,7 +71,7 @@ const ChallengeFormScreen = () => {
     try {
       await api.delete(`/challenges/${editingChallengeId}/`);
       loadChallenges();
-      router.push("/ChallengeListScreen");
+      router.push("/ChallengesListScreen");
     } catch {
       setError("Nie udało się usunąć challenge");
     } finally {
@@ -104,7 +104,7 @@ const ChallengeFormScreen = () => {
       }
 
       loadChallenges();
-      router.push("/ChallengeListScreen");
+      router.push("/ChallengesListScreen");
     } catch {
       setError("Błąd zapisu");
     } finally {

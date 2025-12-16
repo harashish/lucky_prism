@@ -4,10 +4,13 @@ import React from "react";
 import { View, TouchableOpacity, Alert } from "react-native";
 import AppText from "./AppText";
 import { components, spacing } from "../constants/theme";
-
-export default function TodoItem({ item, onComplete, onDelete }: any) {
+export default function TodoItem({ item, onComplete, onDelete, onLongPress }: any) {
   return (
-    <View style={{ ...components.container, marginBottom: spacing.s }}>
+    <TouchableOpacity
+      onLongPress={onLongPress} // <-- tutaj
+      activeOpacity={0.8}
+      style={{ ...components.container, marginBottom: spacing.s }}
+    >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <AppText style={{ fontWeight: "bold", textDecorationLine: item.is_completed ? "line-through" : "none" }}>
           {item.content} ({item.custom_difficulty ? item.custom_difficulty.xp_value : item.category?.difficulty?.xp_value} XP)
@@ -29,6 +32,6 @@ export default function TodoItem({ item, onComplete, onDelete }: any) {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

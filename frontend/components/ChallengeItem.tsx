@@ -1,5 +1,4 @@
 // frontend/components/ChallengeItem.tsx
-
 import React, { useState } from "react";
 import { View, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { router } from "expo-router";
@@ -18,27 +17,30 @@ type Props = {
 
 export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigned }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [localProgress, setLocalProgress] = useState<number | null>(item.progress_percent ?? null);
 
   const assignChallenge = async () => {
     if (!userId) return;
     try {
-      await api.post("/challenges/assign/", {
-        user_id: userId,
-        challenge_id: item.id
-      });
+      await api.post("/challenges/assign/", { user: userId, challenge: item.id });
       Alert.alert("Sukces", "Challenge przypisany do użytkownika!");
       onAssigned?.();
-    } catch {
-      Alert.alert("Błąd", "Nie udało się przypisać challenge.");
+    } catch (e: any) {
+      const detail = e.response?.data?.detail;
+      if (detail === "Active daily challenge already exists") {
+        Alert.alert("Błąd", "Masz już aktywny Daily challenge!");
+      } else if (detail === "Active weekly challenge already exists") {
+        Alert.alert("Błąd", "Masz już aktywny Weekly challenge!");
+      } else {
+        Alert.alert("Błąd", "Nie udało się przypisać challenge.");
+      }
     }
   };
 
   const completeChallenge = async () => {
     if (!item.userChallengeId || !userId) return;
     try {
-      await api.post(
-        `/challenges/user-challenges/${item.userChallengeId}/complete/`
-      );
+      await api.post(`/challenges/user-challenges/${item.userChallengeId}/complete/`);
       Alert.alert("Ukończono", `Otrzymano XP za "${item.title}"`);
 
       const { userChallenges } = useChallengeStore.getState();
@@ -50,6 +52,13 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
     } catch {
       Alert.alert("Błąd", "Nie udało się ukończyć challenge.");
     }
+  };
+
+  // Symulacja przyspieszenia tygodnia o 1 dzień
+  const accelerateWeek = () => {
+    if (localProgress === null) return;
+    const newProgress = Math.min(100, localProgress + Math.round(100 / 7)); // dodajemy ~14% dla 7 dni
+    setLocalProgress(newProgress);
   };
 
   return (
@@ -71,21 +80,51 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
           )}
 
           {userId && alreadyAssigned && (
-            <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
-              <AppText style={{ color: "#fff", fontSize: 14 }}>Ukończ</AppText>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
+                <AppText style={{ color: "#fff", fontSize: 14 }}>Ukończ</AppText>
+              </TouchableOpacity>
+
+              {item.challenge_type === "Weekly" && (
+                <TouchableOpacity onPress={accelerateWeek} style={{ ...components.addButton, backgroundColor: "#f39c12" }}>
+                  <AppText style={{ color: "#fff", fontSize: 12 }}>Przyspiesz +1d</AppText>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
 
-        {expanded && (
-          <View style={{ marginTop: spacing.s }}>
-            <AppText>{item.description}</AppText>
-            <AppText>Difficulty: {item.difficulty.name}</AppText>
-            <AppText>Tags: {item.tags.map((t) => t.name).join(", ")}</AppText>
+        {/* Weekly progress bar */}
+        {alreadyAssigned && localProgress != null && (
+          <View style={{ marginTop: 8 }}>
+            <View style={{ height: 8, backgroundColor: "#eee", borderRadius: 4, overflow: "hidden" }}>
+              <View style={{
+                width: `${localProgress}%`,
+                height: "100%",
+                backgroundColor: colors.buttonActive
+              }} />
+            </View>
+            <AppText style={{ fontSize: 12, marginTop: 2, color: colors.text }}>
+              {localProgress}% {item.challenge_type === "Weekly" ? "tygodnia" : "dnia"}
+            </AppText>
           </View>
         )}
+
+        {expanded && (
+  <View style={{ marginTop: spacing.s }}>
+    {/* pokaż opis tylko jeśli nie jest pusty */}
+    {item.description?.trim() ? (
+      <AppText>{item.description}</AppText>
+    ) : null}
+
+    <AppText>Difficulty: {item.difficulty.name}</AppText>
+    <AppText>
+      Tags: {item.tags.length ? item.tags.map((t) => t.name).join(", ") : "Brak"}
+    </AppText>
+  </View>
+)}
+
       </View>
     </TouchableOpacity>
   );
 }
-

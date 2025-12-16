@@ -16,6 +16,7 @@ export default function CategoryForm() {
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [color, setColor] = useState<string | null>(null);
+  const colorPalette = ["#908bab", "#39a0a1", "#e07a5f", "#f2cc8f", "#a7c66b", "#ff6b6b"];
 
   useEffect(() => {
     (async () => {
@@ -94,20 +95,25 @@ export default function CategoryForm() {
         ))}
       </View>
 
-      <AppText style={{ marginBottom: 8 }}>Kolor (opcjonalnie)</AppText>
-      <TextInput
-        value={color || ""}
-        onChangeText={setColor}
-        placeholder="#RRGGBB"
-        placeholderTextColor="#7a7891"
-        style={{
-          padding: 12,
-          borderRadius: 8,
-          backgroundColor: colors.card,
-          color: colors.text,
-          marginBottom: 30,
-        }}
-      />
+      
+<AppText style={{ marginBottom: 8 }}>Kolor (opcjonalnie)</AppText>
+<View style={{ flexDirection: "row", marginBottom: 20 }}>
+  {colorPalette.map(c => (
+    <TouchableOpacity
+      key={c}
+      onPress={() => setColor(c)}
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 8,
+        backgroundColor: c,
+        marginRight: 8,
+        borderWidth: color === c ? 2 : 0,
+        borderColor: "#fff"
+      }}
+    />
+  ))}
+</View>
 
       <TouchableOpacity
         onPress={save}
