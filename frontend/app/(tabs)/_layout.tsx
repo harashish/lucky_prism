@@ -61,7 +61,7 @@ export default function TabsLayout() {
 
       <Tabs.Screen
         name="RandomHomeScreen"
-        options={{ title: "Random", href: modules.randomizer ? undefined : null }}
+        options={{ title: "Random", href: modules.random ? undefined : null }}
       />
 
       <Tabs.Screen

@@ -6,7 +6,7 @@ export type ModuleKey =
   | "challenges"
   | "todos"
   | "goals"
-  | "randomizer"
+  | "random"
   | "gamification"
   | "notes";
 
@@ -49,21 +49,10 @@ type ModuleStore = {
 export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
   modules: null,
   raw: [],
-  dashboardTiles: [
-    { id: "level_gamification", name: "Level gamification", is_enabled: true, module_dependency: "gamification" },
-    { id: "biggest_streak", name: "Biggest streak", is_enabled: true, module_dependency: "habits" },
-    { id: "random_habit", name: "Random habit", is_enabled: true, module_dependency: "habits" },
-    { id: "random_todo", name: "Random todo", is_enabled: true, module_dependency: "todos" },
-    { id: "goal_week", name: "Week goal", is_enabled: true, module_dependency: "goals" },
-    { id: "goal_month", name: "Month goal", is_enabled: true, module_dependency: "goals" },
-    { id: "goal_year", name: "Year goal", is_enabled: true, module_dependency: "goals" },
-    { id: "daily_challenge", name: "Daily challenge", is_enabled: true, module_dependency: "challenges" },
-    { id: "weekly_challenge", name: "Weekly challenge", is_enabled: true, module_dependency: "challenges" },
-    { id: "random_note", name: "Random note", is_enabled: true, module_dependency: "notes" },
-  ],
+  dashboardTiles: [],
 
-  fetchModules: async () => {
-    if (get().modules) return; // fetch tylko raz
+ fetchModules: async () => {
+    if (get().modules) return;
     const res = await api.get("/settings/modules/?user_id=1");
 
     const modules: Record<ModuleKey, boolean> = {
@@ -71,7 +60,7 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
       challenges: false,
       todos: false,
       goals: false,
-      randomizer: false,
+      random: false,
       gamification: false,
       notes: false,
     };
@@ -81,6 +70,15 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
     });
 
     set({ modules, raw: res.data });
+
+    // pobierz tiles z backendu
+    try {
+      const tRes = await api.get("/settings/dashboard-tiles/?user_id=1");
+      set({ dashboardTiles: tRes.data });
+    } catch (e) {
+      console.warn("Can't load dashboard tiles:", e);
+      // fallback: zostaw pustą tablicę lub lokalny default
+    }
   },
 
   toggleModule: async (id, value) => {
@@ -106,11 +104,19 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
     });
   },
 
-  toggleTile: (id, value) => {
-    set({
-      dashboardTiles: get().dashboardTiles.map((tile) =>
-        tile.id === id ? { ...tile, is_enabled: value } : tile
-      ),
-    });
+  toggleTile: async (id: string, value: boolean) => {
+    // zakładamy id jest numericznym pk gdy tiles pobrane z backendu
+    const tile = get().dashboardTiles.find((t:any) => t.key === id || t.id === id);
+    if (!tile) return;
+    try {
+      await api.patch(`/settings/dashboard-tiles/${tile.id}/`, { is_enabled: value });
+      set({
+        dashboardTiles: get().dashboardTiles.map((t:any) =>
+          t.id === tile.id ? { ...t, is_enabled: value } : t
+        ),
+      });
+    } catch (e) {
+      console.error("toggleTile error", e);
+    }
   },
 }));

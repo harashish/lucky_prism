@@ -151,7 +151,9 @@ const fetchRandomNote = async () => {
     );
   }
 
-  const isTileEnabled = (key: string) => dashboardTiles.find(t => t.id === key && t.is_enabled);
+  //const isTileEnabled = (key: string) => dashboardTiles.find(t => t.id === key && t.is_enabled);
+  const isTileEnabled = (key: string) => (dashboardTiles || []).find((t:any) => (t.key === key || t.id === key) && t.is_enabled);
+
 
   return (
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>

@@ -8,7 +8,7 @@ class ModuleDefinition(models.Model):
         ("challenges", "Challenges"),
         ("todos", "Todos"),
         ("goals", "Goals"),
-        ("randomizer", "Randomizer"),
+        ("random", "Random"),
         ("gamification", "Gamification"),
         ("notes", "Notes"),
     ]
@@ -22,3 +22,30 @@ class ModuleDefinition(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.module}:{self.is_enabled}"
+
+
+class DashboardTile(models.Model):
+    TILE_KEYS = [
+        ("level_gamification", "Level gamification"),
+        ("biggest_streak", "Biggest streak"),
+        ("random_habit", "Random habit"),
+        ("random_todo", "Random todo"),
+        ("goal_week", "Week goal"),
+        ("goal_month", "Month goal"),
+        ("goal_year", "Year goal"),
+        ("daily_challenge", "Daily challenge"),
+        ("weekly_challenge", "Weekly challenge"),
+        ("random_note", "Random note"),
+    ]
+
+    user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
+    key = models.CharField(max_length=50)
+    name = models.CharField(max_length=120)
+    is_enabled = models.BooleanField(default=True)
+    module_dependency = models.CharField(max_length=30, blank=True, null=True)
+
+    class Meta:
+        unique_together = ("user", "key")
+
+    def __str__(self):
+        return f"{self.user_id}:{self.key}:{self.is_enabled}"

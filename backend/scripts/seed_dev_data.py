@@ -99,6 +99,89 @@ if created:
 else:
     print("[TODO CATEGORY] 'General' already exists")
 
+
+
+# =====================
+# MODULE DEFINITIONS (USER TOGGLES)
+# =====================
+
+from apps.settings.models import ModuleDefinition
+
+default_modules = [
+    "habits",
+    "challenges",
+    "todos",
+    "goals",
+    "random",
+    "gamification",
+    "notes",
+]
+
+for module in default_modules:
+    obj, created = ModuleDefinition.objects.get_or_create(
+        user=user,
+        module=module,
+        defaults={"is_enabled": True},
+    )
+    print(f"[MODULE DEF] {module} {'created' if created else 'exists'}")
+
+
+# =====================
+# DASHBOARD TILES
+# =====================
+
+from apps.settings.models import DashboardTile
+
+dashboard_defaults = [
+    ("level_gamification", "Level gamification", "gamification"),
+    ("biggest_streak", "Biggest streak", "habits"),
+    ("random_habit", "Random habit", "habits"),
+    ("random_todo", "Random todo", "todos"),
+    ("goal_week", "Week goal", "goals"),
+    ("goal_month", "Month goal", "goals"),
+    ("goal_year", "Year goal", "goals"),
+    ("daily_challenge", "Daily challenge", "challenges"),
+    ("weekly_challenge", "Weekly challenge", "challenges"),
+    ("random_note", "Random note", "notes"),
+]
+
+for key, name, module_dep in dashboard_defaults:
+    obj, created = DashboardTile.objects.get_or_create(
+        user=user,
+        key=key,
+        defaults={
+            "name": name, 
+            "is_enabled": True, 
+            "module_dependency": module_dep
+        },
+    )
+    if created:
+        print(f"[DASHBOARD TILE] {key} created")
+    else:
+        print(f"[DASHBOARD TILE] {key} exists")
+
+
+# =====================
+# MODULE XP CONFIG
+# =====================
+
+from apps.gamification.models import ModuleXPConfig
+
+module_configs = [
+    ("habits", 0.2),
+    ("challenges", 0.5),
+    ("todos", 0.15),
+    ("goals", 1.5),
+]
+
+for module_name, multiplier in module_configs:
+    obj, created = ModuleXPConfig.objects.get_or_create(
+        module=module_name,
+        defaults={"multiplier": multiplier},
+    )
+    print(f"[MODULE XP CONFIG] {module_name} {'created' if created else 'exists'} ({multiplier}x)")
+
+
 # =====================
 # DEFAULT GOALS
 # =====================
@@ -118,32 +201,6 @@ for period_name, period in period_map.items():
             difficulty=difficulty_map["Easy"],
         )
         print(f"[GOALS] Created {period_name} goal {i}")
-
-# =====================
-# MODULE DEFINITIONS (USER TOGGLES)
-# =====================
-
-from apps.settings.models import ModuleDefinition
-
-default_modules = [
-    "habits",
-    "challenges",
-    "todos",
-    "goals",
-    "randomizer",
-    "gamification",
-    "notes",
-]
-
-for module in default_modules:
-    obj, created = ModuleDefinition.objects.get_or_create(
-        user=user,
-        module=module,
-        defaults={"is_enabled": True},
-    )
-    print(f"[MODULE DEF] {module} {'created' if created else 'exists'}")
-
-
 
 # =====================
 # DEFAULT TODOS
@@ -284,29 +341,6 @@ for name in habit_names:
         defaults={"difficulty": difficulty_map["Easy"]},
     )
     print(f"[HABIT] {name} {'created' if created else 'exists'}")
-
-
-
-
-# =====================
-# MODULE XP CONFIG
-# =====================
-
-from apps.gamification.models import ModuleXPConfig
-
-module_configs = [
-    ("habits", 0.2),
-    ("challenges", 0.5),
-    ("todos", 0.15),
-    ("goals", 1.5),
-]
-
-for module_name, multiplier in module_configs:
-    obj, created = ModuleXPConfig.objects.get_or_create(
-        module=module_name,
-        defaults={"multiplier": multiplier},
-    )
-    print(f"[MODULE XP CONFIG] {module_name} {'created' if created else 'exists'} ({multiplier}x)")
 
 
 print("\n=== SEED DEV DATA DONE ===\n")

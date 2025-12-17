@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             name='ModuleXPConfig',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('module', models.CharField(choices=[('habits', 'Habits'), ('challenges', 'Challenges'), ('todos', 'Todos'), ('goals', 'Goals'), ('randomizer', 'Randomizer')], max_length=30, unique=True)),
+                ('module', models.CharField(choices=[('habits', 'Habits'), ('challenges', 'Challenges'), ('todos', 'Todos'), ('goals', 'Goals'), ('random', 'Random')], max_length=30, unique=True)),
                 ('base_xp', models.IntegerField()),
             ],
         ),

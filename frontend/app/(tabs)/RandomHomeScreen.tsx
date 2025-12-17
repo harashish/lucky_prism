@@ -4,11 +4,16 @@ import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
 import { useRouter } from "expo-router";
 import { useChallengeStore } from "../stores/useChallengeStore";
+import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+
 
 export default function RandomHomeScreen() {
   const router = useRouter();
   const { fetchActive, activeDaily, activeWeekly } = useChallengeStore();
   const [loading, setLoading] = useState(false);
+
+  const { modules } = useModuleSettingsStore();
+
   const userId = 1;
 
   useEffect(() => {
@@ -40,19 +45,54 @@ const handleDaily = async () => {
     );
   }
 
-  return (
-    <View style={{ flex:1, padding:16, backgroundColor: colors.background, justifyContent:"center" }}>
-      <TouchableOpacity onPress={handleDaily} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
+  /*
+        <TouchableOpacity onPress={handleDaily} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
         <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a daily challenge</AppText>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleWeekly} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
+            <TouchableOpacity onPress={handleWeekly} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
         <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a week challenge</AppText>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/random/todo")} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12 }}>
+            <TouchableOpacity onPress={() => router.push("/random/todo")} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12 }}>
         <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a todo</AppText>
       </TouchableOpacity>
+  */
+
+  return (
+    <View style={{ flex:1, padding:16, backgroundColor: colors.background, justifyContent:"center" }}>
+
+
+      <TouchableOpacity
+        onPress={modules?.challenges ? handleDaily : undefined}
+        style={{ backgroundColor: modules?.challenges ? colors.buttonActive : "#444", padding:18, borderRadius:12, marginBottom:12 }}
+        disabled={!modules?.challenges}
+      >
+        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>
+          Randomize a daily challenge
+        </AppText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={modules?.challenges ? handleWeekly : undefined}
+        style={{ backgroundColor: modules?.challenges ? colors.buttonActive : "#444", padding:18, borderRadius:12, marginBottom:12 }}
+        disabled={!modules?.challenges}
+      >
+        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>
+          Randomize a weekly challenge
+        </AppText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={modules?.todos ? () => router.push("/random/todo") : undefined}
+        style={{ backgroundColor: modules?.todos ? colors.buttonActive : "#444", padding:18, borderRadius:12, marginBottom:12 }}
+        disabled={!modules?.todos}
+      >
+        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>
+          Randomize a todo
+        </AppText>
+      </TouchableOpacity>
+
     </View>
   );
 }

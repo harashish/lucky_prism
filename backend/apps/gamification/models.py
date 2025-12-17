@@ -19,7 +19,7 @@ class User(models.Model):
                 "todo": "todos",
                 "goal": "goals",
                 "challenge": "challenges",
-                "randomizer": "randomizer",
+                "random": "random",
             }
 
             # dopasowanie do modułu w konfiguracji
@@ -74,7 +74,7 @@ class ModuleXPConfig(models.Model):
         ("challenges", "Challenges"),
         ("todos", "Todos"),
         ("goals", "Goals"),
-        ("randomizer", "Randomizer"),
+        ("random", "Random"),
     ]
 
     
