@@ -1,0 +1,53 @@
+from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.db import transaction
+
+from .models import ModuleDefinition
+from .serializers import ModuleDefinitionSerializer
+
+
+class ModuleDefinitionList(generics.ListAPIView):
+    serializer_class = ModuleDefinitionSerializer
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get("user_id")
+        qs = ModuleDefinition.objects.all()
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+        return qs.order_by("module")
+
+
+class ModuleDefinitionUpdate(generics.UpdateAPIView):
+    queryset = ModuleDefinition.objects.all()
+    serializer_class = ModuleDefinitionSerializer
+
+
+class InitUserModules(APIView):
+    def post(self, request):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"detail": "user_id required"}, status=400)
+
+        defaults = [
+            "habits",
+            "challenges",
+            "todos",
+            "goals",
+            "randomizer",
+            "gamification",
+            "notes",
+        ]
+
+        created = []
+        with transaction.atomic():
+            for module in defaults:
+                obj, was_created = ModuleDefinition.objects.get_or_create(
+                    user_id=user_id,
+                    module=module,
+                    defaults={"is_enabled": True},
+                )
+                if was_created:
+                    created.append(module)
+
+        return Response({"created": created}, status=201)

@@ -6,6 +6,7 @@ from .views import (
     UserHabitList,
     HabitDayToggleView,
     HabitMonthView,
+    UserHabitStreakView
 )
 
 urlpatterns = [
@@ -14,4 +15,5 @@ urlpatterns = [
     path("user-habits/<int:user_id>/", UserHabitList.as_view(), name="user-habits"),
     path("<int:habit_id>/toggle-day/", HabitDayToggleView.as_view(), name="habit-toggle-day"),
     path("user-habits/<int:user_id>/month/", HabitMonthView.as_view(), name="habit-month"),
+    path("user-habits/<int:user_id>/streaks/", UserHabitStreakView.as_view(), name="user-habits-streaks"),
 ]

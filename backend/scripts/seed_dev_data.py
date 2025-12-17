@@ -30,9 +30,9 @@ else:
 
 difficulties = [
     ("Trivial", 0),
-    ("Easy", 110),
-    ("Medium", 250),
-    ("Hard", 500),
+    ("Easy", 500),
+    ("Medium", 1000),
+    ("Hard", 2500),
 ]
 
 difficulty_map = {}
@@ -82,6 +82,24 @@ for name, xp in periods:
     print(f"[GOAL PERIOD] {name} {'created' if created else 'exists'}")
 
 # =====================
+# DEFAULT TODO CATEGORY
+# =====================
+
+from apps.todos.models import TodoCategory
+
+todo_category, created = TodoCategory.objects.get_or_create(
+    name="General",
+    defaults={
+        "difficulty": difficulty_map["Trivial"],
+    }
+)
+
+if created:
+    print("[TODO CATEGORY] 'General' created")
+else:
+    print("[TODO CATEGORY] 'General' already exists")
+
+# =====================
 # DEFAULT GOALS
 # =====================
 
@@ -102,22 +120,29 @@ for period_name, period in period_map.items():
         print(f"[GOALS] Created {period_name} goal {i}")
 
 # =====================
-# DEFAULT TODO CATEGORY
+# MODULE DEFINITIONS (USER TOGGLES)
 # =====================
 
-from apps.todos.models import TodoCategory
+from apps.settings.models import ModuleDefinition
 
-todo_category, created = TodoCategory.objects.get_or_create(
-    name="General",
-    defaults={
-        "difficulty": difficulty_map["Trivial"],
-    }
-)
+default_modules = [
+    "habits",
+    "challenges",
+    "todos",
+    "goals",
+    "randomizer",
+    "gamification",
+    "notes",
+]
 
-if created:
-    print("[TODO CATEGORY] 'General' created")
-else:
-    print("[TODO CATEGORY] 'General' already exists")
+for module in default_modules:
+    obj, created = ModuleDefinition.objects.get_or_create(
+        user=user,
+        module=module,
+        defaults={"is_enabled": True},
+    )
+    print(f"[MODULE DEF] {module} {'created' if created else 'exists'}")
+
 
 
 # =====================
@@ -259,5 +284,29 @@ for name in habit_names:
         defaults={"difficulty": difficulty_map["Easy"]},
     )
     print(f"[HABIT] {name} {'created' if created else 'exists'}")
+
+
+
+
+# =====================
+# MODULE XP CONFIG
+# =====================
+
+from apps.gamification.models import ModuleXPConfig
+
+module_configs = [
+    ("habits", 0.2),
+    ("challenges", 0.5),
+    ("todos", 0.15),
+    ("goals", 1.5),
+]
+
+for module_name, multiplier in module_configs:
+    obj, created = ModuleXPConfig.objects.get_or_create(
+        module=module_name,
+        defaults={"multiplier": multiplier},
+    )
+    print(f"[MODULE XP CONFIG] {module_name} {'created' if created else 'exists'} ({multiplier}x)")
+
 
 print("\n=== SEED DEV DATA DONE ===\n")

@@ -100,18 +100,23 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
 
-  quickAddTask: async (userId, categoryId, content, customDifficultyId = null) => {
-    try {
-      const payload: any = { user_id: userId, category_id: categoryId, content };
-      if (customDifficultyId) payload.custom_difficulty_id = customDifficultyId;
-      const res = await api.post("/todos/tasks/", payload);
-      await get().loadTasks(userId, categoryId);
-      return res.data;
-    } catch (e: any) {
-      console.error(e);
-      return null;
-    }
-  },
+quickAddTask: async (userId, categoryId, content, customDifficultyId = null) => {
+  try {
+    const payload: any = { 
+      user_id: userId, 
+      category_id: categoryId, 
+      content, 
+      custom_difficulty_id: customDifficultyId ?? null 
+    };
+    const res = await api.post("/todos/tasks/", payload);
+    await get().loadTasks(userId, categoryId);
+    return res.data;
+  } catch (e: any) {
+    console.error(e);
+    return null;
+  }
+},
+
 
   completeTask: async (taskId) => {
   try {

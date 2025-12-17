@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from django.db import transaction
 from .models import Habit, HabitDay
 from .serializers import HabitSerializer, HabitDaySerializer
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from django.db.models import Q
 import calendar
 
 
@@ -140,3 +141,45 @@ class HabitMonthView(APIView):
             "first_day": first_date.isoformat(),
             "last_day": last_date.isoformat()
         })
+
+class UserHabitStreakView(APIView):
+    """
+    GET /api/habits/user-habits/<user_id>/streaks/
+    Zwraca najlepszy streak: { habit_id, title, biggest_streak, current_streak }
+    """
+    def get(self, request, user_id):
+        from .models import Habit, HabitDay
+        habits = Habit.objects.filter(user_id=user_id, is_active=True)
+        best = {"habit_id": None, "title": None, "biggest_streak": 0, "current_streak": 0}
+
+        for h in habits:
+            days = HabitDay.objects.filter(habit=h).order_by('date').values_list('date', 'status')
+            max_streak = 0
+            cur = 0
+            last_date = None
+            current_streak = 0
+
+            for dt, status in days:
+                if status == HabitDay.STATUS_COMPLETED:
+                    if last_date and (dt - last_date).days == 1:
+                        cur += 1
+                    else:
+                        cur = 1
+                    if cur > max_streak: max_streak = cur
+                else:
+                    cur = 0
+                last_date = dt
+
+            # current streak (ending today): count backwards
+            # quick compute: start from latest days until non-completed found
+            cur_back = 0
+            for dt, status in reversed(list(days)):
+                if status == HabitDay.STATUS_COMPLETED:
+                    cur_back += 1
+                else:
+                    break
+
+            if max_streak > best["biggest_streak"]:
+                best.update({"habit_id": h.id, "title": h.title, "biggest_streak": max_streak, "current_streak": cur_back})
+
+        return Response(best, status=200)

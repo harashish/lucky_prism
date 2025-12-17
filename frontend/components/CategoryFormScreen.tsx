@@ -17,6 +17,8 @@ export default function CategoryForm() {
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [color, setColor] = useState<string | null>(null);
   const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
 
   useEffect(() => {
     (async () => {
@@ -58,27 +60,30 @@ export default function CategoryForm() {
     router.push("/TodosScreen");
   };
 
-  const handleDelete = async () => {
-    const confirm = await new Promise(resolve => {
-      Alert.alert(
-        "Delete category?",
-        "This will delete all tasks in this category",
-        [
-          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-          { text: "Delete", style: "destructive", onPress: () => resolve(true) }
-        ]
-      );
-    });
+const handleDelete = async () => {
+  const confirm = await new Promise(resolve => {
+    Alert.alert(
+      "Delete category?",
+      "This will delete all tasks in this category",
+      [
+        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: "Delete", style: "destructive", onPress: () => resolve(true) }
+      ]
+    );
+  });
 
-    if (!confirm) return;
+  if (!confirm) return;
 
-    const ok = await deleteCategory(Number(id));
-    if (!ok) return Alert.alert("Error", "Failed to delete category");
-    router.push("/TodosScreen");
-  };
+const ok = await deleteCategory(Number(id));
+if (!ok) return Alert.alert("Error", "Nie można usunąć ostatniej kategorii");
+
+  router.push("/TodosScreen");
+};
+
 
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
+
       <AppText style={{ marginBottom: 8 }}>Category Name</AppText>
       <TextInput
         value={name}

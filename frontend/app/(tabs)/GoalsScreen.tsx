@@ -278,8 +278,10 @@ export default function GoalsScreen() {
           );
         }}
         ListEmptyComponent={() => (
-          <View style={{ padding: 20 }}>
-            <AppText>Brak celów na ten okres</AppText>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
+            <AppText style={{ color: "#777", fontSize: 16 }}>
+              no goals yet for this period, add some!
+            </AppText>
           </View>
         )}
       />

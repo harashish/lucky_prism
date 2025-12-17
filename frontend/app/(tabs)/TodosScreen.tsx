@@ -49,31 +49,36 @@ export default function TodosScreen() {
   }, [selectedCategoryId]);
 
   const onQuickAdd = async () => {
-    if (!quickText.trim()) return;
-    const catId = selectedCategoryId;
-    if (!catId) return;
+  if (!quickText.trim()) return;
+  const catId = selectedCategoryId;
+  if (!catId) return;
 
-    const res = await quickAddTask(userId, catId, quickText.trim(), customDifficulty);
-    if (res) {
-      setQuickText("");
-      setCustomDifficulty(null);
-    } else {
-      Alert.alert("Błąd", "Nie udało się dodać zadania");
-    }
-  };
+const res = await quickAddTask(
+  userId,
+  catId,
+  quickText.trim(),
+  customDifficulty // już jest ID albo null
+);
+
+  if (res) {
+    setQuickText("");
+    setCustomDifficulty(null);
+  } else {
+    Alert.alert("Błąd", "Nie udało się dodać zadania");
+  }
+};
+
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       
       {/* Difficulty Popup */}
       {showDifficulty && (
-        <CustomDifficultyPicker
-          onSelect={(id: number) => {
-            setCustomDifficulty(id);
-            setShowDifficulty(false);
-          }}
-          onClose={() => setShowDifficulty(false)}
-        />
+<CustomDifficultyPicker
+  onSelect={(d: any) => { setCustomDifficulty(d.id); setShowDifficulty(false); }}
+  onClose={() => setShowDifficulty(false)}
+/>
+
       )}
 
       {/* Edit Todo Popup */}
@@ -133,28 +138,38 @@ export default function TodosScreen() {
 <KeyboardAvoidingView
   style={{ flex: 1 }}
   behavior={Platform.OS === "ios" ? "padding" : "height"}
-  keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 80} // możesz dostosować
+  keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 80}
 >
-  <FlatList
-    data={tasks.filter(t => showCompleted ? t.is_completed : !t.is_completed)}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={({ item }) => (
-      <TodoItem
-        item={item}
-        onComplete={async (taskId) => {
-          const res = await completeTask(taskId);
-          if (res) Alert.alert("Done", `+${res.xp_gained} XP`);
-        }}
-        onDelete={async (taskId) => {
-          const ok = await deleteTask(taskId);
-          if (!ok) Alert.alert("Błąd", "Nie udało się usunąć zadania");
-        }}
-        onLongPress={() => setEditingTodo(item)}
-      />
-    )}
-    contentContainerStyle={{ paddingBottom: 120 }}
-    keyboardShouldPersistTaps="handled"
-  />
+  {tasks.filter(t => showCompleted ? t.is_completed : !t.is_completed).length === 0 ? (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <AppText style={{ color: "#777", fontSize: 16 }}>
+        {showCompleted
+          ? "no completed tasks yet"
+          : "no tasks yet, add some!"}
+      </AppText>
+    </View>
+  ) : (
+    <FlatList
+      data={tasks.filter(t => showCompleted ? t.is_completed : !t.is_completed)}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+        <TodoItem
+          item={item}
+          onComplete={async (taskId) => {
+            const res = await completeTask(taskId);
+            if (res) Alert.alert("Done", `+${res.xp_gained} XP`);
+          }}
+          onDelete={async (taskId) => {
+            const ok = await deleteTask(taskId);
+            if (!ok) Alert.alert("Błąd", "Nie udało się usunąć zadania");
+          }}
+          onLongPress={() => setEditingTodo(item)}
+        />
+      )}
+      contentContainerStyle={{ paddingBottom: 120 }}
+      keyboardShouldPersistTaps="handled"
+    />
+  )}
 
   <BottomInputBar
     quickText={quickText}
@@ -163,6 +178,7 @@ export default function TodosScreen() {
     onOpenDifficulty={() => setShowDifficulty(true)}
   />
 </KeyboardAvoidingView>
+
 
     </View>
   );

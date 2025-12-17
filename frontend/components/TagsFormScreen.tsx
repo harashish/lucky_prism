@@ -66,12 +66,11 @@ const TagsFormScreen = ({ editingTagId }: Props) => {
       await api.delete(`/challenges/tags/${editingTagId}/`);
       router.back();
     } catch (err: any) {
-      if (err.response?.status === 400 && err.response.data?.detail) {
-        setError("Nie można usunąć tagu, który jest powiązany z challenge.");
-      } else {
-        setError("Nie udało się usunąć tagu");
-      }
-    } finally {
+      const msg = err.response?.data?.detail;
+      if (msg) setError(msg);
+      else setError("Nie udało się usunąć tagu");
+    }
+    finally {
       setLoading(false);
     }
   };

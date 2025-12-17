@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     TodoCategoryListCreate, TodoCategoryDetail,
     TodoTaskListCreate, TodoTaskDetail,
-    TodoHistoryList, CompleteTodoTaskView, UndoCompleteTodoTaskView
+    TodoHistoryList, CompleteTodoTaskView, UndoCompleteTodoTaskView, RandomTodoTaskView
 )
 
 urlpatterns = [
@@ -14,4 +14,6 @@ urlpatterns = [
     path("tasks/<int:pk>/complete/", CompleteTodoTaskView.as_view(), name="todo-complete"),
     path("tasks/<int:pk>/undo-complete/", UndoCompleteTodoTaskView.as_view(), name="todo-undo-complete"),
     path("history/", TodoHistoryList.as_view(), name="todo-history"),
+    path("tasks/random/", RandomTodoTaskView.as_view(), name="todo-random"),
+
 ]

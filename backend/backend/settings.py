@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.notes',
     'apps.common',
     'apps.gamification',
+    'apps.settings',
 ]
 
 MIDDLEWARE = [

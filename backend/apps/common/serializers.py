@@ -6,4 +6,7 @@ class DifficultyTypeSerializer(serializers.ModelSerializer):
         model = DifficultyType
         fields = ['id', 'name', 'xp_value']
 
+
+        
+
         

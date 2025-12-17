@@ -134,9 +134,13 @@ export default function HabitsScreen() {
           />
         )}
         ListEmptyComponent={() => (
-          <AppText>Brak habitów. Dodaj nowy habit.</AppText>
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
+                <AppText style={{ color: "#777", fontSize: 16 }}>
+                  no habits yet, add some!
+                </AppText>
+              </View>
         )}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
         refreshing={loading}
         onRefresh={() => loadMonth(userId, month)}
       />
@@ -147,7 +151,7 @@ export default function HabitsScreen() {
         style={{
           position: "absolute",
           right: 20,
-          bottom: 60,
+          bottom: 20,
           width: 60,
           height: 60,
           borderRadius: 30,
@@ -160,5 +164,6 @@ export default function HabitsScreen() {
         <AppText style={{ fontSize: 32, color: "#fff" }}>＋</AppText>
       </TouchableOpacity>
     </View>
+
   );
 }

@@ -41,17 +41,17 @@ const handleDaily = async () => {
   }
 
   return (
-    <View style={{ flex:1, padding:16, backgroundColor: colors.background }}>
+    <View style={{ flex:1, padding:16, backgroundColor: colors.background, justifyContent:"center" }}>
       <TouchableOpacity onPress={handleDaily} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize a daily challenge</AppText>
+        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a daily challenge</AppText>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleWeekly} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize a week challenge</AppText>
+        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a week challenge</AppText>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("/random/todo")} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize a todo</AppText>
+        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a todo</AppText>
       </TouchableOpacity>
     </View>
   );

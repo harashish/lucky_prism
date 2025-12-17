@@ -70,11 +70,30 @@ const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
 
 
 
-  const sections = [
-    { title: "Your challenges", data: assignedChallenges },
-    { title: "All challenges", data: unassignedChallenges },
+const [showAll, setShowAll] = useState(false);
 
-  ];
+const hasAssigned = assignedChallenges.length > 0;
+const hasUnassigned = unassignedChallenges.length > 0;
+
+const sections = [];
+
+// 1. Jeśli są przypisane challengy
+if (hasAssigned) {
+  sections.push({ title: "Actual challenge", data: assignedChallenges });
+
+  // 2. Jeśli dodatkowo są challengy do pokazania
+  if (hasUnassigned) {
+    sections.push({ title: "Challenges list", data: showAll ? unassignedChallenges : [] });
+  }
+} else if (!hasAssigned && hasUnassigned) {
+  // 3. Brak przypisanych, ale są dostępne challengy → pokazujemy rozwiniętą listę
+  sections.push({ title: "Challenges list", data: unassignedChallenges });
+}
+
+// Jeśli nie ma żadnych challengy, sections pozostaje puste
+
+
+
 
   return (
     <View style={{ flex: 1, padding: 10, backgroundColor: colors.background }}>
@@ -104,8 +123,8 @@ const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
 <ScrollView
   horizontal
   showsHorizontalScrollIndicator={false}
-  style={{ marginBottom: 10, height: 50 }} // <- ustalona wysokość ScrollView
-  contentContainerStyle={{ alignItems: "center", paddingLeft: 0, paddingRight: 5 }}
+  style={{ marginBottom: 10, height: 60, flexGrow: 0 }}
+  contentContainerStyle={{ alignItems: "flex-start", paddingLeft: 0, paddingRight: 5, paddingBottom: 0 }}
 >
   {tags.map(tag => (
     <TouchableOpacity
@@ -114,7 +133,7 @@ const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
       onLongPress={() => router.push(`/editTag/${tag.id}`)}
       delayLongPress={300}
       style={{
-        paddingVertical: 8, // wewnętrzny padding tagu
+        paddingVertical: 8,
         paddingHorizontal: 12,
         marginRight: 5,
         borderRadius: 10,
@@ -140,25 +159,46 @@ const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
   </TouchableOpacity>
 </ScrollView>
 
-      {/* Lista challenge */}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ChallengeItem
-            item={item}
-            userId={userId}
-            alreadyAssigned={!!item.userChallengeId}
-            onAssigned={fetchData}
-          />
-        )}
-        renderSectionHeader={({ section: { title } }) => (
-          <HeaderText style={{ fontSize: 22, fontWeight: "bold", marginVertical: 10, color: colors.text }}>
-            {title}
-          </HeaderText>
-        )}
-        contentContainerStyle={{ paddingBottom: 100 }}
+
+{/* Lista challenge */}
+{challenges.length === 0 ? (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
+    <AppText style={{ color: "#777", fontSize: 16 }}>No challenges yet, add some!</AppText>
+  </View>
+) : filteredChallenges.length === 0 ? (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
+    <AppText style={{ color: "#777", fontSize: 16 }}>No challenges with those tags</AppText>
+  </View>
+) : (
+  <SectionList
+    sections={sections}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={({ item }) => (
+      <ChallengeItem
+        item={item}
+        userId={userId}
+        alreadyAssigned={!!item.userChallengeId}
+        onAssigned={fetchData}
       />
+    )}
+    renderSectionHeader={({ section: { title } }) => {
+      const isExpandable = title === "Challenges list";
+      return (
+        <TouchableOpacity
+          onPress={() => {
+            if (isExpandable) setShowAll(prev => !prev);
+          }}
+          style={{ marginVertical: 10 }}
+        >
+          <AppText style={{ fontSize: 17, fontWeight: "bold", color: colors.text }}>
+            {title} {isExpandable && !showAll ? "↩" : ""}
+          </AppText>
+        </TouchableOpacity>
+      );
+    }}
+    contentContainerStyle={{ paddingBottom: 100 }}
+  />
+)}
 
       {/* Floating Button */}
       <TouchableOpacity

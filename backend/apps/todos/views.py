@@ -6,7 +6,8 @@ from django.shortcuts import get_object_or_404
 from .models import TodoCategory, TodoTask, TodoHistory
 from .serializers import TodoCategorySerializer, TodoTaskSerializer, TodoHistorySerializer
 from django.db import transaction
-
+import random
+from django.db.models import Q
 class TodoCategoryListCreate(generics.ListCreateAPIView):
     queryset = TodoCategory.objects.all().order_by('name')
     serializer_class = TodoCategorySerializer
@@ -17,8 +18,17 @@ class TodoCategoryDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         cat = self.get_object()
-        if cat.tasks.exists():
-            return Response({"detail": "Nie można usunąć kategorii z przypisanymi taskami."}, status=status.HTTP_400_BAD_REQUEST)
+        total_categories = TodoCategory.objects.count()
+        if total_categories <= 1:
+            return Response(
+                {"detail": "Nie można usunąć ostatniej kategorii."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # usuń wszystkie taski przypisane do tej kategorii
+        cat.tasks.all().delete()
+        
+        # usuń samą kategorię
         return super().destroy(request, *args, **kwargs)
 
 class TodoTaskListCreate(generics.ListCreateAPIView):
@@ -81,4 +91,26 @@ class UndoCompleteTodoTaskView(APIView):
         task.is_completed = False
         task.save(update_fields=["is_completed", "updated_at"])
         return Response({"detail": "Undone"}, status=status.HTTP_200_OK)
+
+class RandomTodoTaskView(APIView):
+    """
+    GET /todos/tasks/random/?user_id=1
+    Zwraca JEDNO losowe, niezrobione todo (user + default)
+    """
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        if not user_id:
+            return Response({"detail": "user_id required"}, status=400)
+
+        qs = TodoTask.objects.filter(
+            Q(user_id=user_id) | Q(is_default=True),
+            is_completed=False
+        )
+
+        if not qs.exists():
+            return Response(None, status=200)
+
+        task = random.choice(list(qs))
+        return Response(TodoTaskSerializer(task).data)
+
 

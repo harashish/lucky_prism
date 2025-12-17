@@ -1,4 +1,6 @@
-# apps/gamification/models.py
+from django.db import models
+
+
 from django.db import models
 
 class User(models.Model):
@@ -8,17 +10,42 @@ class User(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def add_xp(self, amount: int, source: str = "", source_id: int | None = None):
-        self.total_xp += amount
+        final_xp = amount
+
+        if source:
+            # mapowanie nazw źródła na nazwy w ModuleXPConfig
+            source_mapping = {
+                "habit": "habits",
+                "todo": "todos",
+                "goal": "goals",
+                "challenge": "challenges",
+                "randomizer": "randomizer",
+            }
+
+            # dopasowanie do modułu w konfiguracji
+            module_name = source_mapping.get(source, source)
+            cfg = ModuleXPConfig.objects.filter(module=module_name).first()
+            if cfg:
+                final_xp = amount * cfg.multiplier
+
+            # zachowujemy spójny source w logach
+            source_for_log = module_name
+        else:
+            source_for_log = ""
+
+        self.total_xp += final_xp
+
         new_level = self.calculate_level()
         if new_level > self.current_level:
             self.current_level = new_level
+
         self.save()
 
         XPLog.objects.create(
             user=self,
-            source=source,
+            source=source_for_log,
             source_id=source_id,
-            xp=amount
+            xp=final_xp,
         )
 
         return self.total_xp, self.current_level
@@ -32,20 +59,28 @@ class User(models.Model):
         return level
 
 
+
 class XPLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    source = models.CharField(max_length=30)  # challenge, habit, goal, todo
+    source = models.CharField(max_length=30)  # habit, challenge, todo, goal
     source_id = models.IntegerField(null=True)
     xp = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-class ModuleDefinition(models.Model):
-    name = models.CharField(max_length=20)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    default_xp = models.IntegerField(default=0)
-    is_enabled = models.BooleanField(default=True)
+class ModuleXPConfig(models.Model):
+    MODULE_CHOICES = [
+        ("habits", "Habits"),
+        ("challenges", "Challenges"),
+        ("todos", "Todos"),
+        ("goals", "Goals"),
+        ("randomizer", "Randomizer"),
+    ]
 
-    class Meta:
-        unique_together = ('name', 'user')
+    
 
+    module = models.CharField(max_length=30, choices=MODULE_CHOICES, unique=True)
+    multiplier = models.FloatField()
+
+    def __str__(self):
+        return f"{self.module}: {self.multiplier}xp"

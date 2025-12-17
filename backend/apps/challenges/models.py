@@ -75,7 +75,7 @@ class UserChallenge(models.Model):
             return
 
         xp = self.definition.difficulty.xp_value
-        self.user.add_xp(xp)
+        self.user.add_xp(xp, source="challenge", source_id=self.id)
 
         ChallengeHistory.objects.create(
             user_challenge=self,

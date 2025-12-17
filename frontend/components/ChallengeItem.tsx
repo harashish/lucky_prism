@@ -54,12 +54,16 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
     }
   };
 
-  // Symulacja przyspieszenia tygodnia o 1 dzień
-  const accelerateWeek = () => {
-    if (localProgress === null) return;
-    const newProgress = Math.min(100, localProgress + Math.round(100 / 7)); // dodajemy ~14% dla 7 dni
-    setLocalProgress(newProgress);
-  };
+  const [localDays, setLocalDays] = useState<number>(
+  item.challenge_type === "Weekly" && localProgress != null
+    ? Math.round((localProgress / 100) * 7) // konwersja % → dni
+    : localProgress
+);
+
+const accelerateWeek = () => {
+  if (localDays == null) return;
+  setLocalDays(prev => Math.min(7, prev + 1)); // dodaj 1 dzień, max 7
+};
 
   return (
     <TouchableOpacity
@@ -68,47 +72,53 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
       delayLongPress={300}
     >
       <View style={components.container}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <AppText style={{ fontWeight: "bold" }}>
-            {item.title} ({item.difficulty.xp_value} XP)
-          </AppText>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+  {/* Tekst challenge */}
+  <View style={{ flex: 1, minWidth: 0 }}>
+    <AppText style={{ fontWeight: "bold", flexWrap: "wrap" }}>
+      {item.title} ({item.difficulty.xp_value} XP)
+    </AppText>
+  </View>
 
-          {userId && !alreadyAssigned && (
-            <TouchableOpacity onPress={assignChallenge} style={components.addButton}>
-              <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
-            </TouchableOpacity>
-          )}
+  {/* Przycisk lub zestaw przycisków */}
+  <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8, flexShrink: 0, gap: 8 }}>
+    {userId && !alreadyAssigned && (
+      <TouchableOpacity onPress={assignChallenge} style={components.addButton}>
+        <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+      </TouchableOpacity>
+    )}
 
-          {userId && alreadyAssigned && (
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
-                <AppText style={{ color: "#fff", fontSize: 14 }}>Ukończ</AppText>
-              </TouchableOpacity>
+    {userId && alreadyAssigned && (
+      <>
+        <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
+          <AppText style={{ color: "#fff", fontSize: 14 }}>Ukończ</AppText>
+        </TouchableOpacity>
 
-              {item.challenge_type === "Weekly" && (
-                <TouchableOpacity onPress={accelerateWeek} style={{ ...components.addButton, backgroundColor: "#f39c12" }}>
-                  <AppText style={{ color: "#fff", fontSize: 12 }}>Przyspiesz +1d</AppText>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
+        {item.challenge_type === "Weekly" && (
+          <TouchableOpacity onPress={accelerateWeek} style={{ ...components.addButton, backgroundColor: "#f39c12" }}>
+            <AppText style={{ color: "#fff", fontSize: 12 }}>Przyspiesz +1d</AppText>
+          </TouchableOpacity>
+        )}
+      </>
+    )}
+  </View>
+</View>
 
         {/* Weekly progress bar */}
-        {alreadyAssigned && localProgress != null && (
-          <View style={{ marginTop: 8 }}>
-            <View style={{ height: 8, backgroundColor: "#eee", borderRadius: 4, overflow: "hidden" }}>
-              <View style={{
-                width: `${localProgress}%`,
-                height: "100%",
-                backgroundColor: colors.buttonActive
-              }} />
-            </View>
-            <AppText style={{ fontSize: 12, marginTop: 2, color: colors.text }}>
-              {localProgress}% {item.challenge_type === "Weekly" ? "tygodnia" : "dnia"}
-            </AppText>
-          </View>
-        )}
+{alreadyAssigned && localDays != null && item.challenge_type === "Weekly" && (
+  <View style={{ marginTop: 8 }}>
+    <View style={{ height: 8, backgroundColor: "#eee", borderRadius: 4, overflow: "hidden" }}>
+      <View style={{
+        width: `${(localDays / 7) * 100}%`,
+        height: "100%",
+        backgroundColor: colors.buttonActive
+      }} />
+    </View>
+    <AppText style={{ fontSize: 12, marginTop: 2, color: colors.text }}>
+      {localDays}/7 dni
+    </AppText>
+  </View>
+)}
 
         {expanded && (
   <View style={{ marginTop: spacing.s }}>

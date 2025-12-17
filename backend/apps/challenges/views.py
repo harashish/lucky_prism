@@ -208,6 +208,15 @@ class ChallengeTagDetail(generics.RetrieveUpdateDestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         tag = self.get_object()
 
+        # 1. Sprawdź, czy to ostatni tag w systemie
+        total_tags = ChallengeTag.objects.count()
+        if total_tags <= 1:
+            return Response(
+                {"detail": "Nie można usunąć ostatniego taga."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2. Sprawdź, czy tag jest przypisany do jakiegoś wyzwania
         if ChallengeDefinition.objects.filter(tags=tag).exists():
             return Response(
                 {"detail": "Nie można usunąć taga przypisanego do wyzwań."},

@@ -1,8 +1,9 @@
 # apps/notes/urls.py
 from django.urls import path
-from .views import RandomNoteListCreate, RandomNoteDetail
+from .views import NotesListCreateView, NoteDetailView, RandomNoteView
 
 urlpatterns = [
-    path("", RandomNoteListCreate.as_view(), name="notes"),
-    path("<int:pk>/", RandomNoteDetail.as_view(), name="note-detail"),
+    path("", NotesListCreateView.as_view()),
+    path("random/", RandomNoteView.as_view()),
+    path("<int:pk>/", NoteDetailView.as_view()),
 ]
