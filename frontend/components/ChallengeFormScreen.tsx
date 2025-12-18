@@ -7,6 +7,8 @@ import { useChallengeStore, Challenge, ChallengeType, DifficultyType } from "../
 import { colors, spacing, radius } from "../constants/theme";
 import AppText from "../components/AppText";
 import { api } from "../app/api/apiClient"; // import instancji Axios
+import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
+
 
 const ChallengeFormScreen = () => {
   const router = useRouter();
@@ -24,6 +26,11 @@ const ChallengeFormScreen = () => {
   const [error, setError] = useState<string | null>(null);
 
   const editingChallengeId = params?.id ? parseInt(params.id as string, 10) : null;
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
+  
 
   // load tags on mount
   useEffect(() => { loadTags(); }, []);
@@ -189,7 +196,10 @@ const ChallengeFormScreen = () => {
               backgroundColor: difficulty?.id === d.id ? colors.buttonActive : colors.button
             }}
           >
-            <AppText>{d.name} ({d.xp_value} XP)</AppText>
+            <AppText>
+              {d.name}
+              {gamificationOn ? ` (${d.xp_value} XP)` : ""}
+            </AppText>
           </TouchableOpacity>
         ))}
       </View>

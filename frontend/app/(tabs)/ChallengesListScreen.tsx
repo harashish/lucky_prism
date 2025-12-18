@@ -123,8 +123,8 @@ if (hasAssigned) {
 <ScrollView
   horizontal
   showsHorizontalScrollIndicator={false}
-  style={{ marginBottom: 10, height: 60, flexGrow: 0 }}
-  contentContainerStyle={{ alignItems: "flex-start", paddingLeft: 0, paddingRight: 5, paddingBottom: 0 }}
+  style={{ marginBottom: 10, height: 80, flexGrow: 0 }}
+  contentContainerStyle={{ alignItems: "flex-start", paddingLeft: 0, paddingRight: 5, paddingBottom: 20 }}
 >
   {tags.map(tag => (
     <TouchableOpacity

@@ -2,9 +2,13 @@ import React from "react";
 import { View, TouchableOpacity, Alert } from "react-native";
 import AppText from "./AppText";
 import { components, spacing, colors } from "../constants/theme";
+import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
 
 export default function TodoItem({ item, onComplete, onDelete, onLongPress }: any) {
   const isCompleted = item.is_completed;
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
 
   return (
     <TouchableOpacity
@@ -29,9 +33,17 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
               flexWrap: "wrap",
             }}
           >
-            {item.content} ({item.custom_difficulty ? item.custom_difficulty.xp_value : item.category?.difficulty?.xp_value} XP)
+            {item.content}
+            {gamificationOn && (
+              ` (${item.custom_difficulty
+                ? item.custom_difficulty.xp_value
+                : item.category?.difficulty?.xp_value} XP)`
+            )}
           </AppText>
+
         </View>
+
+        
 
         {/* Przycisk wykonania i kosza */}
         <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8, flexShrink: 0 }}>

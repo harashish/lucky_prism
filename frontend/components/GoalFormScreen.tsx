@@ -7,6 +7,8 @@ import { useGoalStore } from "../app/stores/useGoalStore";
 import { api } from "../app/api/apiClient";
 import AppText from "../components/AppText";
 import { colors, spacing, radius } from "../constants/theme";
+import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
+
 
 const GoalFormScreen = () => {
   const router = useRouter();
@@ -25,6 +27,10 @@ const GoalFormScreen = () => {
   const [error, setError] = useState<string | null>(null);
 
   const userId = 1;
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
 
   useEffect(() => {
     loadPeriods();
@@ -72,21 +78,17 @@ const GoalFormScreen = () => {
 
 // ... (Wewnątrz GoalFormScreen)
 
-  const computedXp = () => {
-    // 1. Pobieramy wartość bazową XP dla wybranego okresu (np. 50, 200, 1000)
-    const periodBase = selectedPeriodObj?.default_xp || 0;
-    
-    // 2. Pobieramy procentową wartość trudności (np. 10, 20, 50)
-    const difficultyValue = availableDifficulties.find(d => d.id === difficultyId)?.xp_value || 0;
-    
-    // 3. Konwertujemy wartość trudności na ułamek (np. 50 -> 0.5)
-    // Zgodnie z Twoją logiką z GoalsScreen.tsx: (g.difficulty?.xp_value || 0) / 100
-    const diffPercent = difficultyValue / 100;
-    
-    // 4. Mnożymy bazowe XP przez procent trudności i zaokrąglamy
-    // Zgodnie z Twoją logiką z GoalsScreen.tsx: Math.round(periodBase * diffPercent)
-    return Math.round(periodBase * diffPercent);
-  };
+    const computedXp = () => {
+      if (!gamificationOn) return null;
+
+      const periodBase = selectedPeriodObj?.default_xp || 0;
+      const difficultyValue =
+        availableDifficulties.find(d => d.id === difficultyId)?.xp_value || 0;
+
+      const diffPercent = difficultyValue / 100;
+      return Math.round(periodBase * diffPercent);
+    };
+
 
   const save = async () => {
 // ... (reszta funkcji save)
@@ -225,12 +227,21 @@ const GoalFormScreen = () => {
               backgroundColor: difficultyId === d.id ? colors.buttonActive : colors.button
             }}
           >
-            <AppText>{d.name} ({d.xp_value} XP)</AppText>
+            <AppText>
+              {d.name}
+              {gamificationOn ? ` (${d.xp_value} XP)` : ""}
+            </AppText>
+
           </TouchableOpacity>
         ))}
       </View>
 
-      <AppText style={{ marginBottom: spacing.m }}>XP gain: {computedXp()} XP</AppText>
+      {gamificationOn && computedXp() !== null && (
+        <AppText style={{ marginBottom: spacing.m }}>
+          XP gain: {computedXp()} XP
+        </AppText>
+      )}
+
 
       <TouchableOpacity
         onPress={save}

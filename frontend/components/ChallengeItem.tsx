@@ -6,6 +6,7 @@ import { useChallengeStore, ChallengeWithUserInfo } from "../app/stores/useChall
 import AppText from "../components/AppText";
 import { colors, components, radius, spacing } from "../constants/theme";
 import { api } from "../app/api/apiClient";
+import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
 
 type Props = {
   item: ChallengeWithUserInfo;
@@ -18,6 +19,10 @@ type Props = {
 export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigned }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [localProgress, setLocalProgress] = useState<number | null>(item.progress_percent ?? null);
+
+  
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
 
   const assignChallenge = async () => {
     if (!userId) return;
@@ -38,21 +43,31 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
   };
 
   const completeChallenge = async () => {
-    if (!item.userChallengeId || !userId) return;
-    try {
-      await api.post(`/challenges/user-challenges/${item.userChallengeId}/complete/`);
-      Alert.alert("Ukończono", `  XP za "${item.title}"`);
+  if (!item.userChallengeId || !userId) return;
 
-      const { userChallenges } = useChallengeStore.getState();
-      useChallengeStore.setState({
-        userChallenges: userChallenges.filter(uc => uc.id !== item.userChallengeId)
-      });
+  try {
+    await api.post(`/challenges/user-challenges/${item.userChallengeId}/complete/`);
 
-      onAssigned?.();
-    } catch {
-      Alert.alert("Błąd", "Nie udało się ukończyć challenge.");
+    if (gamificationOn) {
+      Alert.alert("Ukończono", `Challenge "${item.title}" ukończony`);
+    } else {
+      Alert.alert("Ukończono", item.difficulty.name);
     }
-  };
+
+    const { userChallenges } = useChallengeStore.getState();
+    useChallengeStore.setState({
+      userChallenges: userChallenges.filter(
+        uc => uc.id !== item.userChallengeId
+      ),
+    });
+
+    onAssigned?.();
+  } catch {
+    Alert.alert("Błąd", "Nie udało się ukończyć challenge.");
+  }
+};
+
+  
 
   const [localDays, setLocalDays] = useState<number>(
   item.challenge_type === "Weekly" && localProgress != null
@@ -75,9 +90,12 @@ const accelerateWeek = () => {
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
   {/* Tekst challenge */}
   <View style={{ flex: 1, minWidth: 0 }}>
-    <AppText style={{ fontWeight: "bold", flexWrap: "wrap" }}>
-      {item.title} ({item.difficulty.xp_value} XP)
-    </AppText>
+      <AppText style={{ fontWeight: "bold", flexWrap: "wrap" }}>
+        {item.title}
+        {gamificationOn ? ` (${item.difficulty.xp_value} XP)` : ""}
+      </AppText>
+
+
   </View>
 
   {/* Przycisk lub zestaw przycisków */}

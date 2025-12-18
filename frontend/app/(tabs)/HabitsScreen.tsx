@@ -6,10 +6,18 @@ import HeaderText from "../../components/HeaderText";
 import { colors } from "../../constants/theme";
 import { useRouter } from "expo-router";
 import HabitItem from "../../components/HabitItem";
+import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+
 
 const userId = 1;
 
+
+
 export default function HabitsScreen() {
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
   const router = useRouter();
   const {
     habits,
@@ -35,15 +43,18 @@ export default function HabitsScreen() {
       Alert.alert("Błąd", "Nie udało się zapisać dnia");
       return;
     }
-
-    if (res.already_completed) {
-      Alert.alert(
-        "Info",
-        "This habit was already marked for today. XP is not rolled back."
-      );
-    } else if (res.xp_added > 0) {
-      Alert.alert("Done", `+${res.xp_added} XP`);
-    }
+      if (res.already_completed) {
+        if (gamificationOn) {
+          Alert.alert(
+            "Info",
+            "This habit was already marked for today."
+          );
+        }
+      } else if (res.xp_added > 0) {
+        if (gamificationOn) {
+          Alert.alert("Done", `+${res.xp_added} XP`);
+        }
+      }
 
     await loadMonth(userId, month);
   };
@@ -60,9 +71,10 @@ export default function HabitsScreen() {
       return;
     }
 
-    if (res.xp_added > 0) {
-      Alert.alert("Done", `+${res.xp_added} XP`);
-    }
+if (res.xp_added > 0 && gamificationOn) {
+  Alert.alert("Done", `+${res.xp_added} XP`);
+}
+
 
     await loadMonth(userId, month);
   };

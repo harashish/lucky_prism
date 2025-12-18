@@ -7,11 +7,20 @@ import AppText from "../components/AppText";
 import { colors, spacing, radius } from "../constants/theme";
 import { useHabitStore } from "../app/stores/useHabitStore";
 import { api } from "../app/api/apiClient";
+import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
+
 
 //const colorPalette = ["#c4a7e7", "#908bab", "#39a0a1", "#e07a5f", "#f2cc8f", "#a7c66b", "#ff6b6b"];
   const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
 
+
+
 export default function HabitFormScreen() {
+
+  
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
   const router = useRouter();
   const params = useLocalSearchParams();
   const editingId = params?.id ? parseInt(params.id as string, 10) : null;
@@ -49,10 +58,11 @@ export default function HabitFormScreen() {
     }
   }, [editingId]);
 
-  const computedXp = () => {
-    const diff = difficulties.find(d => d.id === difficultyId)?.xp_value || 0;
-    return diff;
-  };
+    const computedXp = () => {
+      if (!gamificationOn) return null;
+      return difficulties.find(d => d.id === difficultyId)?.xp_value || 0;
+    };
+
 
   const save = async () => {
     if (!title || !difficultyId) {
@@ -124,12 +134,23 @@ export default function HabitFormScreen() {
       <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
         {difficulties.map(d => (
           <TouchableOpacity key={d.id} onPress={() => setDifficultyId(d.id)} style={{ padding: spacing.s, borderRadius: radius.md, marginRight: spacing.s, marginBottom: spacing.s, backgroundColor: difficultyId === d.id ? colors.buttonActive : colors.button }}>
-            <AppText>{d.name} ({d.xp_value} XP)</AppText>
+            <AppText>
+              {d.name}
+              {gamificationOn ? ` (${d.xp_value} XP)` : ""}
+            </AppText>
+
           </TouchableOpacity>
         ))}
       </View>
 
-      <AppText style={{ marginBottom: spacing.m }}>XP gain (per completion): {computedXp()} XP</AppText>
+      
+
+        {gamificationOn && computedXp() !== null && (
+        <AppText style={{ marginBottom: spacing.m }}>
+            XP gain (per completion): {computedXp()} XP
+          </AppText>
+        )}
+
 
       <TouchableOpacity onPress={save} style={{ backgroundColor: colors.buttonActive, padding: spacing.m, borderRadius: radius.md, alignItems: "center", marginBottom: editingId ? spacing.m : 0 }}>
         {loading ? <ActivityIndicator color="#fff" /> : <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editingId ? "Save" : "Add habit"}</AppText>}

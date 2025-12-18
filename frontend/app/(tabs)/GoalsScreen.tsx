@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, FlatList, Alert } from "react-native";
 import AppText from "../../components/AppText";
-import HeaderText from "../../components/HeaderText";
 import { colors, components } from "../../constants/theme";
 import { useGoalStore } from "../stores/useGoalStore";
 import { useRouter } from "expo-router";
 
+
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
+
+import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 
 dayjs.extend(isoWeek);
 
 const periodNames = ["week", "month", "year"];
 
 export default function GoalsScreen() {
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
+
   const router = useRouter();
   const userId = 1;
 
@@ -39,11 +46,14 @@ export default function GoalsScreen() {
   }, [selectedPeriod]);
 
   /** XP */
-  const xpGain = (g: any) => {
-    const diffPercent = (g.difficulty?.xp_value || 0) / 100;
-    const periodBase = g.period?.default_xp || 0;
-    return Math.round(periodBase * diffPercent);
-  };
+const xpGain = (g: any) => {
+  if (!gamificationOn) return null;
+
+  const diffPercent = (g.difficulty?.xp_value || 0) / 100;
+  const periodBase = g.period?.default_xp || 0;
+  return Math.round(periodBase * diffPercent);
+};
+
 
   /** Ukończone */
   const completedGoalIds = new Set(history.map((h) => h.goal));
@@ -100,9 +110,12 @@ export default function GoalsScreen() {
           onPress: async () => {
             const res = await completeGoal(goalId);
             if (res) {
-              Alert.alert("Done", `+${res.total_xp}XP`);
+              if (gamificationOn) {
+                Alert.alert("Done", `+${res.total_xp} XP`);
+              }
               loadUserGoals(userId, selectedPeriod);
             }
+
           },
         },
       ]
@@ -268,9 +281,12 @@ export default function GoalsScreen() {
                       </AppText>
                     ) : null}
 
-                    <AppText style={{ fontSize: 12, opacity: 0.7 }}>
-                      {xpGain(item)} XP
-                    </AppText>
+                    {gamificationOn && xpGain(item) !== null && (
+                      <AppText style={{ fontSize: 12, opacity: 0.7 }}>
+                        {xpGain(item)} XP
+                      </AppText>
+                    )}
+
                   </View>
                 )}
               </View>

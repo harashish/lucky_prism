@@ -11,6 +11,8 @@ import BottomInputBar from "../../components/BottomInputBar";
 import CustomDifficultyPicker from "../todos/customDifficultyPicker";
 import EditTodoPopup from "../todos/editTodoPopup";
 import { KeyboardAvoidingView, Platform } from "react-native";
+import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+
 
 const userId = 1;
 
@@ -26,6 +28,10 @@ export default function TodosScreen() {
   const [editingTodo, setEditingTodo] = useState<any | null>(null);
 
   const [showCompleted, setShowCompleted] = useState(false);
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
   
 
   // LOAD CATEGORIES + SELECT FIRST
@@ -112,7 +118,12 @@ const res = await quickAddTask(
               }}
             >
               <AppText>{cat.name}</AppText>
-              <AppText style={{ fontSize: 12 }}>{cat.difficulty?.xp_value ?? 0} XP</AppText>
+              {gamificationOn && (
+              <AppText style={{ fontSize: 12 }}>
+                {cat.difficulty?.xp_value ?? 0} XP
+              </AppText>
+)}
+
             </TouchableOpacity>
           ))}
 
@@ -157,7 +168,10 @@ const res = await quickAddTask(
           item={item}
           onComplete={async (taskId) => {
             const res = await completeTask(taskId);
-            if (res) Alert.alert("Done", `+${res.xp_gained} XP`);
+            if (res && gamificationOn) {
+              Alert.alert("Done", `+${res.xp_gained} XP`);
+            }
+
           }}
           onDelete={async (taskId) => {
             const ok = await deleteTask(taskId);

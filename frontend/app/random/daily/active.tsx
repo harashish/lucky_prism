@@ -4,12 +4,17 @@ import AppText from "../../../components/AppText";
 import { useChallengeStore } from "../../stores/useChallengeStore";
 import { colors } from "../../../constants/theme";
 import { useRouter } from "expo-router";
+import { useModuleSettingsStore } from "../../stores/useModuleSettingsStore";
 
 export default function DailyActiveScreen() {
   const router = useRouter();
   const userId = 1;
   const { fetchActive, activeDaily, discardUserChallenge, completeUserChallenge } = useChallengeStore();
   const [loading, setLoading] = useState(true);
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
 
   useEffect(() => {
     const load = async () => {
@@ -32,7 +37,9 @@ const onWykonano = async () => {
   const res = await completeUserChallenge(activeDaily.id);
   if (!res) return Alert.alert("Błąd", "Nie udało się ukończyć");
 
-  Alert.alert("Ukończono", `Total XP: ${res.total_xp}`);
+    if (gamificationOn) {
+      Alert.alert("Done", ` +${res.total_xp} XP`);
+    }
 
   await fetchActive(userId);
   const { activeDaily: latestActive } = useChallengeStore.getState();
@@ -57,7 +64,11 @@ const onWykonano = async () => {
       <AppText style={{ marginBottom: 12 }}>{ch?.description}</AppText>
 
       <TouchableOpacity onPress={onSpróbujInny} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10, marginBottom: 10 }}>
-        <AppText>Spróbuj inny (brak XP)</AppText>
+        <AppText>
+          Spróbuj inny
+          {gamificationOn ? " (brak XP)" : ""}
+        </AppText>
+
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onWykonano} style={{ backgroundColor: colors.buttonActive, padding: 12, borderRadius: 10, marginBottom: 10 }}>

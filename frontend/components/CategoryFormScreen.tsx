@@ -5,6 +5,7 @@ import { colors } from "../constants/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTodoStore } from "../app/stores/useTodoStore";
 import { api } from "../app/api/apiClient";
+import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
 
 export default function CategoryForm() {
   const { id } = useLocalSearchParams();
@@ -18,6 +19,10 @@ export default function CategoryForm() {
   const [color, setColor] = useState<string | null>(null);
   const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const { modules } = useModuleSettingsStore();
+  const gamificationOn = modules?.gamification;
+
 
 
   useEffect(() => {
@@ -113,9 +118,11 @@ if (!ok) return Alert.alert("Error", "Nie można usunąć ostatniej kategorii");
             }}
           >
             <AppText style={{ color: difficultyId === d.id ? "#fff" : colors.text }}>
-              {d.name} ({d.xp_value} XP)
+              {d.name}
+                {gamificationOn ? ` (${d.xp_value} XP)` : ""}
             </AppText>
           </TouchableOpacity>
+          
         ))}
       </View>
 
