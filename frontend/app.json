@@ -2,6 +2,7 @@
   "expo": {
     "name": "lucky prism",
     "slug": "lucky-prism",
+    "scheme": "lucky-prism",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/lucky-prism-icon.png",

@@ -1,5 +1,3 @@
-# apps/challenges/views.py
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -15,11 +13,6 @@ from .serializers import (
     UserChallengeSerializer,
 )
 from apps.gamification.models import User
-
-
-# ==========================================================
-#  ACTIVE CHALLENGES ENDPOINT
-# ==========================================================
 
 class ActiveChallengesView(APIView):
     def get(self, request, user_id):
@@ -44,11 +37,6 @@ class ActiveChallengesView(APIView):
 
         return Response(data, status=200)
 
-
-# ==========================================================
-#  ASSIGN CHALLENGE
-# ==========================================================
-
 class AssignChallengeView(APIView):
     def post(self, request):
         user_id = request.data.get("user")
@@ -60,9 +48,8 @@ class AssignChallengeView(APIView):
         except:
             return Response({"detail": "User or Challenge not found"}, status=404)
 
-        challenge_type = definition.type.name  # "Daily" / "Weekly"
+        challenge_type = definition.type.name
 
-        # VALIDATION
         if challenge_type == "Daily":
             if UserChallenge.objects.filter(user=user, challenge_type="Daily", is_completed=False).exists():
                 return Response({"detail": "Active daily challenge already exists"}, status=400)
@@ -72,7 +59,6 @@ class AssignChallengeView(APIView):
                 return Response({"detail": "Active weekly challenge already exists"}, status=400)
 
 
-        # CHECK IF EXISTS, RESET IF COMPLETED
         existing = UserChallenge.objects.filter(user=user, definition=definition).first()
 
         if existing and existing.is_completed:
@@ -87,7 +73,6 @@ class AssignChallengeView(APIView):
 
             return Response(UserChallengeSerializer(existing).data, status=200)
 
-        # CREATE NEW
         uc = UserChallenge.objects.create(
             user=user,
             definition=definition,
@@ -101,11 +86,6 @@ class AssignChallengeView(APIView):
         uc.start_weekly_if_needed()
 
         return Response(UserChallengeSerializer(uc).data, status=201)
-
-
-# ==========================================================
-#  RANDOM CHALLENGE
-# ==========================================================
 
 class RandomChallengeView(APIView):
     def get(self, request):
@@ -135,11 +115,6 @@ class RandomChallengeView(APIView):
         picked = random.choice(list(qs))
         return Response(ChallengeDefinitionSerializer(picked).data, status=200)
 
-
-# ==========================================================
-#  COMPLETE
-# ==========================================================
-
 class CompleteUserChallengeView(APIView):
     def post(self, request, pk):
         try:
@@ -147,19 +122,13 @@ class CompleteUserChallengeView(APIView):
         except UserChallenge.DoesNotExist:
             return Response({"detail": "Not found"}, status=404)
 
-        xp = uc.complete() or 0   # ← TO JEST KLUCZOWA LINIA
+        xp = uc.complete() or 0
 
         return Response({
             "xp_gained": xp,
             "total_xp": uc.user.total_xp,
             "current_level": uc.user.current_level
         }, status=200)
-
-
-
-# ==========================================================
-#  DISCARD
-# ==========================================================
 
 class DiscardUserChallengeView(APIView):
     def post(self, request, pk):
@@ -173,11 +142,6 @@ class DiscardUserChallengeView(APIView):
 
         return Response({"detail": "discarded"}, status=200)
 
-
-# ==========================================================
-#  LISTS
-# ==========================================================
-
 class ChallengeListCreate(generics.ListCreateAPIView):
     queryset = ChallengeDefinition.objects.all()
     serializer_class = ChallengeDefinitionSerializer
@@ -186,11 +150,9 @@ class ChallengeTagListCreate(generics.ListCreateAPIView):
     queryset = ChallengeTag.objects.all()
     serializer_class = ChallengeTagSerializer
 
-
 class ChallengeTypeListCreate(generics.ListCreateAPIView):
     queryset = ChallengeType.objects.all()
     serializer_class = ChallengeTypeSerializer
-
 
 class UserChallengeList(generics.ListAPIView):
     serializer_class = UserChallengeSerializer
@@ -211,18 +173,16 @@ class ChallengeTagDetail(generics.RetrieveUpdateDestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         tag = self.get_object()
 
-        # 1. Sprawdź, czy to ostatni tag w systemie
         total_tags = ChallengeTag.objects.count()
         if total_tags <= 1:
             return Response(
-                {"detail": "Nie można usunąć ostatniego taga."},
+                {"detail": "Cannot delete the last remaining tag."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 2. Sprawdź, czy tag jest przypisany do jakiegoś wyzwania
         if ChallengeDefinition.objects.filter(tags=tag).exists():
             return Response(
-                {"detail": "Nie można usunąć taga przypisanego do wyzwań."},
+                {"detail": "Cannot delete a tag assigned to challenges."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

@@ -1,4 +1,3 @@
-// addChallenge.tsx
 import ChallengeFormScreen from "../components/ChallengeFormScreen";
 
 export default function AddChallenge() {

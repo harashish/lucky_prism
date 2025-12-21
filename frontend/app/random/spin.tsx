@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { colors } from "../../constants/theme";
 import AppText from "../../components/AppText";
 
@@ -10,10 +10,8 @@ export default function RandomSpin({ items, onFinish }: { items: string[]; onFin
     const interval = setInterval(() => {
       setIndex(i => (i + 1) % items.length);
       ticks++;
-      // szybki spin: 600ms total (12 ticks * 50ms)
       if (ticks >= 12) {
         clearInterval(interval);
-        // final pick
         const picked = Math.floor(Math.random() * items.length);
         onFinish(picked);
       }

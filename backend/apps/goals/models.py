@@ -1,5 +1,3 @@
-# apps/goals/models.py
-
 from django.db import models
 from apps.gamification.services.xp_calculator import calculate_xp
 
@@ -28,7 +26,7 @@ class GoalHistory(models.Model):
         xp = calculate_xp(
             module="goals",
             difficulty=self.goal.difficulty.name.lower(),
-            period=self.goal.period.name.lower(),  # weekly / monthly / yearly
+            period=self.goal.period.name.lower(),  # weekly/monthly/yearly
         )
 
         self.xp_gained = xp

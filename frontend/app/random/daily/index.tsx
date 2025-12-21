@@ -19,9 +19,9 @@ export default function DailyPickScreen() {
   const toggleTag = (id:number) => setSelectedTags(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
 
   const onLosuj = async () => {
-    if (!tags.length) return Alert.alert("no tags");
+    if (!tags.length) return Alert.alert("No tags.");
     const picked = await randomChallenge(userId, "Daily", selectedTags);
-    if (!picked) return Alert.alert("no challenges with selected tags");
+    if (!picked) return Alert.alert("No challenges with selected tags.");
 
     setSpinning(true);
     setSpinItems(["...", "Randomizing", "Searching", "Wait", "OK"]);
@@ -38,8 +38,8 @@ return (
     <ScrollView 
       contentContainerStyle={{ 
         flexGrow: 1, 
-        justifyContent: "center",  // centrowanie w pionie
-        alignItems: "center",      // centrowanie w poziomie
+        justifyContent: "center",
+        alignItems: "center",
         padding: 16
       }}
       showsVerticalScrollIndicator={false}

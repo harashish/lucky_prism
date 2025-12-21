@@ -36,7 +36,7 @@ export default function DailyActiveScreen() {
   const onComplete = async () => {
     if (!activeDaily) return;
     const res = await completeUserChallenge(activeDaily.id);
-    if (!res) return Alert.alert("Error", "Could not complete the challenge");
+    if (!res) return Alert.alert("Error", "Cannot complete the challenge");
 
     if (gamificationOn) {
       useGamificationStore.getState().applyXpResult(res);

@@ -5,16 +5,15 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Animated,
 } from "react-native";
 import AppText from "../../components/AppText";
 import { colors, spacing } from "../../constants/theme";
 import { useRouter } from "expo-router";
-import Svg, { Circle } from "react-native-svg";
 import { api } from "../api/apiClient";
-import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+import { DashboardTileKey, useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useFocusEffect } from "@react-navigation/native";
 import { useGamificationStore } from "../stores/useGamificationStore";
+
 
 const userId = 1;
 
@@ -33,7 +32,16 @@ export default function DashboardScreen() {
   const [activeDaily, setActiveDaily] = useState<any | null>(null);
   const [activeWeekly, setActiveWeekly] = useState<any[]>([]);
   const [randomNote, setRandomNote] = useState<any | null>(null);
-  const [noteExpanded, setNoteExpanded] = useState(false);
+
+  const GOAL_TILES: DashboardTileKey[] = [
+    "goal_week",
+    "goal_month",
+    "goal_year",
+  ];
+
+
+  const { modules } = useModuleSettingsStore();
+  const challengesEnabled = modules?.challenges;
   const fetchRandomTodo = async () => {
     try {
       const res = await api.get(`/todos/tasks/random/?user_id=${userId}`);
@@ -125,14 +133,29 @@ const fetchRandomNote = async () => {
   }
 
   //const isTileEnabled = (key: string) => dashboardTiles.find(t => t.id === key && t.is_enabled);
-  const isTileEnabled = (key: string) => (dashboardTiles || []).find((t:any) => (t.key === key || t.id === key) && t.is_enabled);
+  const canRenderTile = (key: DashboardTileKey) => {
+  const tile = dashboardTiles?.find(
+    (t:any) => t.key === key || t.id === key
+  );
+  if (!tile || !tile.is_enabled) return false;
+
+  // jeśli tile ma zależność modułową → sprawdź moduł
+  if (tile.module_dependency) {
+    return modules?.[tile.module_dependency] === true;
+  }
+
+  return true;
+};
+
 
 
   return (
-    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background}} contentContainerStyle={{
+    paddingBottom: 30,
+  }}>
 
       {/* LEVEL */}
-{useModuleSettingsStore.getState().modules?.gamification && (
+{canRenderTile("level_gamification") && (
   <TouchableOpacity
     onPress={() => router.push("/GamificationScreen")}
     style={{ backgroundColor: colors.card, padding: 16, borderRadius: 12, marginBottom: 20 }}
@@ -158,7 +181,7 @@ const fetchRandomNote = async () => {
 
 
 {/* BIGGEST STREAK */}
-{isTileEnabled("biggest_streak") && (
+{canRenderTile("biggest_streak") && (
   <TouchableOpacity
     onPress={() => router.push("/HabitsScreen")}
     onLongPress={() => biggestStreak?.habit_id && router.push({ pathname: "/editHabit/[id]", params: { id: String(biggestStreak.habit_id) } })}
@@ -175,11 +198,11 @@ const fetchRandomNote = async () => {
 
 
 {/* GOALS */}
-{["goal_week", "goal_month", "goal_year"].map((key, idx) => {
+{GOAL_TILES.map((key, idx) => {
   const goal = [goalWeek, goalMonth, goalYear][idx];
   const label = ["Random week goal", "Random month goal", "Random year goal"][idx];
 
-  if (!isTileEnabled(key) || !goal) return null;
+  if (!canRenderTile(key) || !goal) return null;
 
   return (
     <View key={key} style={{ marginBottom: 16 }}>
@@ -224,7 +247,7 @@ const fetchRandomNote = async () => {
 
 
       {/* DAILY CHALLENGE */}
-      {isTileEnabled("daily_challenge") && (
+      {canRenderTile("daily_challenge") && (
         <View style={{ marginBottom: 12 }}>
           <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Daily challenge</AppText>
           {activeDaily ? (
@@ -242,7 +265,7 @@ const fetchRandomNote = async () => {
       )}
 
       {/* WEEKLY CHALLENGE */}
-      {isTileEnabled("weekly_challenge") && (
+      {canRenderTile("weekly_challenge") && (
         <View style={{ marginBottom: 12 }}>
           <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Week challenge</AppText>
           {activeWeekly && activeWeekly.length > 0 ? (
@@ -265,7 +288,7 @@ const fetchRandomNote = async () => {
       )}
 
       {/* RANDOM TODO */}
-      {isTileEnabled("random_todo") && (
+      {canRenderTile("random_todo") && (
         <>
           <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Random todo</AppText>
           <TouchableOpacity onPress={fetchRandomTodo} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 12, marginBottom: 12 }}>
@@ -275,7 +298,7 @@ const fetchRandomNote = async () => {
       )}
 
 {/* RANDOM NOTE */}
-{isTileEnabled("random_note") && (
+{canRenderTile("random_note") && (
   <View style={{ marginBottom: 16 }}>
     <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Note</AppText>
 
@@ -330,7 +353,7 @@ const fetchRandomNote = async () => {
 )}
 
       {/* RANDOM HABIT */}
-      {isTileEnabled("random_habit") && randomHabit && (
+      {canRenderTile("random_habit") && randomHabit && (
   <>
     <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Random habit</AppText>
     <TouchableOpacity
@@ -358,6 +381,9 @@ const fetchRandomNote = async () => {
 )}
 
 
+
+
     </ScrollView>
+    
   );
 }

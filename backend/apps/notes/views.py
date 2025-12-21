@@ -1,13 +1,11 @@
-# apps/notes/views.py
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from .models import RandomNote
 from .serializers import RandomNoteSerializer
 import random
 
-USER_ID = 1  # zgodnie z założeniem projektu
+USER_ID = 1
 
 class NotesListCreateView(generics.ListCreateAPIView):
     serializer_class = RandomNoteSerializer
@@ -25,9 +23,6 @@ class NoteDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class RandomNoteView(APIView):
-    """
-    GET /notes/random/
-    """
     def get(self, request):
         qs = RandomNote.objects.filter(user_id=USER_ID)
         if not qs.exists():

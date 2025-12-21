@@ -1,14 +1,64 @@
 import { Tabs } from "expo-router";
-import { useEffect } from "react";
-import { colors } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import AppText from "../../components/AppText";
+import { colors, fonts } from "../../constants/theme";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { View, ActivityIndicator } from "react-native";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-
 
 export default function TabsLayout() {
   const { modules, fetchModules } = useModuleSettingsStore();
+
+  const TAB_CONFIG: Record<
+    string,
+    {
+      label: string;
+      icon: keyof typeof Ionicons.glyphMap;
+      iconOutline: keyof typeof Ionicons.glyphMap;
+    }
+  > = {
+    index: {
+      label: "Home",
+      icon: "home",
+      iconOutline: "home-outline",
+    },
+    HabitsScreen: {
+      label: "Habits",
+      icon: "repeat",
+      iconOutline: "repeat-outline",
+    },
+    TodosScreen: {
+      label: "Todos",
+      icon: "checkbox",
+      iconOutline: "checkbox-outline",
+    },
+    ChallengesListScreen: {
+      label: "Challenges",
+      icon: "flame",
+      iconOutline: "flame-outline",
+    },
+    GoalsScreen: {
+      label: "Goals",
+      icon: "flag",
+      iconOutline: "flag-outline",
+    },
+    RandomHomeScreen: {
+      label: "Random",
+      icon: "shuffle",
+      iconOutline: "shuffle-outline",
+    },
+    GamificationScreen: {
+      label: "Level",
+      icon: "game-controller",
+      iconOutline: "game-controller-outline",
+    },
+    SettingsScreen: {
+      label: "Settings",
+      icon: "settings",
+      iconOutline: "settings-outline",
+    },
+  };
 
   useEffect(() => {
     fetchModules();
@@ -16,7 +66,14 @@ export default function TabsLayout() {
 
   if (!modules) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.buttonActive} />
       </View>
     );
@@ -24,54 +81,65 @@ export default function TabsLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-    <Tabs
-      screenOptions={{
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        tabBarActiveTintColor: colors.buttonActive,
-        tabBarInactiveTintColor: colors.text,
-        headerStyle: { backgroundColor: colors.card },
-        headerTitleStyle: { color: colors.text },
-      }}
-    >
-      <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
+      <Tabs
+        initialRouteName="index"
+        screenOptions={({ route }) => {
+          const config = TAB_CONFIG[route.name];
 
-      <Tabs.Screen
-        name="ChallengesListScreen"
-        options={{ title: "Challenges", href: modules.challenges ? undefined : null }}
-      />
+          return {
+            headerShown: true,
+            headerTitle: config?.label ?? "",
+            headerStyle: {
+              backgroundColor: colors.background,
+            },
+            headerTitleStyle: {
+              color: colors.text,
+              fontSize: 20,
+              fontFamily: fonts.nunitoRegular,
+            },
+            headerShadowVisible: false,
 
-      <Tabs.Screen
-        name="GoalsScreen"
-        options={{ title: "Goals", href: modules.goals ? undefined : null }}
-      />
+            tabBarShowLabel: false,
+            tabBarStyle: {
+              backgroundColor: "#15151aff",
+              borderTopColor: "transparent",
+              height: 68,
+            },
 
-      <Tabs.Screen
-        name="HabitsScreen"
-        options={{ title: "Habits", href: modules.habits ? undefined : null }}
-      />
+            tabBarIcon: ({ focused }) => {
+              if (!config) return null;
 
-      <Tabs.Screen
-        name="TodosScreen"
-        options={{ title: "Todos", href: modules.todos ? undefined : null }}
-      />
+              return (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: 80,
+                    height: 40,
+                    marginTop: 25,
+                  }}
+                >
+                  <Ionicons
+                    name={focused ? config.icon : config.iconOutline}
+                    size={18}
+                    color={focused ? colors.buttonActive : "#7a7891"}
+                  />
 
-      <Tabs.Screen
-        name="RandomHomeScreen"
-        options={{ title: "Random", href: modules.random ? undefined : null }}
-      />
-
-      <Tabs.Screen
-        name="GamificationScreen"
-        options={{ title: "Level", href: modules.gamification ? undefined : null }}
-      />
-
-      <Tabs.Screen name="SettingsScreen" options={{ title: "Settings" }} />
-    </Tabs>
+                </View>
+              );
+            },
+          };
+        }}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="ChallengesListScreen" />
+        <Tabs.Screen name="HabitsScreen" />
+        <Tabs.Screen name="TodosScreen" />
+        <Tabs.Screen name="GoalsScreen" />
+        <Tabs.Screen name="RandomHomeScreen" />
+        <Tabs.Screen name="GamificationScreen" />
+        <Tabs.Screen name="SettingsScreen" />
+      </Tabs>
     </GestureHandlerRootView>
   );
 }

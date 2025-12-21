@@ -1,5 +1,3 @@
-// frontend/app/(tabs)/TodosScreen.tsx
-
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, FlatList, Alert } from "react-native";
 import AppText from "../../components/AppText";
@@ -15,8 +13,6 @@ import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
-
-
 
 const userId = 1;
 
@@ -38,8 +34,6 @@ export default function TodosScreen() {
   const gamificationOn = modules?.gamification;
 
   
-
-  // LOAD CATEGORIES + SELECT FIRST
 useFocusEffect(
   useCallback(() => {
     loadCategories();
@@ -58,9 +52,6 @@ useEffect(() => {
   }
 }, [categories]);
 
-
-
-  // LOAD TASKS WHEN CATEGORY CHANGES
   useEffect(() => {
     if (selectedCategoryId !== null) {
       loadTasks(userId, selectedCategoryId);
@@ -76,14 +67,14 @@ const res = await quickAddTask(
   userId,
   catId,
   quickText.trim(),
-  customDifficulty // już jest ID albo null
+  customDifficulty
 );
 
   if (res) {
     setQuickText("");
     setCustomDifficulty(null);
   } else {
-    Alert.alert("Błąd", "Nie udało się dodać zadania");
+    Alert.alert("Error", "Cannot add todo.");
   }
 };
 
@@ -93,10 +84,10 @@ const res = await quickAddTask(
       
       {/* Difficulty Popup */}
       {showDifficulty && (
-<CustomDifficultyPicker
-  onSelect={(d: any) => { setCustomDifficulty(d.id); setShowDifficulty(false); }}
-  onClose={() => setShowDifficulty(false)}
-/>
+      <CustomDifficultyPicker
+        onSelect={(d: any) => { setCustomDifficulty(d.id); setShowDifficulty(false); }}
+        onClose={() => setShowDifficulty(false)}
+      />
 
       )}
 
@@ -155,9 +146,9 @@ const res = await quickAddTask(
         </ScrollView>
       </View>
 
-            <TouchableOpacity onPress={() => setShowCompleted(prev => !prev)} style={{ padding: 8, marginBottom: 12, backgroundColor: colors.buttonActive, borderRadius: 10, alignItems: 'center' }}>
-  <AppText style={{ color: "#fff" }}>{showCompleted ? "Show todo" : "Show completed"}</AppText>
-</TouchableOpacity>
+       <TouchableOpacity onPress={() => setShowCompleted(prev => !prev)} style={{ padding: 8, marginBottom: 12, backgroundColor: colors.buttonActive,  alignItems: 'center' }}>
+        <AppText style={{ color: "#fff" }}>{showCompleted ? "Show todo" : "Show completed"}</AppText>
+      </TouchableOpacity>
 
 <KeyboardAvoidingView
   style={{ flex: 1 }}
@@ -202,14 +193,13 @@ const res = await quickAddTask(
     />
   )}
 
-  <BottomInputBar
-    quickText={quickText}
-    setQuickText={setQuickText}
-    onQuickAdd={onQuickAdd}
-    onOpenDifficulty={() => setShowDifficulty(true)}
-  />
-</KeyboardAvoidingView>
-
+      <BottomInputBar
+        quickText={quickText}
+        setQuickText={setQuickText}
+        onQuickAdd={onQuickAdd}
+        onOpenDifficulty={() => setShowDifficulty(true)}
+      />
+    </KeyboardAvoidingView>
 
     </View>
   );

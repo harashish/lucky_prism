@@ -1,5 +1,3 @@
-// components/AppText.tsx
-
 import { Text, TextProps } from "react-native";
 import { colors, fonts } from "../constants/theme";
 
@@ -10,7 +8,7 @@ export default function AppText({ style, ...props }: TextProps) {
       style={[
         {
           color: colors.text,
-          fontFamily: fonts.poppinsRegular, // domyślna czcionka
+          fontFamily: fonts.poppinsRegular,
           lineHeight: 20,
         },
         style,

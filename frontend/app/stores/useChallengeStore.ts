@@ -3,9 +3,11 @@ import { api } from "../api/apiClient";
 
 export interface ChallengeTag { id: number; name: string; }
 export interface ChallengeType { id: number; name: string; }
-export interface DifficultyType { id: number; name: string }
+export interface DifficultyType { id: number; name: string; xp_value: number; }
 export interface Challenge { id:number; title:string; description:string; type:ChallengeType; difficulty:DifficultyType; tags:ChallengeTag[]; is_default:boolean; }
 export interface UserChallenge { id:number; challenge: Challenge; start_date: string; challenge_type: string; weekly_deadline?: string; progress_percent?: number; is_completed: boolean; }
+import type { XpResult } from "./useGamificationStore";
+
 
 interface ChallengeStore {
   challenges: Challenge[];
@@ -23,12 +25,7 @@ interface ChallengeStore {
   randomChallenge: (userId: number, type: "Daily" | "Weekly", tagIds?: number[]) => Promise<Challenge | null>;
   assignChallenge: (userId: number, challengeId: number) => Promise<UserChallenge | null>;
   discardUserChallenge: (id: number) => Promise<boolean>;
-  completeUserChallenge: (id: number) => Promise<{
-  xp_gained: number;
-  total_xp: number;
-  current_level: number;
-} | null>;
-
+  completeUserChallenge: (id: number) => Promise<XpResult | null>;
 
   reset: () => void;
 }
@@ -81,14 +78,13 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
   },
 
   fetchActive: async (userId: number) => {
-    set({ loading: true });
     try {
       const res = await api.get(`/challenges/active/${userId}/`);
       set({ activeDaily: res.data.daily || null, activeWeekly: res.data.weekly || [] });
     } catch (e: any) {
       console.error("fetchActive", e.response?.data || e.message || e);
       set({ activeDaily: null, activeWeekly: [] });
-    } finally { set({ loading: false }); }
+    } 
   },
 
   randomChallenge: async (userId, type, tagIds = []) => {
@@ -127,25 +123,32 @@ assignChallenge: async (userId, challengeId) => {
 },
 
 
-  discardUserChallenge: async (id) => {
-    try {
-      await api.post(`/challenges/user-challenges/${id}/discard/`);
-      return true;
-    } catch (e: any) {
-      console.error("discardUserChallenge", e.response?.data || e.message || e);
-      return false;
-    }
+    discardUserChallenge: async (id) => {
+      try {
+        await api.post(`/challenges/user-challenges/${id}/discard/`);
+        const userId = get().activeDaily?.challenge?.id
+          ? undefined
+          : undefined; // 👈 NIE POTRZEBA userId
+        await get().fetchActive(1); // albo przekazuj userId do store
+        return true;
+      } catch (e: any) {
+        console.error("discardUserChallenge", e.response?.data || e.message || e);
+        return false;
+      }
   },
 
-  completeUserChallenge: async (id) => {
-    try {
-      const res = await api.post(`/challenges/user-challenges/${id}/complete/`);
-      return res.data;
-    } catch (e: any) {
-      console.error("completeUserChallenge", e.response?.data || e.message || e);
-      return null;
-    }
-  },
+
+completeUserChallenge: async (id) => {
+  try {
+    const res = await api.post(`/challenges/user-challenges/${id}/complete/`);
+    await get().fetchActive(1);
+    return res.data;
+  } catch (e: any) {
+    console.error("completeUserChallenge", e.response?.data || e.message || e);
+    return null;
+  }
+},
+
 
   reset: () => set({ challenges: [], tags: [], userChallenges: [], activeDaily: null, activeWeekly: [] }),
 }));

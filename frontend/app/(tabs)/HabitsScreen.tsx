@@ -38,7 +38,7 @@ export default function HabitsScreen() {
     const res = await toggleDay(habitId, today);
 
     if (!res) {
-      Alert.alert("Błąd", "Nie udało się zapisać dnia");
+      Alert.alert("Error", "Cannot save day.");
       return;
     }
       if (res.already_completed) {
@@ -50,8 +50,6 @@ export default function HabitsScreen() {
         .getState()
         .applyXpResult(res);
     }
-
-
     await loadMonth(userId, month);
   };
 
@@ -63,7 +61,7 @@ export default function HabitsScreen() {
     const res = await toggleDay(habitId, date, newStatus);
 
     if (!res) {
-      Alert.alert("Błąd", "Cannot save day");
+      Alert.alert("Error", "Cannot save day");
       return;
     }
 

@@ -1,8 +1,8 @@
 // frontend/components/HabitItem.tsx
 import React, { useState } from "react";
-import { View, Pressable, StyleSheet } from "react-native";
+import { View, Pressable } from "react-native";
 import AppText from "./AppText";
-import { colors, components, spacing, radius } from "../constants/theme";
+import { colors, components, spacing } from "../constants/theme";
 import { useRouter } from "expo-router";
 
 type HabitProps = {
@@ -61,7 +61,7 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
         </AppText>
 
           
-                  {item.motivation_reason ? (
+          {item.motivation_reason ? (
           <AppText
             style={{
               fontSize: 12,
@@ -78,7 +78,7 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
         </View>
       )}
 
-      {/* month grid (pozostawione bez zmian) */}
+
       <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: spacing.s }}>
         {days.map((d: any) => {
           const status = d.status;

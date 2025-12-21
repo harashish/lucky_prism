@@ -1,4 +1,3 @@
-# apps/goals/serializers.py
 from rest_framework import serializers
 from .models import Goal, GoalHistory, GoalPeriod
 from apps.common.models import DifficultyType

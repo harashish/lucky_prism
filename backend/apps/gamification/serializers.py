@@ -21,8 +21,3 @@ class UserSerializer(serializers.ModelSerializer):
             "logs",
         ]
 
-
-'''class ModuleXPConfigSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ModuleXPConfig
-        fields = ["id", "module", "base_xp"]'''

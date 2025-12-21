@@ -1,5 +1,3 @@
-// components/AppText.tsx
-
 import { Text, TextProps } from "react-native";
 import { colors, fonts } from "../constants/theme";
 

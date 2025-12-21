@@ -28,14 +28,23 @@ else:
 # DIFFICULTY TYPES
 # =====================
 
-difficulties = ["Trivial", "Easy", "Medium", "Hard"]
+difficulties = [
+    ("Trivial", 1),
+    ("Easy", 2),
+    ("Medium", 3),
+    ("Hard", 4),
+]
 
 difficulty_map = {}
 
-for name in difficulties:
-    obj, created = DifficultyType.objects.get_or_create(name=name)
+for name, order in difficulties:
+    obj, created = DifficultyType.objects.get_or_create(
+        name=name,
+        defaults={"order": order},
+    )
+
     difficulty_map[name] = obj
-    print(f"[DIFFICULTY] {name} {'created' if created else 'exists'}")
+    print(f"[DIFFICULTY] {name} ({order}) {'created' if created else 'exists'}")
 
 
 # =====================

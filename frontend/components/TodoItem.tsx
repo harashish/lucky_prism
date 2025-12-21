@@ -1,4 +1,3 @@
-// frontend/components/TodoItem.tsx
 import React, { useRef } from "react";
 import { View, Alert, Pressable, StyleSheet } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -16,12 +15,12 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
   const confirmComplete = () => {
     swipeRef.current?.close();
     Alert.alert(
-      "Ukończyć zadanie?",
+      "Complete task?",
       item.content,
       [
-        { text: "Anuluj", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
-          text: "Tak",
+          text: "Yes",
           onPress: () => onComplete(item.id),
         },
       ]
@@ -31,12 +30,12 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
   const confirmDelete = () => {
     swipeRef.current?.close();
     Alert.alert(
-      "Usunąć zadanie?",
+      "Delete task?",
       item.content,
       [
-        { text: "Anuluj", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
-          text: "Usuń",
+          text: "Delete",
           style: "destructive",
           onPress: () => onDelete(item.id),
         },
@@ -46,13 +45,13 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
 
   const renderLeftAction = () => (
     <View style={[styles.action, styles.complete]}>
-      <AppText style={styles.actionText}>Ukończ</AppText>
+      <AppText style={styles.actionText}>Complete</AppText>
     </View>
   );
 
   const renderRightAction = () => (
     <View style={[styles.action, styles.delete]}>
-      <AppText style={styles.actionText}>Usuń</AppText>
+      <AppText style={styles.actionText}>Delete</AppText>
     </View>
   );
 
@@ -89,7 +88,7 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
                 <AppText
                   style={{
                     fontWeight: "normal",
-                    color: colors.light,
+                    color: isCompleted ? "#777" : colors.light,
                   }}
                 >
                   {" "}
@@ -97,6 +96,7 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
                 </AppText>
               )}
             </AppText>
+
 
 
           </View>

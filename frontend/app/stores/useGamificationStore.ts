@@ -1,16 +1,7 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-/**
- * Centralny store gamifikacji.
- * - NIE liczy XP
- * - NIE zna wzorów
- * - tylko aplikuje wynik z backendu
- */
-
-
-
-type XpResult = {
+export type XpResult = {
   xp_gained: number;
   total_xp: number;
   current_level: number;
@@ -27,7 +18,7 @@ type GamificationState = {
   xpPopup: XpPopup | null;
 
   applyXpResult: (result: XpResult) => void;
-  fetchUser: (userId: number) => Promise<void>;   // ⬅️ DODAJ
+  fetchUser: (userId: number) => Promise<void>;
   clearXpPopup: () => void;
   resetGamification: () => void;
 };
@@ -38,10 +29,6 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
   currentLevel: 1,
   xpPopup: null,
 
-  /**
-   * JEDYNA funkcja, która aktualizuje XP i level
-   * na podstawie odpowiedzi z backendu
-   */
 
   fetchUser: async (userId: number) => {
     const res = await api.get(`/gamification/users/${userId}/`);
@@ -65,8 +52,6 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
       },
     });
   },
-
-
 
   clearXpPopup: () => {
     set({ xpPopup: null });

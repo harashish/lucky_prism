@@ -8,7 +8,9 @@ export default function SettingsScreen() {
  const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleToggles } = useModuleSettingsStore();
 
   return (
-    <ScrollView style={{ flex: 1, padding: spacing.l, backgroundColor: colors.background  }}>
+    <ScrollView style={{ flex: 1, padding: spacing.l, backgroundColor: colors.background  }} contentContainerStyle={{
+    paddingBottom: 30,
+  }} >
       
       {/* MODULES */}
       <AppText style={{ fontWeight: "700", marginBottom: 10 }}>Modules</AppText>
@@ -37,7 +39,7 @@ export default function SettingsScreen() {
             <AppText>{tile.name}</AppText>
             <Switch
               value={tile.is_enabled}
-              onValueChange={(v) => toggleTile(tile.id, v)}
+              onValueChange={(v) => toggleTile(tile.key, v)}
               trackColor={{ 
                 false: colors.card, // Kolor tła, gdy wyłączony
                 true: colors.buttonActive // Kolor tła, gdy włączony 
@@ -50,11 +52,6 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
-
-
-      
-
 
 const styles = StyleSheet.create({
   container: {

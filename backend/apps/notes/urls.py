@@ -1,4 +1,3 @@
-# apps/notes/urls.py
 from django.urls import path
 from .views import NotesListCreateView, NoteDetailView, RandomNoteView
 

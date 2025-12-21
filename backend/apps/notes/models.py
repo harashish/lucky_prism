@@ -1,5 +1,3 @@
-# apps/notes/models.py
-
 from django.db import models
 
 class RandomNote(models.Model):

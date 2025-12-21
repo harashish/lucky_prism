@@ -1,7 +1,5 @@
-// frontend/components/TagsFormScreen.tsx
-
 import React, { useEffect, useState } from "react";
-import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import AppText from "../components/AppText";
 import { colors, radius } from "../constants/theme";
@@ -88,7 +86,6 @@ return (
       <TextInput
         value={name}
         onChangeText={setName}
-        //placeholder="Tag name"
         placeholderTextColor="#7a7891"
         style={{
           borderWidth: 1,

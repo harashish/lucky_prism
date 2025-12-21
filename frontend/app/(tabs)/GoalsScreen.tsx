@@ -136,12 +136,28 @@ const [selectedPeriod, setSelectedPeriod] =
             >
               <View style={{ ...components.container, opacity: isCompleted ? 0.5 : 1 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <View style={{ flex: 1 }}>
-            <AppText style={{ fontWeight: "bold" }}>{item.title}</AppText>
-            <AppText style={{ fontSize: 12, color: "#777" }}>
-              {item.difficulty.name}
-            </AppText>
-          </View>
+                  <View style={{ flex: 1 }}>
+                    <AppText
+                      style={{
+                        fontWeight: "bold",
+                        textDecorationLine: isCompleted ? "line-through" : "none",
+                        color: isCompleted ? "#777" : colors.text,
+                      }}
+                    >
+                      {item.title}
+                    </AppText>
+
+                    <AppText
+                      style={{
+                        fontSize: 12,
+                        color: isCompleted ? "#777" : "#777",
+                        textDecorationLine: isCompleted ? "line-through" : "none",
+                      }}
+                    >
+                      {item.difficulty.name}
+                    </AppText>
+                  </View>
+
 
                   {!isCompleted && (
                     <TouchableOpacity

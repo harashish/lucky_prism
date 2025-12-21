@@ -24,7 +24,9 @@ class ModuleDefinitionUpdate(generics.UpdateAPIView):
     def perform_update(self, serializer):
         instance = serializer.save()
         # jeśli wyłączono moduł -> wyłącz powiązane DashboardTile
-        if not instance.is_enabled:
+        if instance.is_enabled:
+            DashboardTile.objects.filter(user=instance.user, module_dependency=instance.module).update(is_enabled=True)
+        else:
             DashboardTile.objects.filter(user=instance.user, module_dependency=instance.module).update(is_enabled=False)
 
 
@@ -77,10 +79,6 @@ class DashboardTileUpdate(generics.UpdateAPIView):
     serializer_class = DashboardTileSerializer
 
 class InitUserDashboardTiles(APIView):
-    """
-    POST /settings/dashboard-tiles/init/  body: { user_id: 1 }
-    Creates default tiles for the user if missing.
-    """
     def post(self, request):
         user_id = request.data.get("user_id")
         if not user_id:

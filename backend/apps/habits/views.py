@@ -5,8 +5,7 @@ from rest_framework.response import Response
 from django.db import transaction
 from .models import Habit, HabitDay
 from .serializers import HabitSerializer, HabitDaySerializer
-from datetime import datetime, date, timedelta
-from django.db.models import Q
+from datetime import datetime, date
 import calendar
 from apps.gamification.services.xp_calculator import calculate_xp
 
@@ -27,16 +26,6 @@ class UserHabitList(generics.ListAPIView):
         return Habit.objects.filter(user_id=user_id, is_active=True).order_by("-created_at")
 
 class HabitDayToggleView(APIView):
-    """
-    Toggle habit day status.
-    Status cycle:
-      EMPTY -> COMPLETED -> SKIPPED -> EMPTY
-
-    XP:
-    - awarded ONLY first time COMPLETED
-    - NEVER removed
-    """
-
     def post(self, request, habit_id):
         date_str = request.data.get("date")
         status_val = request.data.get("status")
@@ -64,7 +53,6 @@ class HabitDayToggleView(APIView):
             xp_added = 0
             already_completed = False
 
-            # determine next status if not explicitly provided
             if status_val is None:
                 if obj.status == HabitDay.STATUS_EMPTY:
                     new_status = HabitDay.STATUS_COMPLETED
@@ -75,7 +63,6 @@ class HabitDayToggleView(APIView):
             else:
                 new_status = int(status_val)
 
-            # XP logic
             if obj.status == HabitDay.STATUS_COMPLETED and obj.xp_awarded:
                 already_completed = True
 
@@ -152,10 +139,6 @@ class HabitMonthView(APIView):
         })
 
 class UserHabitStreakView(APIView):
-    """
-    GET /api/habits/user-habits/<user_id>/streaks/
-    Zwraca najlepszy streak: { habit_id, title, biggest_streak, current_streak }
-    """
     def get(self, request, user_id):
         from .models import Habit, HabitDay
         habits = Habit.objects.filter(user_id=user_id, is_active=True)
@@ -179,8 +162,6 @@ class UserHabitStreakView(APIView):
                     cur = 0
                 last_date = dt
 
-            # current streak (ending today): count backwards
-            # quick compute: start from latest days until non-completed found
             cur_back = 0
             for dt, status in reversed(list(days)):
                 if status == HabitDay.STATUS_COMPLETED:

@@ -76,7 +76,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
-CORS_ALLOW_ALL_ORIGINS = True   # na lokalny dev
+CORS_ALLOW_ALL_ORIGINS = True   #na lokalny dev
 
 TEMPLATES = [
     {

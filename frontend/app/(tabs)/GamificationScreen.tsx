@@ -1,5 +1,3 @@
-// frontend/app/(tabs)/GamificationScreen.tsx
-
 import React, { useCallback, useState } from "react";
 import {
   View,
@@ -46,12 +44,11 @@ export default function GamificationScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchUser(userId);   // ⬅️ synchronizacja XP / level
-      fetchLogs();         // ⬅️ logi XP
+      fetchUser(userId);
+      fetchLogs();
     }, [])
   );
 
-  // --- PROGRESS ---
   const xpForLevel = (lvl: number) => 50 * lvl * (lvl - 1);
   const currentLevelXpStart = xpForLevel(level);
   const nextLevelXp = xpForLevel(level + 1);

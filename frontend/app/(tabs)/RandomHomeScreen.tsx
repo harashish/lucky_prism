@@ -11,7 +11,6 @@ export default function RandomHomeScreen() {
   const router = useRouter();
   const { fetchActive, activeDaily, activeWeekly } = useChallengeStore();
   const [loading, setLoading] = useState(false);
-
   const { modules } = useModuleSettingsStore();
 
   const userId = 1;
@@ -20,15 +19,13 @@ export default function RandomHomeScreen() {
     fetchActive(userId);
   }, []);
 
-const handleDaily = async () => {
-  setLoading(true);
-  await fetchActive(userId);
-  const { activeDaily: latestActive } = useChallengeStore.getState();
-  setLoading(false);
-  router.push(latestActive ? "/random/daily/active" : "/random/daily");
-};
-
-
+  const handleDaily = async () => {
+    setLoading(true);
+    await fetchActive(userId);
+    const { activeDaily: latestActive } = useChallengeStore.getState();
+    setLoading(false);
+    router.push(latestActive ? "/random/daily/active" : "/random/daily");
+  };
 
   const handleWeekly = async () => {
     setLoading(true);
@@ -44,20 +41,6 @@ const handleDaily = async () => {
       </View>
     );
   }
-
-  /*
-        <TouchableOpacity onPress={handleDaily} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a daily challenge</AppText>
-      </TouchableOpacity>
-
-            <TouchableOpacity onPress={handleWeekly} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12, marginBottom:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a week challenge</AppText>
-      </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push("/random/todo")} style={{ backgroundColor: colors.buttonActive, padding:18, borderRadius:12 }}>
-        <AppText style={{ color:"#fff", fontWeight:"bold", textAlign: "center" }}>Randomize a todo</AppText>
-      </TouchableOpacity>
-  */
 
   return (
     <View style={{ flex:1, padding:16, backgroundColor: colors.background, justifyContent:"center" }}>

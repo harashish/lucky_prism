@@ -37,7 +37,7 @@ export default function TodoPickScreen() {
       let arr = res.data.filter((t:any) => !t.is_completed);
       if (!arr.length) {
         setSpinning(false);
-        Alert.alert("no tasks in this category");
+        Alert.alert("No tasks in this category.");
         return;
       }
 
@@ -50,7 +50,7 @@ export default function TodoPickScreen() {
 
     } catch(e){ 
       setSpinning(false);
-      Alert.alert("Błąd", "can't load tasks" ); 
+      Alert.alert("Error", "Cannot load tasks." ); 
     }
   };
 
@@ -61,8 +61,8 @@ export default function TodoPickScreen() {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          justifyContent: "center", // centrowanie pionowe
-          alignItems: "center",     // centrowanie poziome
+          justifyContent: "center",
+          alignItems: "center",
           padding: 16
         }}
         showsVerticalScrollIndicator={false}

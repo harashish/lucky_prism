@@ -1,5 +1,3 @@
-// frontend/components/HabitFormScreen.tsx
-
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -15,18 +13,25 @@ export default function HabitFormScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const editingId = params?.id ? parseInt(params.id as string, 10) : null;
-
   const { createHabit, updateHabit, deleteHabit, loadDifficulties, difficulties } = useHabitStore();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [why, setWhy] = useState("");
-  const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
-  const [color, setColor] = useState<string>(colorPalette[0]);
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const colorPalette = [
+    "#908bab",
+    "#E5FE86",
+    "#825BA5",
+    "#83CDEE",
+    "#E4BEE6",
+    "#EA97DC",
+    "#A0B4EF",
+  ];
+
+  const [color, setColor] = useState<string>(colorPalette[0]);
 
   const userId = 1;
 
@@ -105,7 +110,9 @@ const save = async () => {
 
   return (
     <>
-    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }} contentContainerStyle={{
+    paddingBottom: 30
+  }}>
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
         {editingId ? "Edit habit" : "Add habit"}
       </AppText>
@@ -138,8 +145,6 @@ const save = async () => {
         ))}
       </View>
 
-
-
       <TouchableOpacity onPress={save} style={{ backgroundColor: colors.buttonActive, padding: spacing.m, borderRadius: radius.md, alignItems: "center", marginBottom: editingId ? spacing.m : 0 }}>
         {loading ? <ActivityIndicator color="#fff" /> : <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editingId ? "Save" : "Add habit"}</AppText>}
       </TouchableOpacity>
@@ -165,12 +170,7 @@ const save = async () => {
           </AppText>
         </TouchableOpacity>
       )}
-
-
-      
-      
     </ScrollView>
-
     <FormErrorModal
       visible={!!errorMessage}
       message={errorMessage || ""}

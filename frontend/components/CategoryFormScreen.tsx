@@ -13,7 +13,6 @@ export default function CategoryForm() {
   const editing = !!id;
   const router = useRouter();
   const { addCategory, saveCategory, deleteCategory } = useTodoStore();
-
   const [name, setName] = useState("");
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [difficulties, setDifficulties] = useState<any[]>([]);

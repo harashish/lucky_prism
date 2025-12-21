@@ -3,12 +3,7 @@ import { View, TouchableOpacity, Modal, ScrollView, Alert } from "react-native";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
 import { api } from "../api/apiClient";
-import { useRouter } from "expo-router";
 
-/**
- * Ten ekran działa jak pół–popup: otwiera się jako mały modal.
- * Możesz go otwierać z quick-add: router.push("/todos/customDifficultyPicker")
- */
 export default function CustomDifficultyPicker({ onSelect, onClose }) {
   const [difficulties, setDifficulties] = useState([]);
 
@@ -31,7 +26,7 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
         
         <View style={{
           width: "80%",
-          maxHeight: "60%",
+          maxHeight: "80%",
           backgroundColor: colors.card,
           borderRadius: 14,
           padding: 16
@@ -44,7 +39,7 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
             {difficulties.map(d => (
               <TouchableOpacity
                 key={d.id}
-                onPress={() => onSelect(d)} // przekazujemy cały obiekt
+                onPress={() => onSelect(d)}
                 style={{
                   padding: 12,
                   borderRadius: 8,

@@ -1,4 +1,3 @@
-// frontend/app/random/result.tsx
 import React, { useRef, useState, useEffect } from "react";
 import { View, TouchableOpacity, Alert, Animated, ActivityIndicator } from "react-native";
 import AppText from "../../components/AppText";
@@ -16,9 +15,8 @@ export default function RandomResultScreen(){
   const [currentItem, setCurrentItem] = useState(item ? JSON.parse(item) : null);
   const [assigning, setAssigning] = useState(false);
   const [assigned, setAssigned] = useState(false);
-  const slideAnim = useRef(new Animated.Value(0)).current; // start position
+  const slideAnim = useRef(new Animated.Value(0)).current; 
 
-  // auto-assign challenge immediately after arriving (only for challenges)
   useEffect(() => {
     if (source === "challenge" && currentItem && !assigned && !assigning) {
       (async () => {
@@ -28,7 +26,7 @@ export default function RandomResultScreen(){
           setAssigned(true);
         } catch (e: any) {
           const err = e.response?.data?.detail || e.response?.data || e.message || e;
-          Alert.alert("Błąd przypisania", typeof err === "string" ? err : JSON.stringify(err));
+          Alert.alert("Error", typeof err === "string" ? err : JSON.stringify(err));
         } finally {
           setAssigning(false);
         }
@@ -36,24 +34,22 @@ export default function RandomResultScreen(){
     }
   }, [source, currentItem]);
 
-  // slide animation przy losuj dalej (todo)
   const slideTodo = (nextItem: any) => {
     Animated.timing(slideAnim, { toValue: -50, duration: 250, useNativeDriver: true }).start(() => {
       setCurrentItem(nextItem);
-      slideAnim.setValue(50); // start poniżej
+      slideAnim.setValue(50);
       Animated.timing(slideAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start();
     });
   };
 
-  // losuj dalej (todo)
-  const onLosujDalej = async () => {
+  const onReroll = async () => {
     try {
       const res = await api.get("/todos/tasks/", { params: { user_id: userId, category_id: categoryId }});
       const arr = res.data.filter((t:any) => !t.is_completed);
-      if (!arr.length) { Alert.alert("Lista pusta", "Brak niewykonanych zadań."); return; }
+      if (!arr.length) { Alert.alert("Empty List", "No todos."); return; }
       const next = arr[Math.floor(Math.random() * arr.length)];
       slideTodo(next);
-    } catch (e) { Alert.alert("Błąd losowania", "Spróbuj ponownie."); }
+    } catch (e) { Alert.alert("Error", "Try again."); }
   };
 
   if (!currentItem) return null;
@@ -87,7 +83,7 @@ export default function RandomResultScreen(){
           {assigning && (
             <View style={{ marginTop:12, alignItems:"center" }}>
               <ActivityIndicator color={colors.buttonActive} />
-              <AppText style={{ marginTop:8 }}>Przypisywanie...</AppText>
+              <AppText style={{ marginTop:8 }}>Assigning...</AppText>
             </View>
           )}
 
@@ -105,7 +101,7 @@ export default function RandomResultScreen(){
           <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
             <AppText style={{ textAlign: "center" }}>OK</AppText>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onLosujDalej} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>
+          <TouchableOpacity onPress={onReroll} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>
             <AppText style={{ textAlign: "center", color:"#fff" }}>Reroll</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10 }}>

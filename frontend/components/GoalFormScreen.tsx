@@ -1,5 +1,3 @@
-// frontend/components/GoalFormScreen.tsx
-
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -9,8 +7,6 @@ import AppText from "../components/AppText";
 import { colors, spacing, radius } from "../constants/theme";
 import FormErrorModal from "../components/FormErrorModal";
 import { confirmDelete } from "../components/confirmDelete";
-
-
 
 const GoalFormScreen = () => {
   const router = useRouter();
@@ -66,7 +62,7 @@ const GoalFormScreen = () => {
 
   const fetchDifficulties = async () => {
     try {
-      const res = await api.get("/common/difficulties/"); // re-use difficulties endpoint
+      const res = await api.get("/common/difficulties/");
       setAvailableDifficulties(res.data);
     } catch (e) {
       console.error(e);
@@ -128,7 +124,9 @@ if (!why.trim()) {
 
   return (
     <>
-    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }} contentContainerStyle={{
+    paddingBottom: 30
+  }}>
 
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
         {editingId ? "Edit goal" : "Add goal"}

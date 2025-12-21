@@ -19,13 +19,10 @@ export default function WeeklyPickScreen() {
   const toggleTag = (id:number) => setSelectedTags(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
 
   const onLosuj = async () => {
-    if (!tags.length) return Alert.alert("no tagsw");
+    if (!tags.length) return Alert.alert("No tags.");
     const picked = await randomChallenge(userId, "Weekly", selectedTags);
-    //if (selectedTags.length === 0) return Alert.alert("Choose at least one tag");
-
-    
     if (!picked) {
-      Alert.alert("no challenges with selected tags");
+      Alert.alert("No challenges with selected tags.");
       return;
     }
 
@@ -45,8 +42,8 @@ export default function WeeklyPickScreen() {
       <ScrollView 
         contentContainerStyle={{ 
           flexGrow: 1, 
-          justifyContent: "center", // centrowanie pionowe
-          alignItems: "center",     // centrowanie poziome
+          justifyContent: "center",
+          alignItems: "center",
           padding: 16
         }}
         showsVerticalScrollIndicator={false}

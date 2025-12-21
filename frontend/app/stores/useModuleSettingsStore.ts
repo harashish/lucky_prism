@@ -23,7 +23,8 @@ export type ModuleKey =
   | "random_note";
 
 type DashboardTileSetting = {
-  id: DashboardTileKey;
+  id: number; 
+  key: DashboardTileKey;
   name: string;
   is_enabled: boolean;
   module_dependency?: ModuleKey; // jeśli tile zależy od modułu
@@ -102,7 +103,8 @@ toggleModule: async (id, value) => {
 
   try {
     await api.patch(`/settings/modules/${id}/`, { is_enabled: value });
-    // success: remove pending
+    const tRes = await api.get("/settings/dashboard-tiles/?user_id=1");
+    set({ dashboardTiles: tRes.data });
     set({ pendingModuleToggles: get().pendingModuleToggles.filter(x => x !== id) });
   } catch (e) {
     // rollback on error
@@ -111,7 +113,7 @@ toggleModule: async (id, value) => {
   }
 },
 
-  toggleTile: async (id: string, value: boolean) => {
+toggleTile: async (id: DashboardTileKey, value: boolean) => {
     // zakładamy id jest numericznym pk gdy tiles pobrane z backendu
     const tile = get().dashboardTiles.find((t:any) => t.key === id || t.id === id);
     if (!tile) return;

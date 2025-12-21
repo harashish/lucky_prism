@@ -1,4 +1,3 @@
-// frontend/components/RandomResultCard.tsx
 import React from "react";
 import { Animated, View } from "react-native";
 import AppText from "./AppText";
@@ -15,7 +14,6 @@ export default function RandomResultCard({
   title,
   description,
   animatedStyle,
-  highlight = false,
 }: Props) {
   const Wrapper: any = animatedStyle ? Animated.View : View;
 

@@ -1,12 +1,9 @@
-// frontend/app/(tabs)/ChallengesListScreen.tsx
-
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, StyleSheet, SectionList } from "react-native";
 import { useChallengeStore, ChallengeWithUserInfo } from "../stores/useChallengeStore";
 import ChallengeItem from "../../components/ChallengeItem";
 import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
-import HeaderText from "../../components/HeaderText";
 import { colors } from "../../constants/theme";
 
 const ChallengesListScreen = () => {
@@ -23,10 +20,9 @@ const ChallengesListScreen = () => {
   const [selectedType, setSelectedType] = useState<"Daily" | "Weekly">("Daily");
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
-  const { activeDaily, activeWeekly } = useChallengeStore();
+  //const { activeDaily, activeWeekly } = useChallengeStore();
 
-  const activeChallengeBox = activeDaily || activeWeekly[0]; // jeśli więcej weekly, bierzemy pierwszy
-
+  //const activeChallengeBox = activeDaily || activeWeekly[0]; // jeśli więcej weekly, bierzemy pierwszy
 
   const userId = 1;
 
@@ -77,22 +73,14 @@ const hasUnassigned = unassignedChallenges.length > 0;
 
 const sections = [];
 
-// 1. Jeśli są przypisane challengy
 if (hasAssigned) {
   sections.push({ title: "Actual challenge", data: assignedChallenges });
-
-  // 2. Jeśli dodatkowo są challengy do pokazania
   if (hasUnassigned) {
     sections.push({ title: "Challenges list", data: showAll ? unassignedChallenges : [] });
   }
 } else if (!hasAssigned && hasUnassigned) {
-  // 3. Brak przypisanych, ale są dostępne challengy → pokazujemy rozwiniętą listę
   sections.push({ title: "Challenges list", data: unassignedChallenges });
 }
-
-// Jeśli nie ma żadnych challengy, sections pozostaje puste
-
-
 
 
   return (
@@ -106,7 +94,7 @@ if (hasAssigned) {
       style={{
         flex: 1,
         padding: 15,
-        marginRight: i === 0 ? 5 : 0, // odstęp między kafelkami
+        marginRight: i === 0 ? 5 : 0,
         marginLeft: i === 1 ? 5 : 0,
         borderRadius: 10,
         backgroundColor: selectedType === t ? colors.buttonActive : colors.button,
@@ -144,21 +132,20 @@ if (hasAssigned) {
     </TouchableOpacity>
   ))}
 
-  <TouchableOpacity
-    onPress={() => router.push("/addTag")}
-    style={{
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.buttonActive,
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <AppText style={{ fontSize: 24, color: "#fff" }}>＋</AppText>
-  </TouchableOpacity>
-</ScrollView>
-
+    <TouchableOpacity
+      onPress={() => router.push("/addTag")}
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: 20,
+        backgroundColor: colors.buttonActive,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <AppText style={{ fontSize: 24, color: "#fff" }}>+</AppText>
+    </TouchableOpacity>
+  </ScrollView>
 
 {/* Lista challenge */}
 {challenges.length === 0 ? (
@@ -191,7 +178,7 @@ if (hasAssigned) {
           style={{ marginVertical: 10 }}
         >
           <AppText style={{ fontSize: 17, fontWeight: "bold", color: colors.text }}>
-            {title} {isExpandable && !showAll ? "↩" : ""}
+            {title}
           </AppText>
         </TouchableOpacity>
       );
@@ -212,7 +199,6 @@ if (hasAssigned) {
 };
 
 export default ChallengesListScreen;
-
 
 const styles = StyleSheet.create({
   floatingButton: {

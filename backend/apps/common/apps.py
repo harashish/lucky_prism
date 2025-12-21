@@ -1,5 +1,3 @@
-# apps/common/apps.py
-
 from django.apps import AppConfig
 
 

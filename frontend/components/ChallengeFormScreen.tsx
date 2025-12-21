@@ -1,5 +1,3 @@
-// frontend/components/ChallengeFormScreen.tsx
-
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -26,11 +24,8 @@ const ChallengeFormScreen = () => {
 
   const editingId = params?.id ? parseInt(params.id as string, 10) : null;
 
-
-  // load tags on mount
   useEffect(() => { loadTags(); }, []);
 
-  // load challenge if editing
   useEffect(() => {
     if (editingId) {
       api.get(`/challenges/${editingId}/`)
@@ -131,13 +126,14 @@ const ChallengeFormScreen = () => {
 
 return (
   <>
-    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }} contentContainerStyle={{
+    paddingBottom: 30
+  }}>
 
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
         {editingId ? "Edit challenge" : "Add challenge"}
       </AppText>
 
-      {/* Nazwa */}
       <AppText style={{ marginBottom: 6 }}>Name:</AppText>
       <TextInput
         value={title}
@@ -153,7 +149,6 @@ return (
         placeholderTextColor="#7a7891"
       />
 
-      {/* Opis */}
       <AppText style={{ marginBottom: 6 }}>Description:</AppText>
       <TextInput
         value={description}
@@ -171,7 +166,6 @@ return (
         placeholderTextColor="#7a7891"
       />
 
-      {/* Typ */}
       <AppText style={{ marginBottom: 6 }}>Type:</AppText>
       <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
         {availableTypes.map(t => (
@@ -191,7 +185,6 @@ return (
         ))}
       </View>
 
-      {/* Trudność */}
       <AppText style={{ marginBottom: 6 }}>Difficulty:</AppText>
       <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
         {availableDifficulties.map(d => (
@@ -212,7 +205,6 @@ return (
         ))}
       </View>
 
-      {/* Tagi */}
       <AppText style={{ marginBottom: 6 }}>Tags:</AppText>
       <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.l }}>
         {tags.map(tag => (
@@ -235,7 +227,6 @@ return (
         ))}
       </View>
 
-      {/* Zapisz */}
       <TouchableOpacity
         onPress={saveChallenge}
         style={{
@@ -252,7 +243,6 @@ return (
         }
       </TouchableOpacity>
 
-      {/* Usuń */}
       {editingId && (
         <TouchableOpacity
           onPress={() =>

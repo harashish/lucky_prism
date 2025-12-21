@@ -33,7 +33,7 @@ export default function WeeklyActiveScreen() {
     );
   }
 
-  const uc = activeWeekly[0]; // pierwszy aktywny
+  const uc = activeWeekly[0];
   const ch = uc.challenge;
   const progress = uc.progress_percent ?? 0;
 

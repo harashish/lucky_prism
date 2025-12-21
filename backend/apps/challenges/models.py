@@ -4,7 +4,6 @@ from django.utils import timezone
 from datetime import timedelta, datetime, time
 from apps.gamification.services.xp_calculator import calculate_xp
 
-
 class ChallengeType(models.Model):
     name = models.CharField(max_length=20, unique=True)
 
@@ -32,7 +31,6 @@ class ChallengeDefinition(models.Model):
     def __str__(self):
         return self.title
 
-
 class UserChallenge(models.Model):
     """
     Instancja challenge przypisana użytkownikowi.
@@ -41,9 +39,7 @@ class UserChallenge(models.Model):
 
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
     definition = models.ForeignKey(ChallengeDefinition, on_delete=models.CASCADE)
-
-    # kopiujemy typ do stabilności danych
-    challenge_type = models.CharField(max_length=20)  # "Daily" albo "Weekly"
+    challenge_type = models.CharField(max_length=20)  # daily/weekly
 
     start_date = models.DateField(auto_now_add=True)
     weekly_deadline = models.DateField(null=True, blank=True)
@@ -79,7 +75,7 @@ class UserChallenge(models.Model):
         xp = calculate_xp(
             module="challenges",
             difficulty=self.definition.difficulty.name.lower(),
-            period=self.challenge_type.lower(),  # daily / weekly
+            period=self.challenge_type.lower(),
         )
 
         self.user.add_xp(
@@ -97,7 +93,6 @@ class UserChallenge(models.Model):
         self.save(update_fields=["is_completed", "updated_at"])
 
         return xp
-
 
 
 class ChallengeHistory(models.Model):

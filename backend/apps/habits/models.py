@@ -1,16 +1,11 @@
-# backend/apps/habits/models.py
-
 from django.db import models
 
 class Habit(models.Model):
-    """
-    Habit - daily only.
-    """
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
     title = models.CharField(max_length=70)
     description = models.TextField(blank=True)
     motivation_reason = models.TextField(blank=True)
-    color = models.CharField(max_length=20, default="#908bab")  # hex or named
+    color = models.CharField(max_length=20, default="#908bab")
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -24,13 +19,6 @@ class Habit(models.Model):
 
 
 class HabitDay(models.Model):
-    """
-    Represents a day for a given habit.
-    We store minimal status enum:
-      0 = empty (no action)
-      1 = skipped
-      2 = completed
-    """
     STATUS_EMPTY = 0
     STATUS_SKIPPED = 1
     STATUS_COMPLETED = 2

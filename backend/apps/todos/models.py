@@ -1,5 +1,3 @@
-# apps/todos/models.py
-
 from django.db import models
 from apps.gamification.services.xp_calculator import calculate_xp
 
@@ -7,7 +5,7 @@ from apps.gamification.services.xp_calculator import calculate_xp
 class TodoCategory(models.Model):
     name = models.CharField(max_length=30)
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
-    color = models.CharField(max_length=20, blank=True, null=True)  # opcjonalnie kolor
+    color = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -23,7 +21,7 @@ class TodoTask(models.Model):
         blank=True
     )
     category = models.ForeignKey(TodoCategory, on_delete=models.PROTECT, related_name="tasks")
-    is_completed = models.BooleanField(default=False)   # status (przydatne dla listy)
+    is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
