@@ -10,6 +10,7 @@ export const colors = {
   inputBorder: "#908bab",
   inputBorderActive: "#c4a7e7",
   deleteButton: "#daa7e7",
+  light: "#FFFFF1",
 };
 
 export const fonts = {
@@ -31,7 +32,7 @@ export const fonts = {
 
 export const spacing = {
   xs: 6,
-  s: 10,
+  s: 6,
   m: 16,
   l: 22,
   xl: 32,

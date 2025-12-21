@@ -7,15 +7,16 @@ import { useGoalStore } from "../app/stores/useGoalStore";
 import { api } from "../app/api/apiClient";
 import AppText from "../components/AppText";
 import { colors, spacing, radius } from "../constants/theme";
-import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
+import FormErrorModal from "../components/FormErrorModal";
+import { confirmDelete } from "../components/confirmDelete";
+
 
 
 const GoalFormScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const editingId = params?.id ? parseInt(params.id as string, 10) : null;
-  const { periods, loadPeriods, loadGoals } = useGoalStore();
-
+  const { periods, loadPeriods, loadUserGoals } = useGoalStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [why, setWhy] = useState("");
@@ -24,13 +25,9 @@ const GoalFormScreen = () => {
   const [availableDifficulties, setAvailableDifficulties] = useState<any[]>([]);
   const [selectedPeriodObj, setSelectedPeriodObj] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const userId = 1;
-
-  const { modules } = useModuleSettingsStore();
-  const gamificationOn = modules?.gamification;
-
 
   useEffect(() => {
     loadPeriods();
@@ -52,7 +49,7 @@ const GoalFormScreen = () => {
         })
         .catch(err => {
           console.error(err);
-          setError("Nie udało się pobrać celu");
+          setErrorMessage("Failed to load goal");
         })
         .finally(() => setLoading(false));
     }
@@ -76,29 +73,20 @@ const GoalFormScreen = () => {
     }
   };
 
-// ... (Wewnątrz GoalFormScreen)
-
-    const computedXp = () => {
-      if (!gamificationOn) return null;
-
-      const periodBase = selectedPeriodObj?.default_xp || 0;
-      const difficultyValue =
-        availableDifficulties.find(d => d.id === difficultyId)?.xp_value || 0;
-
-      const diffPercent = difficultyValue / 100;
-      return Math.round(periodBase * diffPercent);
-    };
-
-
   const save = async () => {
-// ... (reszta funkcji save)
-    if (!title || !period || !difficultyId) {
-      setError("Uzupełnij wszystkie wymagane pola");
-      return;
-    }
+if (!title.trim()) {
+  setErrorMessage("Please enter goal name");
+  return;
+}
+if (!difficultyId) {
+  setErrorMessage("Please select difficulty");
+  return;
+}
+if (!why.trim()) {
+  setErrorMessage("Please fill: Why it's important");
+  return;
+}
     setLoading(true);
-    setError(null);
-
     const payload = {
       title,
       description,
@@ -114,11 +102,11 @@ const GoalFormScreen = () => {
       } else {
         await api.post("/goals/", payload);
       }
-      await loadGoals();
+      await loadUserGoals(userId);
       router.push("/GoalsScreen");
     } catch (err) {
       console.error(err);
-      setError("Błąd zapisu");
+      setErrorMessage("Failed to save goal");
     } finally {
       setLoading(false);
     }
@@ -129,18 +117,18 @@ const GoalFormScreen = () => {
     setLoading(true);
     try {
       await api.delete(`/goals/${editingId}/`);
-      await loadGoals();
+      await loadUserGoals(userId);
       router.push("/GoalsScreen");
     } catch {
-      setError("Nie udało się usunąć celu");
+      setErrorMessage("Failed to delete goal");
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
-      {error && <AppText style={{ color: "red", marginBottom: spacing.m }}>{error}</AppText>}
 
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
         {editingId ? "Edit goal" : "Add goal"}
@@ -227,22 +215,11 @@ const GoalFormScreen = () => {
               backgroundColor: difficultyId === d.id ? colors.buttonActive : colors.button
             }}
           >
-            <AppText>
-              {d.name}
-              {gamificationOn ? ` (${d.xp_value} XP)` : ""}
-            </AppText>
+            <AppText>{d.name}</AppText>
 
           </TouchableOpacity>
         ))}
       </View>
-
-      {gamificationOn && computedXp() !== null && (
-        <AppText style={{ marginBottom: spacing.m }}>
-          XP gain: {computedXp()} XP
-        </AppText>
-      )}
-
-
       <TouchableOpacity
         onPress={save}
         style={{
@@ -258,7 +235,13 @@ const GoalFormScreen = () => {
 
       {editingId && (
         <TouchableOpacity
-          onPress={deleteGoal}
+          onPress={() =>
+            confirmDelete({
+              title: "Delete goal?",
+              message: "This goal will be permanently removed.",
+              onConfirm: deleteGoal,
+            })
+          }
           style={{
             backgroundColor: colors.deleteButton,
             padding: spacing.m,
@@ -267,10 +250,19 @@ const GoalFormScreen = () => {
             marginBottom: spacing.l
           }}
         >
-          <AppText style={{ color: "#fff", fontWeight: "bold" }}>Delete goal</AppText>
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+            Delete goal
+          </AppText>
         </TouchableOpacity>
       )}
+
     </ScrollView>
+    <FormErrorModal
+  visible={!!errorMessage}
+  message={errorMessage || ""}
+  onClose={() => setErrorMessage(null)}
+/>
+</>
   );
 };
 

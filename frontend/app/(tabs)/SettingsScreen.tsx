@@ -5,7 +5,7 @@ import { colors, spacing } from "../../constants/theme";
 import { ScrollView } from "react-native-gesture-handler";
 
 export default function SettingsScreen() {
-  const { raw, modules, dashboardTiles, toggleModule, toggleTile } = useModuleSettingsStore();
+ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleToggles } = useModuleSettingsStore();
 
   return (
     <ScrollView style={{ flex: 1, padding: spacing.l, backgroundColor: colors.background  }}>
@@ -18,7 +18,12 @@ export default function SettingsScreen() {
           <Switch
             value={m.is_enabled}
             onValueChange={(v) => toggleModule(m.id, v)}
-            trackColor={{ true: colors.buttonActive }}
+            trackColor={{ 
+                false: colors.card, 
+                true: colors.buttonActive 
+              }}
+            disabled={pendingModuleToggles.includes(m.id)} // <- blokada podczas requestu
+            thumbColor={colors.light}
           />
         </View>
       ))}
@@ -33,13 +38,22 @@ export default function SettingsScreen() {
             <Switch
               value={tile.is_enabled}
               onValueChange={(v) => toggleTile(tile.id, v)}
-              trackColor={{ true: colors.buttonActive }}
+              trackColor={{ 
+                false: colors.card, // Kolor tła, gdy wyłączony
+                true: colors.buttonActive // Kolor tła, gdy włączony 
+              }}
+              thumbColor={colors.light}
+
             />
           </View>
       ))}
     </ScrollView>
   );
 }
+
+
+
+      
 
 
 const styles = StyleSheet.create({

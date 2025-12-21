@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     padding: 28,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: colors.buttonActive,
+    borderColor: colors.light,
     backgroundColor: colors.card,
     maxWidth: "90%",
   },

@@ -39,31 +39,25 @@ class UserGoalList(generics.ListAPIView):
 class CompleteGoalView(APIView):
     """
     POST /goals/<pk>/complete/
-    Działa bez auth (używamy user powiązanego z celem).
-    Tworzy GoalHistory, dodaje XP do usera, zwraca total_xp i current_level.
+    Tworzy GoalHistory, dodaje XP do usera (wewnątrz complete),
+    zwraca aktualny stan użytkownika.
     """
     def post(self, request, pk):
         try:
             goal = Goal.objects.get(pk=pk)
         except Goal.DoesNotExist:
-            return Response({"detail": "Goal not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Goal not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        difficulty_percent = 0
-        if goal.difficulty:
-            difficulty_percent = (goal.difficulty.xp_value or 0) / 100
-
-        period_xp = goal.period.default_xp or 0
-
-        xp = int(period_xp * difficulty_percent)
-
-
-        # tworzymy historię i przypisujemy xp
-        history = GoalHistory.objects.create(goal=goal, xp_gained=xp)
-        total_xp, current_level = goal.user.add_xp(amount=int(xp), source="goal", source_id=goal.id)
+        history = GoalHistory.objects.create(goal=goal)
+        result = history.complete()  # <-- TU dzieje się XP
 
         return Response({
             "goal_id": goal.id,
-            "xp_gained": xp,
-            "total_xp": total_xp,
-            "current_level": current_level
+            "xp_gained": history.xp_gained,
+            "total_xp": goal.user.total_xp,
+            "current_level": goal.user.current_level,
         }, status=status.HTTP_200_OK)
+

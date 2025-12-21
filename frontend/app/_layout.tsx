@@ -10,14 +10,24 @@ import { Nunito_400Regular, Nunito_700Bold } from "@expo-google-fonts/nunito";
 import { Manrope_400Regular, Manrope_600SemiBold } from "@expo-google-fonts/manrope";
 import { ActivityIndicator, View } from "react-native";
 import { colors } from "../constants/theme";
+import XPPopup from "../components/XPPopup";
+import { useGamificationStore } from "./stores/useGamificationStore";
+import { useEffect } from "react";
+
 
 export default function RootLayout() {
+  const fetchUser = useGamificationStore(s => s.fetchUser);
   const [loaded] = useFonts({
     Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold,
     Poppins_400Regular, Poppins_600SemiBold,
     Nunito_400Regular, Nunito_700Bold,
     Manrope_400Regular, Manrope_600SemiBold,
   });
+
+
+    useEffect(() => {
+    fetchUser(1);
+  }, []);
 
   if (!loaded) {
     return (
@@ -27,9 +37,11 @@ export default function RootLayout() {
     );
   }
 
-  return (
+return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Slot />
+      <XPPopup />
     </View>
   );
+
 }

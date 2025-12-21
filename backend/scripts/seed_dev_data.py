@@ -28,22 +28,15 @@ else:
 # DIFFICULTY TYPES
 # =====================
 
-difficulties = [
-    ("Trivial", 0),
-    ("Easy", 500),
-    ("Medium", 1000),
-    ("Hard", 2500),
-]
+difficulties = ["Trivial", "Easy", "Medium", "Hard"]
 
 difficulty_map = {}
 
-for name, xp in difficulties:
-    obj, created = DifficultyType.objects.get_or_create(
-        name=name,
-        defaults={"xp_value": xp},
-    )
+for name in difficulties:
+    obj, created = DifficultyType.objects.get_or_create(name=name)
     difficulty_map[name] = obj
     print(f"[DIFFICULTY] {name} {'created' if created else 'exists'}")
+
 
 # =====================
 # CHALLENGE TYPES
@@ -65,21 +58,15 @@ print(f"[TAG] 'General' {'created' if created else 'exists'}")
 # GOAL PERIODS
 # =====================
 
-periods = [
-    ("week", 50),
-    ("month", 200),
-    ("year", 1000),
-]
+periods = ["weekly", "monthly", "yearly"]
 
 period_map = {}
 
-for name, xp in periods:
-    period, created = GoalPeriod.objects.get_or_create(
-        name=name,
-        defaults={"default_xp": xp},
-    )
+for name in periods:
+    period, created = GoalPeriod.objects.get_or_create(name=name)
     period_map[name] = period
     print(f"[GOAL PERIOD] {name} {'created' if created else 'exists'}")
+
 
 # =====================
 # DEFAULT TODO CATEGORY
@@ -160,7 +147,7 @@ for key, name, module_dep in dashboard_defaults:
     else:
         print(f"[DASHBOARD TILE] {key} exists")
 
-
+'''
 # =====================
 # MODULE XP CONFIG
 # =====================
@@ -180,7 +167,7 @@ for module_name, multiplier in module_configs:
         defaults={"multiplier": multiplier},
     )
     print(f"[MODULE XP CONFIG] {module_name} {'created' if created else 'exists'} ({multiplier}x)")
-
+'''
 
 # =====================
 # DEFAULT GOALS
@@ -199,6 +186,11 @@ for period_name, period in period_map.items():
             title=f"Default {period_name} goal {i}",
             period=period,
             difficulty=difficulty_map["Easy"],
+            motivation_reason=(
+                "This goal exists to build long-term consistency, "
+                "reduce decision fatigue, and align daily actions "
+                "with deeper personal values."
+            ),
         )
         print(f"[GOALS] Created {period_name} goal {i}")
 
@@ -338,7 +330,14 @@ for name in habit_names:
     obj, created = Habit.objects.get_or_create(
         user=user,
         title=name,
-        defaults={"difficulty": difficulty_map["Easy"]},
+        defaults={
+        "difficulty": difficulty_map["Easy"],
+        "motivation_reason": (
+            "This habit supports clarity, self-regulation, "
+            "and long-term psychological stability."
+        ),
+    },
+        
     )
     print(f"[HABIT] {name} {'created' if created else 'exists'}")
 

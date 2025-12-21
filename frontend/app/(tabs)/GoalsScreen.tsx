@@ -4,29 +4,24 @@ import AppText from "../../components/AppText";
 import { colors, components } from "../../constants/theme";
 import { useGoalStore } from "../stores/useGoalStore";
 import { useRouter } from "expo-router";
-
-
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+import { useGamificationStore } from "../stores/useGamificationStore";
 
 dayjs.extend(isoWeek);
 
-const periodNames = ["week", "month", "year"];
+const periodNames = ["weekly", "monthly", "yearly"] as const;
 
 export default function GoalsScreen() {
+  const router = useRouter();
+  const userId = 1;
 
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
-
-  const router = useRouter();
-  const userId = 1;
-
   const {
     goals,
-    periods,
     history,
     loadPeriods,
     loadUserGoals,
@@ -34,8 +29,9 @@ export default function GoalsScreen() {
     completeGoal,
   } = useGoalStore();
 
-  const [selectedPeriod, setSelectedPeriod] =
-    useState<"week" | "month" | "year">("week");
+
+const [selectedPeriod, setSelectedPeriod] =
+  useState<"weekly" | "monthly" | "yearly">("weekly");
 
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
 
@@ -45,77 +41,40 @@ export default function GoalsScreen() {
     loadHistory();
   }, [selectedPeriod]);
 
-  /** XP */
-const xpGain = (g: any) => {
-  if (!gamificationOn) return null;
+  const completedGoalIds = new Set(history.map(h => h.goal));
 
-  const diffPercent = (g.difficulty?.xp_value || 0) / 100;
-  const periodBase = g.period?.default_xp || 0;
-  return Math.round(periodBase * diffPercent);
-};
-
-
-  /** Ukończone */
-  const completedGoalIds = new Set(history.map((h) => h.goal));
-
-  const goalsForPeriod = goals.filter(
-    (g) => g.period?.name?.toLowerCase() === selectedPeriod
-  );
-
-  /** Goals progress */
-  const completedCount = goalsForPeriod.filter((g) =>
+  const completedCount = goals.filter(g =>
     completedGoalIds.has(g.id)
   ).length;
 
   const progress =
-    goalsForPeriod.length === 0
-      ? 0
-      : completedCount / goalsForPeriod.length;
+    goals.length === 0 ? 0 : completedCount / goals.length;
 
-  /** Time progress */
   const now = dayjs();
+  const timeProgress =
+    selectedPeriod === "weekly"
+      ? now.diff(now.startOf("isoWeek")) / now.endOf("isoWeek").diff(now.startOf("isoWeek"))
+      : selectedPeriod === "monthly"
+      ? now.diff(now.startOf("month")) / now.endOf("month").diff(now.startOf("month"))
+      : now.diff(now.startOf("year")) / now.endOf("year").diff(now.startOf("year"));
 
-  const weekStart = now.startOf("isoWeek");
-  const weekEnd = now.endOf("isoWeek");
-
-  const monthStart = now.startOf("month");
-  const monthEnd = now.endOf("month");
-
-  const yearStart = now.startOf("year");
-  const yearEnd = now.endOf("year");
-
-  let timeProgress = 0;
-
-  if (selectedPeriod === "week") {
-    timeProgress = now.diff(weekStart) / weekEnd.diff(weekStart);
-  }
-
-  if (selectedPeriod === "month") {
-    timeProgress = now.diff(monthStart) / monthEnd.diff(monthStart);
-  }
-
-  if (selectedPeriod === "year") {
-    timeProgress = now.diff(yearStart) / yearEnd.diff(yearStart);
-  }
-
-  /** Complete */
-  const onComplete = async (goalId: number, title: string) => {
+  const onComplete = (goalId: number, title: string) => {
     Alert.alert(
-      "Are you sure?",
-      `Are you sure you completed "${title}"?`,
+      "Complete goal?",
+      title,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Yes",
           onPress: async () => {
             const res = await completeGoal(goalId);
-            if (res) {
-              if (gamificationOn) {
-                Alert.alert("Done", `+${res.total_xp} XP`);
-              }
-              loadUserGoals(userId, selectedPeriod);
+
+            if (res && gamificationOn && res.xp_gained > 0) {
+              useGamificationStore.getState().applyXpResult(res);
             }
 
+            loadUserGoals(userId, selectedPeriod);
+            loadHistory();
           },
         },
       ]
@@ -125,24 +84,17 @@ const xpGain = (g: any) => {
   return (
     <View style={{ flex: 1, padding: 12, backgroundColor: colors.background }}>
       {/* PERIOD SELECTOR */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-      >
-        {periodNames.map((p) => (
+      <View style={{ flexDirection: "row", marginBottom: 12 }}>
+        {periodNames.map(p => (
           <TouchableOpacity
             key={p}
-            onPress={() => setSelectedPeriod(p as any)}
+            onPress={() => setSelectedPeriod(p)}
             style={{
               flex: 1,
               marginHorizontal: 4,
               padding: 14,
               borderRadius: 12,
-              backgroundColor:
-                selectedPeriod === p ? colors.buttonActive : colors.card,
+              backgroundColor: selectedPeriod === p ? colors.buttonActive : colors.card,
               alignItems: "center",
             }}
           >
@@ -153,61 +105,25 @@ const xpGain = (g: any) => {
         ))}
       </View>
 
-      {/* PROGRESS SUMMARY */}
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 12,
-          padding: 10,
-          marginBottom: 12,
-        }}
-      >
-        <AppText style={{ fontSize: 12, marginBottom: 4, opacity: 0.8 }}>
-          Goals progress: {Math.round(progress * 100)}%
-        </AppText>
-        <View
-          style={{
-            height: 6,
-            backgroundColor: colors.background,
-            borderRadius: 4,
-            marginBottom: 8,
-          }}
-        >
-          <View
-            style={{
-              height: 6,
-              width: `${Math.round(progress * 100)}%`,
-              backgroundColor: colors.buttonActive,
-              borderRadius: 4,
-            }}
-          />
+      {/* PROGRESS */}
+      <View style={{ backgroundColor: colors.card, borderRadius: 12, padding: 10, marginBottom: 12 }}>
+        <AppText style={{ fontSize: 12 }}>Goals progress: {Math.round(progress * 100)}%</AppText>
+        <View style={{ height: 6, backgroundColor: colors.background, borderRadius: 4, marginBottom: 8 }}>
+          <View style={{ height: 6, width: `${progress * 100}%`, backgroundColor: colors.buttonActive }} />
         </View>
 
-        <AppText style={{ fontSize: 12, marginBottom: 4, opacity: 0.8 }}>
+        <AppText style={{ fontSize: 12 }}>
           Time ({selectedPeriod}): {Math.round(timeProgress * 100)}%
         </AppText>
-        <View
-          style={{
-            height: 6,
-            backgroundColor: colors.background,
-            borderRadius: 4,
-          }}
-        >
-          <View
-            style={{
-              height: 6,
-              width: `${Math.round(timeProgress * 100)}%`,
-              backgroundColor: colors.buttonActive,
-              borderRadius: 4,
-            }}
-          />
+        <View style={{ height: 6, backgroundColor: colors.background, borderRadius: 4 }}>
+          <View style={{ height: 6, width: `${timeProgress * 100}%`, backgroundColor: colors.buttonActive }} />
         </View>
       </View>
 
-      {/* GOALS LIST */}
+      {/* GOALS */}
       <FlatList
-        data={goalsForPeriod}
-        keyExtractor={(item) => item.id.toString()}
+        data={goals}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={{ paddingBottom: 140 }}
         renderItem={({ item }) => {
           const isCompleted = completedGoalIds.has(item.id);
@@ -215,94 +131,52 @@ const xpGain = (g: any) => {
 
           return (
             <TouchableOpacity
-              onPress={() =>
-                setExpandedGoalId(isExpanded ? null : item.id)
-              }
+              onPress={() => setExpandedGoalId(isExpanded ? null : item.id)}
               onLongPress={() => router.push(`/editGoal/${item.id}`)}
-              delayLongPress={300}
             >
-              <View
-                style={{
-                  ...components.container,
-                  opacity: isCompleted ? 0.5 : 1,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <AppText
-                    style={{
-                      fontWeight: "bold",
-                      textDecorationLine: isCompleted
-                        ? "line-through"
-                        : "none",
-                      color: isCompleted ? "#777" : colors.text,
-                    }}
-                  >
-                    {item.title}
-                  </AppText>
+              <View style={{ ...components.container, opacity: isCompleted ? 0.5 : 1 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={{ flex: 1 }}>
+            <AppText style={{ fontWeight: "bold" }}>{item.title}</AppText>
+            <AppText style={{ fontSize: 12, color: "#777" }}>
+              {item.difficulty.name}
+            </AppText>
+          </View>
 
                   {!isCompleted && (
                     <TouchableOpacity
                       onPress={() => onComplete(item.id, item.title)}
                       style={components.completeButton}
                     >
-                      <AppText style={{ color: "#fff" }}>✔️</AppText>
+                      <AppText style={{ color: "#fff" }}>+</AppText>
                     </TouchableOpacity>
                   )}
                 </View>
 
                 {isExpanded && (
                   <View style={{ marginTop: 8 }}>
-                    {item.description ? (
-                      <AppText
-                        style={{
-                          marginBottom: 4,
-                          color: isCompleted ? "#777" : colors.text,
-                        }}
-                      >
-                        {item.description}
-                      </AppText>
-                    ) : null}
-
-                    {item.motivation_reason ? (
-                      <AppText
-                        style={{
-                          fontSize: 12,
-                          opacity: 0.8,
-                          marginBottom: 4,
-                        }}
-                      >
+                    {!!item.description && <AppText>{item.description}</AppText>}
+                    {!!item.motivation_reason && (
+                      <AppText style={{ fontSize: 12, opacity: 0.8 }}>
                         Motivation: {item.motivation_reason}
                       </AppText>
-                    ) : null}
-
-                    {gamificationOn && xpGain(item) !== null && (
-                      <AppText style={{ fontSize: 12, opacity: 0.7 }}>
-                        {xpGain(item)} XP
-                      </AppText>
                     )}
-
                   </View>
                 )}
               </View>
             </TouchableOpacity>
           );
         }}
-        ListEmptyComponent={() => (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
-            <AppText style={{ color: "#777", fontSize: 16 }}>
-              no goals yet for this period, add some!
+        ListEmptyComponent={
+          <View style={{ alignItems: "center", marginTop: 50 }}>
+            <AppText style={{ color: "#777" }}>
+              no goals yet for this period
             </AppText>
           </View>
-        )}
+        }
       />
 
-      {/* FLOATING ADD */}
+      {/* ADD */}
       <TouchableOpacity
         onPress={() => router.push("/addGoal")}
         style={{
@@ -313,9 +187,8 @@ const xpGain = (g: any) => {
           height: 60,
           borderRadius: 30,
           backgroundColor: colors.buttonActive,
-          justifyContent: "center",
           alignItems: "center",
-          elevation: 5,
+          justifyContent: "center",
         }}
       >
         <AppText style={{ fontSize: 32, color: "#fff" }}>＋</AppText>

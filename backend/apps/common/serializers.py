@@ -4,7 +4,7 @@ from .models import DifficultyType
 class DifficultyTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DifficultyType
-        fields = ['id', 'name', 'xp_value']
+        fields = ['id', 'name']
 
 
         

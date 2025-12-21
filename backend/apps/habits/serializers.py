@@ -12,6 +12,7 @@ class HabitDaySerializer(serializers.ModelSerializer):
 
 class HabitSerializer(serializers.ModelSerializer):
     difficulty = DifficultyTypeSerializer(read_only=True)
+    motivation_reason = serializers.CharField(allow_blank=False)
     difficulty_id = serializers.PrimaryKeyRelatedField(
         queryset=DifficultyType.objects.all(),
         write_only=True,

@@ -2,6 +2,8 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime, time
+from apps.gamification.services.xp_calculator import calculate_xp
+
 
 class ChallengeType(models.Model):
     name = models.CharField(max_length=20, unique=True)
@@ -74,8 +76,17 @@ class UserChallenge(models.Model):
         if self.is_completed:
             return
 
-        xp = self.definition.difficulty.xp_value
-        self.user.add_xp(xp, source="challenge", source_id=self.id)
+        xp = calculate_xp(
+            module="challenges",
+            difficulty=self.definition.difficulty.name.lower(),
+            period=self.challenge_type.lower(),  # daily / weekly
+        )
+
+        self.user.add_xp(
+            xp=xp,
+            source="challenge",
+            source_id=self.id,
+        )
 
         ChallengeHistory.objects.create(
             user_challenge=self,
@@ -85,8 +96,12 @@ class UserChallenge(models.Model):
         self.is_completed = True
         self.save(update_fields=["is_completed", "updated_at"])
 
+        return xp
+
+
 
 class ChallengeHistory(models.Model):
     user_challenge = models.ForeignKey(UserChallenge, on_delete=models.CASCADE)
     completion_date = models.DateTimeField(auto_now_add=True)
-    xp_gained = models.IntegerField()
+    xp_gained = models.IntegerField(default=0)
+

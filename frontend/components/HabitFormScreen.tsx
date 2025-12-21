@@ -1,4 +1,4 @@
-// frontend/components/GoalFormScreen.tsx
+// frontend/components/HabitFormScreen.tsx
 
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
@@ -7,19 +7,10 @@ import AppText from "../components/AppText";
 import { colors, spacing, radius } from "../constants/theme";
 import { useHabitStore } from "../app/stores/useHabitStore";
 import { api } from "../app/api/apiClient";
-import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
-
-
-//const colorPalette = ["#c4a7e7", "#908bab", "#39a0a1", "#e07a5f", "#f2cc8f", "#a7c66b", "#ff6b6b"];
-  const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
-
-
+import FormErrorModal from "../components/FormErrorModal";
+import { confirmDelete } from "../components/confirmDelete";
 
 export default function HabitFormScreen() {
-
-  
-  const { modules } = useModuleSettingsStore();
-  const gamificationOn = modules?.gamification;
 
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -30,10 +21,12 @@ export default function HabitFormScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [why, setWhy] = useState("");
+  const colorPalette = ["#908bab", "#E5FE86", "#825BA5", "#83CDEE", "#E4BEE6", "#EA97DC","#A0B4EF"];
   const [color, setColor] = useState<string>(colorPalette[0]);
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
   const userId = 1;
 
@@ -52,23 +45,26 @@ export default function HabitFormScreen() {
         })
         .catch(err => {
           console.error(err);
-          setError("Nie udało się pobrać habitu");
+          setErrorMessage("Failed to load habit");
         })
         .finally(() => setLoading(false));
     }
   }, [editingId]);
 
-    const computedXp = () => {
-      if (!gamificationOn) return null;
-      return difficulties.find(d => d.id === difficultyId)?.xp_value || 0;
-    };
-
-
-  const save = async () => {
-    if (!title || !difficultyId) {
-      setError("Uzupełnij wszystkie wymagane pola");
+const save = async () => {
+    if (!title.trim()) {
+      setErrorMessage("Please enter habit name");
       return;
     }
+    if (!difficultyId) {
+      setErrorMessage("Please select difficulty");
+      return;
+    }
+    if (!why.trim()) {
+      setErrorMessage("Please fill: Why it's important");
+      return;
+    }
+
     setLoading(true);
     const payload = {
       title,
@@ -87,7 +83,7 @@ export default function HabitFormScreen() {
       router.push("/HabitsScreen");
     } catch (err) {
       console.error(err);
-      setError("Błąd zapisu");
+      setErrorMessage("Failed to save habit");
     } finally {
       setLoading(false);
     }
@@ -100,16 +96,16 @@ export default function HabitFormScreen() {
       await deleteHabit(editingId);
       router.push("/HabitsScreen");
     } catch {
-      setError("Nie udało się usunąć habitu");
+      setErrorMessage("Failed to delete habit");
     } finally {
       setLoading(false);
     }
+    
   };
 
   return (
+    <>
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
-      {error && <AppText style={{ color: "red", marginBottom: spacing.m }}>{error}</AppText>}
-
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
         {editingId ? "Edit habit" : "Add habit"}
       </AppText>
@@ -136,20 +132,12 @@ export default function HabitFormScreen() {
           <TouchableOpacity key={d.id} onPress={() => setDifficultyId(d.id)} style={{ padding: spacing.s, borderRadius: radius.md, marginRight: spacing.s, marginBottom: spacing.s, backgroundColor: difficultyId === d.id ? colors.buttonActive : colors.button }}>
             <AppText>
               {d.name}
-              {gamificationOn ? ` (${d.xp_value} XP)` : ""}
             </AppText>
 
           </TouchableOpacity>
         ))}
       </View>
 
-      
-
-        {gamificationOn && computedXp() !== null && (
-        <AppText style={{ marginBottom: spacing.m }}>
-            XP gain (per completion): {computedXp()} XP
-          </AppText>
-        )}
 
 
       <TouchableOpacity onPress={save} style={{ backgroundColor: colors.buttonActive, padding: spacing.m, borderRadius: radius.md, alignItems: "center", marginBottom: editingId ? spacing.m : 0 }}>
@@ -157,10 +145,37 @@ export default function HabitFormScreen() {
       </TouchableOpacity>
 
       {editingId && (
-        <TouchableOpacity onPress={onDelete} style={{ backgroundColor: colors.deleteButton, padding: spacing.m, borderRadius: radius.md, alignItems: "center" }}>
-          <AppText style={{ color: "#fff", fontWeight: "bold" }}>Delete habit</AppText>
+        <TouchableOpacity
+          onPress={() =>
+            confirmDelete({
+              title: "Delete habit?",
+              message: "This habit will be permanently removed.",
+              onConfirm: onDelete,
+            })
+          }
+          style={{
+            backgroundColor: colors.deleteButton,
+            padding: spacing.m,
+            borderRadius: radius.md,
+            alignItems: "center",
+          }}
+        >
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+            Delete habit
+          </AppText>
         </TouchableOpacity>
       )}
+
+
+      
+      
     </ScrollView>
-  );
+
+    <FormErrorModal
+      visible={!!errorMessage}
+      message={errorMessage || ""}
+      onClose={() => setErrorMessage(null)}
+    />
+  </>
+);
 }

@@ -1,6 +1,8 @@
 # apps/todos/models.py
 
 from django.db import models
+from apps.gamification.services.xp_calculator import calculate_xp
+
 
 class TodoCategory(models.Model):
     name = models.CharField(max_length=30)
@@ -38,10 +40,19 @@ class TodoHistory(models.Model):
 
     def complete(self):
         diff = self.task.custom_difficulty or self.task.category.difficulty
-        xp = diff.xp_value if diff else 0
+
+        xp = calculate_xp(
+            module="todos",
+            difficulty=diff.name.lower(),
+        ) if diff else 0
+
         self.xp_gained = xp
         self.save()
-        # nadaj XP userowi
-        self.task.user.add_xp(xp, source="todo", source_id=self.id)
+
+        self.task.user.add_xp(
+            xp=xp,
+            source="todo",
+            source_id=self.id,
+        )
 
 

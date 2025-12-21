@@ -7,11 +7,9 @@ import { colors } from "../../constants/theme";
 import { useRouter } from "expo-router";
 import HabitItem from "../../components/HabitItem";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
-
+import { useGamificationStore } from "../stores/useGamificationStore";
 
 const userId = 1;
-
-
 
 export default function HabitsScreen() {
 
@@ -44,17 +42,15 @@ export default function HabitsScreen() {
       return;
     }
       if (res.already_completed) {
-        if (gamificationOn) {
-          Alert.alert(
-            "Info",
-            "This habit was already marked for today."
-          );
-        }
-      } else if (res.xp_added > 0) {
-        if (gamificationOn) {
-          Alert.alert("Done", `+${res.xp_added} XP`);
-        }
+      if (gamificationOn) {
+        Alert.alert("Info", "This habit was already marked for today.");
       }
+    } else if (res.xp_gained > 0 && gamificationOn) {
+      useGamificationStore
+        .getState()
+        .applyXpResult(res);
+    }
+
 
     await loadMonth(userId, month);
   };
@@ -71,9 +67,11 @@ export default function HabitsScreen() {
       return;
     }
 
-if (res.xp_added > 0 && gamificationOn) {
-  Alert.alert("Done", `+${res.xp_added} XP`);
-}
+    if (res.xp_gained > 0 && gamificationOn) {
+      useGamificationStore
+        .getState()
+        .applyXpResult(res);
+    }
 
 
     await loadMonth(userId, month);

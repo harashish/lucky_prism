@@ -12,6 +12,10 @@ import CustomDifficultyPicker from "../todos/customDifficultyPicker";
 import EditTodoPopup from "../todos/editTodoPopup";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+import { useGamificationStore } from "../stores/useGamificationStore";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
+
 
 
 const userId = 1;
@@ -20,7 +24,8 @@ export default function TodosScreen() {
   const router = useRouter();
   const { categories, tasks, loadCategories, loadTasks, quickAddTask, completeTask, deleteTask } = useTodoStore();
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const { selectedCategoryId, setSelectedCategoryId } = useTodoStore();
+
   const [quickText, setQuickText] = useState("");
   const [customDifficulty, setCustomDifficulty] = useState<number | null>(null);
 
@@ -35,17 +40,25 @@ export default function TodosScreen() {
   
 
   // LOAD CATEGORIES + SELECT FIRST
-  useEffect(() => {
-    (async () => {
-      await loadCategories();
-    })();
-  }, []);
+useFocusEffect(
+  useCallback(() => {
+    loadCategories();
+  }, [])
+);
 
-  useEffect(() => {
-    if (categories.length > 0 && selectedCategoryId === null) {
-      setSelectedCategoryId(categories[0].id);
-    }
-  }, [categories]);
+useEffect(() => {
+  if (!categories.length) {
+    setSelectedCategoryId(null);
+    return;
+  }
+
+  const exists = categories.some(c => c.id === selectedCategoryId);
+  if (!exists) {
+    setSelectedCategoryId(categories[0].id);
+  }
+}, [categories]);
+
+
 
   // LOAD TASKS WHEN CATEGORY CHANGES
   useEffect(() => {
@@ -118,11 +131,11 @@ const res = await quickAddTask(
               }}
             >
               <AppText>{cat.name}</AppText>
-              {gamificationOn && (
+            {gamificationOn && (
               <AppText style={{ fontSize: 12 }}>
-                {cat.difficulty?.xp_value ?? 0} XP
+                {cat.difficulty?.name}
               </AppText>
-)}
+            )}
 
             </TouchableOpacity>
           ))}
@@ -168,9 +181,13 @@ const res = await quickAddTask(
           item={item}
           onComplete={async (taskId) => {
             const res = await completeTask(taskId);
-            if (res && gamificationOn) {
-              Alert.alert("Done", `+${res.xp_gained} XP`);
-            }
+
+          if (res && gamificationOn && res.xp_gained > 0) {
+            useGamificationStore
+              .getState()
+              .applyXpResult(res);
+          }
+
 
           }}
           onDelete={async (taskId) => {

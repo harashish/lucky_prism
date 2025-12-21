@@ -1,9 +1,12 @@
-import React, { useRef, useState } from "react";
-import { View, TouchableOpacity, Alert, Animated } from "react-native";
+// frontend/app/random/result.tsx
+import React, { useRef, useState, useEffect } from "react";
+import { View, TouchableOpacity, Alert, Animated, ActivityIndicator } from "react-native";
 import AppText from "../../components/AppText";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors } from "../../constants/theme";
 import { api } from "../api/apiClient";
+import RandomResultCard from "../../components/RandomResultCard";
+
 
 export default function RandomResultScreen(){
   const { item, source, categoryId } = useLocalSearchParams() as any;
@@ -11,21 +14,29 @@ export default function RandomResultScreen(){
   const userId = 1;
 
   const [currentItem, setCurrentItem] = useState(item ? JSON.parse(item) : null);
+  const [assigning, setAssigning] = useState(false);
+  const [assigned, setAssigned] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current; // start position
 
-  // challenge accept
-  const onAssignChallenge = async () => {
-    if (!currentItem) return;
-    try {
-      await api.post("/challenges/assign/", { user: userId, challenge: currentItem.id });
-      router.replace(currentItem.type?.name === "Daily" ? "/random/daily/active" : "/random/weekly/active");
-    } catch (e: any) {
-      const err = e.response?.data || e.message || e;
-      Alert.alert("Błąd przypisania", typeof err === "string" ? err : JSON.stringify(err));
+  // auto-assign challenge immediately after arriving (only for challenges)
+  useEffect(() => {
+    if (source === "challenge" && currentItem && !assigned && !assigning) {
+      (async () => {
+        setAssigning(true);
+        try {
+          await api.post("/challenges/assign/", { user: userId, challenge: currentItem.id });
+          setAssigned(true);
+        } catch (e: any) {
+          const err = e.response?.data?.detail || e.response?.data || e.message || e;
+          Alert.alert("Błąd przypisania", typeof err === "string" ? err : JSON.stringify(err));
+        } finally {
+          setAssigning(false);
+        }
+      })();
     }
-  };
+  }, [source, currentItem]);
 
-  // slide animation przy losuj dalej
+  // slide animation przy losuj dalej (todo)
   const slideTodo = (nextItem: any) => {
     Animated.timing(slideAnim, { toValue: -50, duration: 250, useNativeDriver: true }).start(() => {
       setCurrentItem(nextItem);
@@ -34,7 +45,7 @@ export default function RandomResultScreen(){
     });
   };
 
-  // losuj dalej
+  // losuj dalej (todo)
   const onLosujDalej = async () => {
     try {
       const res = await api.get("/todos/tasks/", { params: { user_id: userId, category_id: categoryId }});
@@ -48,44 +59,43 @@ export default function RandomResultScreen(){
   if (!currentItem) return null;
 
   const todoCard = (
-    <Animated.View style={{
-      transform: [{ translateY: slideAnim }],
-      padding: 28,
-      borderWidth: 2,
-      borderColor: colors.buttonActive,
-      borderRadius: 16,
-      marginVertical: 40,
-      alignSelf: "center",
-      maxWidth: "90%",
-      backgroundColor: colors.card,
-    }}>
-      <AppText style={{ 
-        fontSize: 28, 
-        fontWeight: "800", 
-        textAlign: "center",
-        lineHeight: 36,
-      }}>
-        {currentItem.content}
-      </AppText>
-    </Animated.View>
+    <RandomResultCard
+      title={currentItem.content}
+      animatedStyle={{
+        transform: [{ translateY: slideAnim }],
+      }}
+    />
   );
+
+
+  const goToActive = () => {
+    if (!currentItem) return router.replace("/(tabs)/RandomHomeScreen");
+    const dest = currentItem.type?.name === "Daily" ? "/random/daily/active" : "/random/weekly/active";
+    router.replace(dest);
+  };
 
   return (
     <View style={{ flex:1, padding:18, backgroundColor: colors.background, justifyContent:"center" }}>
       {source === "challenge" && (
         <>
-          <View style={{ padding:22, borderWidth:2, borderRadius:16, borderColor: colors.buttonActive, alignSelf:"center", maxWidth:"90%", backgroundColor: colors.card }}>
-            <AppText style={{ fontSize:20, fontWeight:"800", textAlign:"center", marginBottom:8 }}>{currentItem.title}</AppText>
-            <AppText style={{ textAlign:"center" }}>{currentItem.description}</AppText>
-          </View>
+          <RandomResultCard
+              title={currentItem.title}
+              description={currentItem.description}
+            />
 
-          <TouchableOpacity onPress={onAssignChallenge} style={{ backgroundColor: colors.buttonActive, padding:12, borderRadius:10, marginTop:12 }}>
-            <AppText style={{ color:"#fff", fontWeight:"bold" }}>Akceptuj</AppText>
-          </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.back()} style={{ padding:12, borderRadius:10, backgroundColor: colors.card, marginTop:8 }}>
-            <AppText>Anuluj</AppText>
-          </TouchableOpacity>
+          {assigning && (
+            <View style={{ marginTop:12, alignItems:"center" }}>
+              <ActivityIndicator color={colors.buttonActive} />
+              <AppText style={{ marginTop:8 }}>Przypisywanie...</AppText>
+            </View>
+          )}
+
+          {!assigning && (
+            <TouchableOpacity onPress={goToActive} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginTop:12 }}>
+              <AppText style={{ textAlign: "center" }}>OK</AppText>
+            </TouchableOpacity>
+          )}
         </>
       )}
 
@@ -93,13 +103,13 @@ export default function RandomResultScreen(){
         <>
           {todoCard}
           <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
-            <AppText>OK</AppText>
+            <AppText style={{ textAlign: "center" }}>OK</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={onLosujDalej} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>
-            <AppText style={{ color:"#fff" }}>Reroll</AppText>
+            <AppText style={{ textAlign: "center", color:"#fff" }}>Reroll</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10 }}>
-            <AppText>Change category</AppText>
+            <AppText style={{ textAlign: "center" }}>Change category</AppText>
           </TouchableOpacity>
         </>
       )}

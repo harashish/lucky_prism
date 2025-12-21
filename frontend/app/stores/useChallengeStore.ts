@@ -3,7 +3,7 @@ import { api } from "../api/apiClient";
 
 export interface ChallengeTag { id: number; name: string; }
 export interface ChallengeType { id: number; name: string; }
-export interface DifficultyType { id: number; name: string; xp_value: number; }
+export interface DifficultyType { id: number; name: string }
 export interface Challenge { id:number; title:string; description:string; type:ChallengeType; difficulty:DifficultyType; tags:ChallengeTag[]; is_default:boolean; }
 export interface UserChallenge { id:number; challenge: Challenge; start_date: string; challenge_type: string; weekly_deadline?: string; progress_percent?: number; is_completed: boolean; }
 
@@ -23,7 +23,12 @@ interface ChallengeStore {
   randomChallenge: (userId: number, type: "Daily" | "Weekly", tagIds?: number[]) => Promise<Challenge | null>;
   assignChallenge: (userId: number, challengeId: number) => Promise<UserChallenge | null>;
   discardUserChallenge: (id: number) => Promise<boolean>;
-  completeUserChallenge: (id: number) => Promise<{ total_xp: number; current_level: number } | null>;
+  completeUserChallenge: (id: number) => Promise<{
+  xp_gained: number;
+  total_xp: number;
+  current_level: number;
+} | null>;
+
 
   reset: () => void;
 }

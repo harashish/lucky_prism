@@ -22,9 +22,13 @@ export interface Habit {
 }
 
 interface ToggleDayResponse {
-  xp_added: number;
+  xp_gained: number;
+  total_xp: number;
+  current_level: number;
   already_completed?: boolean;
+  day?: any;
 }
+
 
 interface HabitStore {
   habits: Habit[];
@@ -130,10 +134,7 @@ export const useHabitStore = create<HabitStore>((set) => ({
         payload
       );
 
-      return {
-        xp_added: res.data.xp_added || 0,
-        already_completed: res.data.already_completed || false,
-      };
+      return res.data as ToggleDayResponse;
     } catch (e: any) {
       console.error(
         "Error toggling habit day:",
@@ -142,6 +143,7 @@ export const useHabitStore = create<HabitStore>((set) => ({
       return null;
     }
   },
+
 
   reset: () => set({ habits: [] }),
 }));

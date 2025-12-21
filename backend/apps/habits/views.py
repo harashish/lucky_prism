@@ -8,6 +8,7 @@ from .serializers import HabitSerializer, HabitDaySerializer
 from datetime import datetime, date, timedelta
 from django.db.models import Q
 import calendar
+from apps.gamification.services.xp_calculator import calculate_xp
 
 
 class HabitListCreate(generics.ListCreateAPIView):
@@ -82,21 +83,29 @@ class HabitDayToggleView(APIView):
             obj.save(update_fields=["status", "updated_at"])
 
             if new_status == HabitDay.STATUS_COMPLETED and not obj.xp_awarded:
-                xp_amount = habit.difficulty.xp_value if habit.difficulty else 0
-                habit.user.add_xp(
-                    amount=int(xp_amount),
-                    source="habit",
-                    source_id=obj.id
+                xp_amount = calculate_xp(
+                    module="habits",
+                    difficulty=habit.difficulty.name.lower(),
                 )
+
+                habit.user.add_xp(
+                    xp=xp_amount,
+                    source="habit",
+                    source_id=obj.id,
+                )
+
                 obj.xp_awarded = True
                 obj.save(update_fields=["xp_awarded"])
-                xp_added = int(xp_amount)
+                xp_added = xp_amount
 
         return Response({
             "day": HabitDaySerializer(obj).data,
-            "xp_added": xp_added,
+            "xp_gained": xp_added,
+            "total_xp": habit.user.total_xp,
+            "current_level": habit.user.current_level,
             "already_completed": already_completed
         }, status=200)
+
 
 class HabitMonthView(APIView):
     def get(self, request, user_id):

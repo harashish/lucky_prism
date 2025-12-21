@@ -5,82 +5,83 @@ import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from
 import { useRouter } from "expo-router";
 import AppText from "../components/AppText";
 import { colors, radius } from "../constants/theme";
-import { api } from "../app/api/apiClient"; // import instancji Axios
+import { api } from "../app/api/apiClient";
+import FormErrorModal from "../components/FormErrorModal";
+import { useLocalSearchParams } from "expo-router";
 
-type Props = {
-  editingTagId?: number;
-};
 
-const TagsFormScreen = ({ editingTagId }: Props) => {
+const TagsFormScreen = () => {
+  const { id } = useLocalSearchParams();
+  const editingId = id ? Number(id) : null;
   const router = useRouter();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (editingTagId) {
+    if (editingId) {
       const fetchTag = async () => {
         setLoading(true);
         try {
-          const res = await api.get(`/challenges/tags/${editingTagId}/`);
+          const res = await api.get(`/challenges/tags/${editingId}/`);
           setName(res.data.name);
         } catch (err: any) {
           console.error(err);
-          setError("Nie udało się pobrać tagu");
+          setErrorMessage("Cannot load tag");
         } finally {
           setLoading(false);
         }
       };
       fetchTag();
     }
-  }, [editingTagId]);
+  }, [editingId]);
 
   const saveTag = async () => {
-    if (!name) {
-      setError("Podaj nazwę tagu");
+    if (!name.trim()) {
+      setErrorMessage("Please enter tag name");
       return;
     }
     setLoading(true);
-    setError(null);
     try {
-      if (editingTagId) {
-        await api.patch(`/challenges/tags/${editingTagId}/`, { name });
+      if (editingId) {
+        await api.patch(`/challenges/tags/${editingId}/`, { name });
       } else {
         await api.post("/challenges/tags/", { name });
       }
-      router.back();
+      router.replace("/ChallengesListScreen");
+
     } catch (err: any) {
       console.error(err);
-      setError("Nie udało się zapisać tagu");
+      setErrorMessage("Cannot save tag");
     } finally {
       setLoading(false);
     }
   };
 
   const deleteTag = async () => {
-    if (!editingTagId) return;
+    if (!editingId) return;
     setLoading(true);
-    setError(null);
 
     try {
-      await api.delete(`/challenges/tags/${editingTagId}/`);
-      router.back();
+      await api.delete(`/challenges/tags/${editingId}/`);
+      router.replace("/ChallengesListScreen");
+
     } catch (err: any) {
       const msg = err.response?.data?.detail;
-      if (msg) setError(msg);
-      else setError("Nie udało się usunąć tagu");
+      if (msg) setErrorMessage(msg);
+      else setErrorMessage("Cannot delete tag");
     }
     finally {
       setLoading(false);
     }
   };
 
-  return (
+return (
+  <>
     <ScrollView style={{ flex: 1, padding: 16, backgroundColor: colors.background }}>
-      {error && <AppText style={{ color: "#f44336", marginBottom: 12 }}>{error}</AppText>}
 
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: 16, color: colors.text }}>
-        {editingTagId ? "Edit tag" : "Add tag"}
+        {editingId ? "Edit tag" : "Add tag"}
       </AppText>
 
       <AppText style={{ color: colors.text, marginBottom: 6 }}>Tag name:</AppText>
@@ -106,7 +107,7 @@ const TagsFormScreen = ({ editingTagId }: Props) => {
           padding: 16,
           borderRadius: radius.md,
           alignItems: "center",
-          marginBottom: editingTagId ? 12 : 0
+          marginBottom: editingId ? 12 : 0
         }}
         disabled={loading}
       >
@@ -114,12 +115,12 @@ const TagsFormScreen = ({ editingTagId }: Props) => {
           <ActivityIndicator color="#fff" />
         ) : (
           <AppText style={{ color: "#fff", fontWeight: "bold" }}>
-            {editingTagId ? "Save" : "Add tag"}
+            {editingId ? "Save" : "Add tag"}
           </AppText>
         )}
       </TouchableOpacity>
 
-      {editingTagId && (
+      {editingId && (
         <TouchableOpacity
           onPress={deleteTag}
           style={{
@@ -134,7 +135,13 @@ const TagsFormScreen = ({ editingTagId }: Props) => {
         </TouchableOpacity>
       )}
     </ScrollView>
-  );
+    <FormErrorModal
+      visible={!!errorMessage}
+      message={errorMessage || ""}
+      onClose={() => setErrorMessage(null)}
+    />
+  </>
+);
 };
 
 export default TagsFormScreen;

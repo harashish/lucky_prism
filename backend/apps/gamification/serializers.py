@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, XPLog, ModuleXPConfig
+from .models import User, XPLog
 
 class XPLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
-class ModuleXPConfigSerializer(serializers.ModelSerializer):
+'''class ModuleXPConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ModuleXPConfig
-        fields = ["id", "module", "base_xp"]
+        fields = ["id", "module", "base_xp"]'''

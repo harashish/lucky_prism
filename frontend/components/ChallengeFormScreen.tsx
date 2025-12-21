@@ -6,15 +6,14 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useChallengeStore, Challenge, ChallengeType, DifficultyType } from "../app/stores/useChallengeStore";
 import { colors, spacing, radius } from "../constants/theme";
 import AppText from "../components/AppText";
-import { api } from "../app/api/apiClient"; // import instancji Axios
-import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
-
+import { api } from "../app/api/apiClient";
+import FormErrorModal from "../components/FormErrorModal";
+import { confirmDelete } from "../components/confirmDelete";
 
 const ChallengeFormScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { tags, loadTags, loadChallenges } = useChallengeStore();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<ChallengeType | null>(null);
@@ -23,22 +22,18 @@ const ChallengeFormScreen = () => {
   const [availableTypes, setAvailableTypes] = useState<ChallengeType[]>([]);
   const [availableDifficulties, setAvailableDifficulties] = useState<DifficultyType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const editingChallengeId = params?.id ? parseInt(params.id as string, 10) : null;
+  const editingId = params?.id ? parseInt(params.id as string, 10) : null;
 
-  const { modules } = useModuleSettingsStore();
-  const gamificationOn = modules?.gamification;
-
-  
 
   // load tags on mount
   useEffect(() => { loadTags(); }, []);
 
   // load challenge if editing
   useEffect(() => {
-    if (editingChallengeId) {
-      api.get(`/challenges/${editingChallengeId}/`)
+    if (editingId) {
+      api.get(`/challenges/${editingId}/`)
         .then(res => {
           const c: Challenge = res.data;
           setTitle(c.title);
@@ -47,11 +42,14 @@ const ChallengeFormScreen = () => {
           setDifficulty(c.difficulty);
           setSelectedTags(c.tags.map(t => t.id));
         })
-        .catch(err => console.error(err));
+          .catch(err => {
+            console.error(err);
+            setErrorMessage("Failed to load challenge");
+          })
+          .finally(() => setLoading(false));
     }
-  }, [editingChallengeId]);
+  }, [editingId]);
 
-  // fetch types and difficulties
   useEffect(() => {
     const fetchMeta = async () => {
       try {
@@ -73,27 +71,39 @@ const ChallengeFormScreen = () => {
   };
 
   const deleteChallenge = async () => {
-    if (!editingChallengeId) return;
+    if (!editingId) return;
     setLoading(true);
     try {
-      await api.delete(`/challenges/${editingChallengeId}/`);
+      await api.delete(`/challenges/${editingId}/`);
       loadChallenges();
       router.push("/ChallengesListScreen");
     } catch {
-      setError("Nie udało się usunąć challenge");
+      setErrorMessage("Failed to delete challenge");
     } finally {
       setLoading(false);
     }
   };
 
   const saveChallenge = async () => {
-    if (!title || !type || !difficulty || selectedTags.length === 0) {
-      setError("Uzupełnij wszystkie pola");
+    if (!title.trim()) {
+      setErrorMessage("Please enter challenge name");
+      return;
+    }
+    if (!type) {
+      setErrorMessage("Please select challenge type");
+      return;
+    }
+    if (!difficulty) {
+      setErrorMessage("Please select difficulty");
+      return;
+    }
+    if (selectedTags.length === 0) {
+      setErrorMessage("Please select at least one tag");
       return;
     }
 
+
     setLoading(true);
-    setError(null);
 
     try {
       const payload = {
@@ -104,8 +114,8 @@ const ChallengeFormScreen = () => {
         tags_ids: selectedTags
       };
 
-      if (editingChallengeId) {
-        await api.patch(`/challenges/${editingChallengeId}/`, payload);
+      if (editingId) {
+        await api.patch(`/challenges/${editingId}/`, payload);
       } else {
         await api.post("/challenges/", payload);
       }
@@ -113,18 +123,18 @@ const ChallengeFormScreen = () => {
       loadChallenges();
       router.push("/ChallengesListScreen");
     } catch {
-      setError("Błąd zapisu");
+      setErrorMessage("Failed to save challenge");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
+return (
+  <>
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
-      {error && <AppText style={{ color: "red", marginBottom: spacing.m }}>{error}</AppText>}
 
       <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
-        {editingChallengeId ? "Edit challenge" : "Add challenge"}
+        {editingId ? "Edit challenge" : "Add challenge"}
       </AppText>
 
       {/* Nazwa */}
@@ -196,10 +206,8 @@ const ChallengeFormScreen = () => {
               backgroundColor: difficulty?.id === d.id ? colors.buttonActive : colors.button
             }}
           >
-            <AppText>
-              {d.name}
-              {gamificationOn ? ` (${d.xp_value} XP)` : ""}
-            </AppText>
+            <AppText>{d.name}</AppText>
+
           </TouchableOpacity>
         ))}
       </View>
@@ -235,19 +243,25 @@ const ChallengeFormScreen = () => {
           padding: spacing.m,
           borderRadius: radius.md,
           alignItems: "center",
-          marginBottom: editingChallengeId ? spacing.m : 0
+          marginBottom: editingId ? spacing.m : 0
         }}
       >
         {loading
           ? <ActivityIndicator color="#fff" />
-          : <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editingChallengeId ? "Save" : "Add challenge"}</AppText>
+          : <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editingId ? "Save" : "Add challenge"}</AppText>
         }
       </TouchableOpacity>
 
       {/* Usuń */}
-      {editingChallengeId && (
+      {editingId && (
         <TouchableOpacity
-          onPress={deleteChallenge}
+          onPress={() =>
+            confirmDelete({
+              title: "Delete challenge?",
+              message: "This challenge will be permanently removed.",
+              onConfirm: deleteChallenge,
+            })
+          }
           style={{
             backgroundColor: colors.deleteButton,
             padding: spacing.m,
@@ -256,11 +270,20 @@ const ChallengeFormScreen = () => {
             marginBottom: spacing.l
           }}
         >
-          <AppText style={{ color: "#fff", fontWeight: "bold" }}>Delete challenge</AppText>
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+            Delete challenge
+          </AppText>
         </TouchableOpacity>
       )}
+
     </ScrollView>
-  );
+    <FormErrorModal
+      visible={!!errorMessage}
+      message={errorMessage || ""}
+      onClose={() => setErrorMessage(null)}
+    />
+  </>
+);
 };
 
 export default ChallengeFormScreen;

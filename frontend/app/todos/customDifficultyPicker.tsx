@@ -49,10 +49,10 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
                   padding: 12,
                   borderRadius: 8,
                   marginBottom: 8,
-                  backgroundColor: "#FFFFF1",
+                  backgroundColor: colors.light,
                 }}
               >
-                <AppText>{d.name} ({d.xp_value} XP)</AppText>
+                <AppText>{d.name}</AppText>
               </TouchableOpacity>
 
             ))}

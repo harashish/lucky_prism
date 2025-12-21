@@ -33,7 +33,7 @@ export default function NoteEditScreen() {
   return (
     <View style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
       <AppText style={{ fontWeight: "700", marginBottom: spacing.s }}>
-        {id ? "Edytuj notatkę" : "Nowa notatka"}
+        {id ? "Edit note" : "New note"}
       </AppText>
 
       <TextInput
@@ -41,6 +41,9 @@ export default function NoteEditScreen() {
         onChangeText={setContent}
         multiline
         placeholder="Treść notatki..."
+        placeholderTextColor={"rgba(228, 221, 221, 0.5)"}
+        selectionColor={colors.buttonActive}
+        
         style={{
           flex: 1,
           backgroundColor: colors.card,
@@ -61,7 +64,7 @@ export default function NoteEditScreen() {
           alignItems: "center",
         }}
       >
-        <AppText style={{ color: "#fff", fontWeight: "700" }}>Zapisz</AppText>
+        <AppText style={{ color: "#fff", fontWeight: "700" }}>Save</AppText>
       </TouchableOpacity>
     </View>
   );

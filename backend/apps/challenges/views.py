@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
 from django.utils import timezone
+from datetime import timedelta
 import random
 
 from .models import ChallengeDefinition, UserChallenge, ChallengeType, ChallengeTag
@@ -79,7 +80,7 @@ class AssignChallengeView(APIView):
             existing.start_date = timezone.now().date()
 
             if challenge_type == "Weekly":
-                existing.weekly_deadline = existing.start_date + timezone.timedelta(days=7)
+                existing.weekly_deadline = existing.start_date + timedelta(days=7)
 
             existing.save()
             existing.start_weekly_if_needed()
@@ -94,7 +95,7 @@ class AssignChallengeView(APIView):
         )
 
         if challenge_type == "Weekly":
-            uc.weekly_deadline = uc.start_date + timezone.timedelta(days=7)
+            uc.weekly_deadline = uc.start_date + timedelta(days=7)
             uc.save()
 
         uc.start_weekly_if_needed()
@@ -143,15 +144,17 @@ class CompleteUserChallengeView(APIView):
     def post(self, request, pk):
         try:
             uc = UserChallenge.objects.get(pk=pk)
-        except:
+        except UserChallenge.DoesNotExist:
             return Response({"detail": "Not found"}, status=404)
 
-        uc.complete()
+        xp = uc.complete() or 0   # ← TO JEST KLUCZOWA LINIA
 
         return Response({
+            "xp_gained": xp,
             "total_xp": uc.user.total_xp,
             "current_level": uc.user.current_level
         }, status=200)
+
 
 
 # ==========================================================

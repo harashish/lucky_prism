@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-export interface DifficultyType { id: number; name: string; xp_value: number; }
+
+export interface DifficultyType { id: number; name: string;}
 
 export interface TodoCategory {
   id: number;
@@ -27,13 +28,16 @@ interface TodoStore {
   loading: boolean;
 
   loadCategories: () => Promise<void>;
-  loadTasks: (userId?: number, categoryId?: number) => Promise<void>;
+  loadTasks: (userId: number, categoryId: number) => Promise<void>;
+
   addCategory: (payload: any) => Promise<TodoCategory | null>;
   saveCategory: (id: number, payload: any) => Promise<boolean>;
   deleteCategory: (id: number) => Promise<boolean>;
   quickAddTask: (userId: number, categoryId: number, content: string, customDifficultyId?: number | null) => Promise<TodoTask | null>;
   completeTask: (taskId: number) => Promise<{ xp_gained: number; total_xp: number; current_level: number } | null>;
   deleteTask: (taskId: number) => Promise<boolean>;
+  selectedCategoryId: number | null;
+  setSelectedCategoryId: (id: number | null) => void;
 }
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
@@ -53,19 +57,25 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
 
-  loadTasks: async (userId = 1, categoryId?: number) => {
-    set({ loading: true });
-    try {
-      const params: any = { user_id: userId };
-      if (categoryId) params.category_id = categoryId;
-      const res = await api.get<TodoTask[]>("/todos/tasks/", { params });
-      set({ tasks: res.data });
-    } catch (e: any) {
-      console.error("loadTasks", e.response?.data || e.message || e);
-    } finally {
-      set({ loading: false });
-    }
-  },
+loadTasks: async (userId, categoryId) => {
+  if (!categoryId) {
+    console.warn("loadTasks called without categoryId");
+    return;
+  }
+
+  set({ loading: true });
+  try {
+    const res = await api.get<TodoTask[]>("/todos/tasks/", {
+      params: { user_id: userId, category_id: categoryId },
+    });
+    set({ tasks: res.data });
+  } catch (e) {
+    console.error(e);
+  } finally {
+    set({ loading: false });
+  }
+},
+
 
   addCategory: async (payload) => {
     try {
@@ -168,6 +178,9 @@ randomTask: async (userId = 1, categoryId?: number) => {
     return null;
   }
 },
+selectedCategoryId: null,
+
+setSelectedCategoryId: (id) => set({ selectedCategoryId: id }),
 
 
 }));

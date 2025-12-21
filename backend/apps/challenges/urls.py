@@ -11,7 +11,7 @@ from .views import (
     RandomChallengeView,
     DiscardUserChallengeView,
     ActiveChallengesView,
-    ChallengeTagDetail
+    ChallengeTagDetail,
 )
 
 urlpatterns = [

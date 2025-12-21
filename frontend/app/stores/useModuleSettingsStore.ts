@@ -41,15 +41,20 @@ type ModuleStore = {
   modules: Record<ModuleKey, boolean> | null;
   raw: ModuleSetting[];
   dashboardTiles: DashboardTileSetting[];
+
+  pendingModuleToggles: number[];
+
   fetchModules: () => Promise<void>;
   toggleModule: (id: number, value: boolean) => Promise<void>;
   toggleTile: (id: DashboardTileKey, value: boolean) => void;
 };
 
+
 export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
   modules: null,
   raw: [],
   dashboardTiles: [],
+  pendingModuleToggles: [],
 
  fetchModules: async () => {
     if (get().modules) return;
@@ -81,28 +86,30 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
     }
   },
 
-  toggleModule: async (id, value) => {
+  
+
+toggleModule: async (id, value) => {
+  const prevRaw = get().raw;
+  const prevModules = get().modules;
+  const changed = prevRaw.find(m => m.id === id);
+  // optimistic
+  const rawOptimistic = prevRaw.map(m => m.id === id ? { ...m, is_enabled: value } : m);
+  const modulesOptimistic = { ...(prevModules as Record<ModuleKey, boolean>) };
+  if (changed) modulesOptimistic[changed.module] = value;
+
+  // mark pending
+  set({ raw: rawOptimistic, modules: modulesOptimistic, pendingModuleToggles: [...get().pendingModuleToggles, id] });
+
+  try {
     await api.patch(`/settings/modules/${id}/`, { is_enabled: value });
-
-    const raw = get().raw.map((m) =>
-      m.id === id ? { ...m, is_enabled: value } : m
-    );
-
-    const modules = { ...(get().modules as Record<ModuleKey, boolean>) };
-    const changed = raw.find((m) => m.id === id);
-    if (changed) modules[changed.module] = value;
-
-    set({ raw, modules });
-
-    // Wyłączamy dashboard tiles zależne od tego modułu
-    set({
-      dashboardTiles: get().dashboardTiles.map((tile) =>
-        tile.module_dependency === changed?.module && !value
-          ? { ...tile, is_enabled: false }
-          : tile
-      ),
-    });
-  },
+    // success: remove pending
+    set({ pendingModuleToggles: get().pendingModuleToggles.filter(x => x !== id) });
+  } catch (e) {
+    // rollback on error
+    set({ raw: prevRaw, modules: prevModules, pendingModuleToggles: get().pendingModuleToggles.filter(x => x !== id) });
+    console.error("toggleModule failed", e);
+  }
+},
 
   toggleTile: async (id: string, value: boolean) => {
     // zakładamy id jest numericznym pk gdy tiles pobrane z backendu

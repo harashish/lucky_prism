@@ -1,5 +1,4 @@
 // frontend/components/HabitItem.tsx
-
 import React, { useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import AppText from "./AppText";
@@ -31,30 +30,56 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <AppText style={{ fontWeight: "bold" }}>{item.title}</AppText>
 
-        <Pressable 
-  onPress={() => onToggleToday(item.id)} 
-  style={{
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: item.color || colors.buttonActive,
-    justifyContent: "center",
-    alignItems: "center",
-  }}
->
-  <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
-</Pressable>
+
+        <Pressable
+          onPress={() => onToggleToday(item.id)}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            backgroundColor: item.color || colors.buttonActive,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+        </Pressable>
 
       </View>
 
       {expanded && (
-        <View style={{ marginTop: spacing.s }}>
-          <AppText style={{ marginBottom: spacing.s }}>{item.motivation_reason || item.description}</AppText>
+        <View style={{ marginTop: 0 }}>
+          
+          {item.description ? (
+            <>
+              <AppText style={{ marginBottom: spacing.s }}>{item.description}</AppText>
+            </>
+          ) : null}
+
+                  <AppText style={{ fontSize: 12, color: "#777" }}>
+          {item.difficulty.name}
+        </AppText>
+
+          
+                  {item.motivation_reason ? (
+          <AppText
+            style={{
+              fontSize: 12,
+              opacity: 0.8,
+              marginBottom: 4,
+            }}
+          >
+            Motivation: {item.motivation_reason}
+          </AppText>
+        ) : null}
+
+
+
         </View>
       )}
 
-      {/* month grid */}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: spacing.m }}>
+      {/* month grid (pozostawione bez zmian) */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: spacing.s }}>
         {days.map((d: any) => {
           const status = d.status;
           const todayStr = new Date().toISOString().slice(0, 10);
@@ -83,28 +108,24 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
 
           return (
             <Pressable
-  key={d.date}
-  onPress={async () => {
-    // zablokuj przyszłe dni
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (d.date > todayStr) {
-      return;
-    }
-
-    // toggle tylko dla obecnych lub przeszłych dni
-    const newStatus = d.status === 2 ? 1 : 2;
-    await onToggleDay(item.id, d.date, newStatus);
-  }}
-  onLongPress={() => router.push(`/editHabit/${item.id}`)}
-  delayLongPress={300}
->
-  <View style={squareStyle}>
-    <AppText style={{ fontSize: 10, color: "#fff" }}>
-      {new Date(d.date).getDate()}
-    </AppText>
-  </View>
-</Pressable>
-
+              key={d.date}
+              onPress={async () => {
+                const todayStr = new Date().toISOString().slice(0, 10);
+                if (d.date > todayStr) {
+                  return;
+                }
+                const newStatus = d.status === 2 ? 1 : 2;
+                await onToggleDay(item.id, d.date, newStatus);
+              }}
+              onLongPress={() => router.push(`/editHabit/${item.id}`)}
+              delayLongPress={300}
+            >
+              <View style={squareStyle}>
+                <AppText style={{ fontSize: 10, color: "#fff" }}>
+                  {new Date(d.date).getDate()}
+                </AppText>
+              </View>
+            </Pressable>
           );
         })}
       </View>

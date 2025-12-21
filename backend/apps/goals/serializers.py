@@ -8,12 +8,13 @@ from apps.gamification.models import User
 class GoalPeriodSerializer(serializers.ModelSerializer):
     class Meta:
         model = GoalPeriod
-        fields = ['id', 'name', 'default_xp']
+        fields = ['id', 'name']
 
 class GoalSerializer(serializers.ModelSerializer):
     period = GoalPeriodSerializer(read_only=True)
     difficulty = DifficultyTypeSerializer(read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    motivation_reason = serializers.CharField(allow_blank=False)
 
     period_id = serializers.PrimaryKeyRelatedField(
         queryset=GoalPeriod.objects.all(),

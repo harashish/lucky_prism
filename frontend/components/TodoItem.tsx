@@ -1,70 +1,134 @@
-import React from "react";
-import { View, TouchableOpacity, Alert } from "react-native";
+// frontend/components/TodoItem.tsx
+import React, { useRef } from "react";
+import { View, Alert, Pressable, StyleSheet } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import AppText from "./AppText";
 import { components, spacing, colors } from "../constants/theme";
 import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
 
 export default function TodoItem({ item, onComplete, onDelete, onLongPress }: any) {
+  const swipeRef = useRef<Swipeable>(null);
   const isCompleted = item.is_completed;
 
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
+  const confirmComplete = () => {
+    swipeRef.current?.close();
+    Alert.alert(
+      "Ukończyć zadanie?",
+      item.content,
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Tak",
+          onPress: () => onComplete(item.id),
+        },
+      ]
+    );
+  };
+
+  const confirmDelete = () => {
+    swipeRef.current?.close();
+    Alert.alert(
+      "Usunąć zadanie?",
+      item.content,
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Usuń",
+          style: "destructive",
+          onPress: () => onDelete(item.id),
+        },
+      ]
+    );
+  };
+
+  const renderLeftAction = () => (
+    <View style={[styles.action, styles.complete]}>
+      <AppText style={styles.actionText}>Ukończ</AppText>
+    </View>
+  );
+
+  const renderRightAction = () => (
+    <View style={[styles.action, styles.delete]}>
+      <AppText style={styles.actionText}>Usuń</AppText>
+    </View>
+  );
+
   return (
-    <TouchableOpacity
-      onLongPress={onLongPress}
-      activeOpacity={0.8}
-      style={{ 
-        ...components.container, 
-        marginBottom: spacing.s, 
-        marginHorizontal: 12,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-      }}
+    <Swipeable
+      ref={swipeRef}
+      renderLeftActions={!isCompleted ? renderLeftAction : undefined}
+      renderRightActions={renderRightAction}
+      leftThreshold={60}
+      rightThreshold={60}
+      onSwipeableLeftOpen={!isCompleted ? confirmComplete : undefined}
+      onSwipeableRightOpen={confirmDelete}
+      overshootFriction={6}
     >
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        {/* Tekst todo */}
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <AppText
-            style={{
-              fontWeight: "bold",
-              textDecorationLine: isCompleted ? "line-through" : "none",
-              color: isCompleted ? "#777" : colors.text,
-              flexWrap: "wrap",
-            }}
-          >
-            {item.content}
-            {gamificationOn && (
-              ` (${item.custom_difficulty
-                ? item.custom_difficulty.xp_value
-                : item.category?.difficulty?.xp_value} XP)`
-            )}
-          </AppText>
+      <Pressable
+        onLongPress={onLongPress}
+        style={({ pressed }) => [
+          styles.container,
+          { opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <AppText
+              style={{
+                textDecorationLine: isCompleted ? "line-through" : "none",
+                color: isCompleted ? "#777" : colors.text,
+                flexWrap: "wrap",
+              }}
+            >
+              {item.content}
 
+              {gamificationOn && item.custom_difficulty && (
+                <AppText
+                  style={{
+                    fontWeight: "normal",
+                    color: colors.light,
+                  }}
+                >
+                  {" "}
+                  ({item.custom_difficulty.name})
+                </AppText>
+              )}
+            </AppText>
+
+
+          </View>
         </View>
-
-        
-
-        {/* Przycisk wykonania i kosza */}
-        <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8, flexShrink: 0 }}>
-          {!isCompleted && (
-            <TouchableOpacity onPress={() => onComplete(item.id)} style={components.completeButton}>
-              <AppText style={{ color: "#fff" }}>＋</AppText>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            onPress={() => {
-              Alert.alert("Usuń zadanie?", item.content, [
-                { text: "Anuluj", style: "cancel" },
-                { text: "Usuń", style: "destructive", onPress: () => onDelete(item.id) }
-              ]);
-            }}
-            style={{ marginLeft: 8 }}
-          >
-            <AppText>🗑️</AppText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </Pressable>
+    </Swipeable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    ...components.container,
+    marginBottom: spacing.s,
+    marginHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  action: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 96,
+    marginVertical: spacing.s,
+    borderRadius: 10,
+  },
+  complete: {
+    backgroundColor: colors.buttonActive,
+  },
+  delete: {
+    backgroundColor: "#d9534f",
+  },
+  actionText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+});

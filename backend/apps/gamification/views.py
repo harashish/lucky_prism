@@ -2,11 +2,10 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import User, XPLog, ModuleXPConfig
+from .models import User, XPLog
 from .serializers import (
     UserSerializer,
     XPLogSerializer,
-    ModuleXPConfigSerializer,
 )
 
 
@@ -19,13 +18,15 @@ class XPLogList(generics.ListAPIView):
     queryset = XPLog.objects.all()
     serializer_class = XPLogSerializer
 
+    
 
-class ModuleXPConfigList(generics.ListAPIView):
+
+'''class ModuleXPConfigList(generics.ListAPIView):
     queryset = ModuleXPConfig.objects.all()
-    serializer_class = ModuleXPConfigSerializer
+    serializer_class = ModuleXPConfigSerializer'''
 
 
-class AddXPView(APIView):
+'''class AddXPView(APIView):
     def patch(self, request, pk):
         user = User.objects.get(pk=pk)
 
@@ -46,3 +47,4 @@ class AddXPView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+'''
