@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import AppText from "./AppText";
 import { useGamificationStore } from "../app/stores/useGamificationStore";
-import { colors } from "../constants/theme";
 
 export default function XPPopup() {
   const { xpPopup, clearXpPopup } = useGamificationStore();

@@ -100,15 +100,11 @@ loadTasks: async (userId, categoryId) => {
   },
 
   deleteCategory: async (id) => {
-    try {
-      await api.delete(`/todos/categories/${id}/`);
-      await get().loadCategories();
-      return true;
-    } catch (e: any) {
-      console.error(e);
-      return false;
-    }
+    await api.delete(`/todos/categories/${id}/`);
+    await get().loadCategories();
+    return true;
   },
+
 
 quickAddTask: async (userId, categoryId, content, customDifficultyId = null) => {
   try {

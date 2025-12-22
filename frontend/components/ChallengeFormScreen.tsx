@@ -84,7 +84,7 @@ export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenPr
     }
   };
 
-  const saveChallenge = async () => {
+  const save = async () => {
     if (!title.trim()) {
       setErrorMessage("Please enter challenge name");
       return;
@@ -229,7 +229,7 @@ return (
       </View>
 
       <TouchableOpacity
-        onPress={saveChallenge}
+        onPress={save}
         style={{
           backgroundColor: colors.buttonActive,
           padding: spacing.m,

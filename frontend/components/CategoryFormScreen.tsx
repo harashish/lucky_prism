@@ -28,7 +28,7 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [color, setColor] = useState<string | null>(null);
-
+  const { categories } = useTodoStore();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -56,7 +56,7 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
 
     setLoading(true);
     api
-      .get(`/todos/categories/${editingId}`)
+      .get(`/todos/categories/${editingId}/`)
       .then(res => {
         setName(res.data.name);
         setDifficultyId(res.data.difficulty?.id || null);
@@ -98,20 +98,20 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     }
   };
 
-  // ---- delete
   const onDelete = async () => {
     if (!editingId) return;
-
     setLoading(true);
     try {
       await deleteCategory(editingId);
       router.push("/TodosScreen");
-    } catch {
-      setErrorMessage("Cannot delete last category");
+    } catch (err: any) {
+      const msg = err.response?.data?.detail;
+      setErrorMessage(msg || "Cannot delete category");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <>

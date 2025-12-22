@@ -1,78 +1,162 @@
 import React, { useEffect, useState } from "react";
-import { View, TextInput, TouchableOpacity } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
 import AppText from "./AppText";
-import { colors, spacing } from "../constants/theme";
+import { colors, radius, spacing } from "../constants/theme";
 import { api } from "../app/api/apiClient";
+import FormErrorModal from "../components/FormErrorModal";
+import { confirmDelete } from "../components/confirmDelete";
 
 export type NoteFormScreenProps = {
   editingId?: number;
 };
 
-
 export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
-
-    const isEdit = typeof editingId === "number";
+  const isEdit = typeof editingId === "number";
 
   const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // ---- load note (edit)
   useEffect(() => {
-    if (id) {
-      api.get(`/notes/${id}/`).then(res => {
+    if (!editingId) return;
+
+    const fetchNote = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/notes/${editingId}/`);
         setContent(res.data.content);
-      });
-    }
-  }, [id]);
+      } catch (err) {
+        console.error(err);
+        setErrorMessage("Cannot load note");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchNote();
+  }, [editingId]);
+
+  // ---- save
   const save = async () => {
-    if (!content.trim()) return;
-
-    if (id) {
-      await api.patch(`/notes/${id}/`, { content });
-    } else {
-      await api.post("/notes/", { content });
+    if (!content.trim()) {
+      setErrorMessage("Note cannot be empty");
+      return;
     }
-    router.back();
+
+    setLoading(true);
+    try {
+      if (editingId) {
+        await api.patch(`/notes/${editingId}/`, { content });
+      } else {
+        await api.post("/notes/", { content });
+      }
+      router.back();
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Cannot save note");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ---- delete
+  const deleteNote = async () => {
+    if (!editingId) return;
+
+    setLoading(true);
+    try {
+      await api.delete(`/notes/${editingId}/`);
+      router.back();
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Cannot delete note");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <View style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
-      <AppText style={{ fontWeight: "700", marginBottom: spacing.s }}>
-        {id ? "Edit note" : "New note"}
-      </AppText>
+    <>
+      <View style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+        <AppText style={{ fontWeight: "700", marginBottom: spacing.s }}>
+          {editingId ? "Edit note" : "New note"}
+        </AppText>
 
-      <TextInput
-        value={content}
-        onChangeText={setContent}
-        multiline
-        placeholder="Treść notatki..."
-        placeholderTextColor={"rgba(228, 221, 221, 0.5)"}
-        selectionColor={colors.buttonActive}
-        
-        style={{
-          flex: 1,
-          backgroundColor: colors.card,
-          padding: spacing.m,
-          borderRadius: 12,
-          textAlignVertical: "top",
-          color: colors.text,
-        }}
+        <TextInput
+          value={content}
+          onChangeText={setContent}
+          multiline
+          placeholder="Treść notatki..."
+          placeholderTextColor="#7a7891"
+          selectionColor={colors.buttonActive}
+          style={{
+            flex: 1,
+            backgroundColor: colors.card,
+            padding: spacing.m,
+            borderRadius: radius.md,
+            textAlignVertical: "top",
+            color: colors.text,
+          }}
+        />
+
+        <TouchableOpacity
+          onPress={save}
+          style={{
+            backgroundColor: colors.buttonActive,
+            padding: spacing.m,
+            borderRadius: radius.md,
+            alignItems: "center",
+            marginTop: spacing.m,
+            marginBottom: editingId ? spacing.s : 0,
+          }}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+              {editingId ? "Save" : "Add note"}
+            </AppText>
+          )}
+        </TouchableOpacity>
+
+        {editingId && (
+          <TouchableOpacity
+            onPress={() =>
+              confirmDelete({
+                title: "Delete note?",
+                message: "This action cannot be undone.",
+                onConfirm: deleteNote,
+              })
+            }
+            style={{
+              backgroundColor: colors.deleteButton,
+              padding: spacing.m,
+              borderRadius: radius.md,
+              alignItems: "center",
+            }}
+            disabled={loading}
+          >
+            <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+              Delete note
+            </AppText>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <FormErrorModal
+        visible={!!errorMessage}
+        message={errorMessage || ""}
+        onClose={() => setErrorMessage(null)}
       />
-
-      <TouchableOpacity
-        onPress={save}
-        style={{
-          marginTop: spacing.m,
-          backgroundColor: colors.buttonActive,
-          padding: spacing.m,
-          borderRadius: 12,
-          alignItems: "center",
-        }}
-      >
-        <AppText style={{ color: "#fff", fontWeight: "700" }}>Save</AppText>
-      </TouchableOpacity>
-    </View>
+    </>
   );
 }

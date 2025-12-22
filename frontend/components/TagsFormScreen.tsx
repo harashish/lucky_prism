@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import AppText from "../components/AppText";
-import { colors, radius } from "../constants/theme";
+import { colors, radius, spacing } from "../constants/theme";
 import { api } from "../app/api/apiClient";
 import FormErrorModal from "../components/FormErrorModal";
 import { useLocalSearchParams } from "expo-router";
@@ -38,7 +38,7 @@ export default function TagsFormScreen({ editingId }: TagsFormScreenProps) {
     }
   }, [editingId]);
 
-  const saveTag = async () => {
+  const save = async () => {
     if (!name.trim()) {
       setErrorMessage("Please enter tag name");
       return;
@@ -98,7 +98,7 @@ return (
       />
 
       <TouchableOpacity
-        onPress={saveTag}
+        onPress={save}
         style={{
           backgroundColor: colors.buttonActive,
           padding: 16,
@@ -122,7 +122,7 @@ return (
           onPress={deleteTag}
           style={{
             backgroundColor: colors.deleteButton,
-            padding: 16,
+            padding: spacing.m,
             borderRadius: radius.md,
             alignItems: "center",
           }}
