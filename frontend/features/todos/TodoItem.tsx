@@ -1,9 +1,9 @@
 import React, { useRef } from "react";
 import { View, Alert, Pressable, StyleSheet } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
-import AppText from "./AppText";
-import { components, spacing, colors } from "../constants/theme";
-import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
+import AppText from "../../components/AppText";
+import { components, spacing, colors } from "../../constants/theme";
+import { useModuleSettingsStore } from "../../app/stores/useModuleSettingsStore";
 
 export default function TodoItem({ item, onComplete, onDelete, onLongPress }: any) {
   const swipeRef = useRef<Swipeable>(null);

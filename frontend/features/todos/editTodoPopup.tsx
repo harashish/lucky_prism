@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Modal, TouchableOpacity, TextInput, Alert } from "react-native";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
-import { api } from "../api/apiClient";
+import { api } from "../../app/api/apiClient";
 import CustomDifficultyPicker from "./customDifficultyPicker";
 
 export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any) {

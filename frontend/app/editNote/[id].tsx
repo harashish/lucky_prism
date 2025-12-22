@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import NoteFormScreen from "../../components/NoteFormScreen";
+import NoteFormScreen from "../../features/notes/NoteFormScreen";
 
 export default function EditNote() {
   const navigation = useNavigation();

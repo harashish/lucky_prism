@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useChallengeStore, Challenge, ChallengeType, DifficultyType } from "../app/stores/useChallengeStore";
-import { colors, spacing, radius } from "../constants/theme";
-import AppText from "../components/AppText";
-import { api } from "../app/api/apiClient";
-import FormErrorModal from "../components/FormErrorModal";
-import { confirmDelete } from "../components/confirmDelete";
+import { useChallengeStore, Challenge, ChallengeType, DifficultyType } from "../../app/stores/useChallengeStore";
+import { colors, spacing, radius } from "../../constants/theme";
+import AppText from "../../components/AppText";
+import { api } from "../../app/api/apiClient";
+import FormErrorModal from "../../components/FormErrorModal";
+import { confirmDelete } from "../../components/confirmDelete";
 
 export type ChallengeFormScreenProps = {
   editingId?: number;

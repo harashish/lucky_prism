@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import HabitFormScreen from "../../components/HabitFormScreen";
+import HabitFormScreen from "../../features/habits/HabitFormScreen";
 
 export default function EditHabit() {
   const navigation = useNavigation();

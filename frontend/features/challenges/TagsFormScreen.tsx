@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import AppText from "../components/AppText";
-import { colors, radius, spacing } from "../constants/theme";
-import { api } from "../app/api/apiClient";
-import FormErrorModal from "../components/FormErrorModal";
+import AppText from "../../components/AppText";
+import { colors, radius, spacing } from "../../constants/theme";
+import { api } from "../../app/api/apiClient";
+import FormErrorModal from "../../components/FormErrorModal";
 import { useLocalSearchParams } from "expo-router";
 
 export type TagsFormScreenProps = {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Modal, ScrollView, Alert } from "react-native";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
-import { api } from "../api/apiClient";
+import { api } from "../../app/api/apiClient";
 
 export default function CustomDifficultyPicker({ onSelect, onClose }) {
   const [difficulties, setDifficulties] = useState([]);

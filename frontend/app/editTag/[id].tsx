@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import TagsFormScreen from "../../components/TagsFormScreen";
+import TagsFormScreen from "../../features/challenges/TagsFormScreen";
 
 export default function EditTag() {
   const navigation = useNavigation();

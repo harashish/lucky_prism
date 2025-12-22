@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from "react";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import ChallengeFormScreen from "../components/ChallengeFormScreen";
+import ChallengeFormScreen from "../features/challenges/ChallengeFormScreen";
 import { useChallengeStore } from "./stores/useChallengeStore";
 
 

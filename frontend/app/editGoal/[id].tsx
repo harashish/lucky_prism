@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import GoalFormScreen from "../../components/GoalFormScreen";
+import GoalFormScreen from "../../features/goals/GoalFormScreen";
 
 export default function EditGoal() {
   const navigation = useNavigation();

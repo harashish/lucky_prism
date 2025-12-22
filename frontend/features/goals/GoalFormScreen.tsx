@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useGoalStore } from "../app/stores/useGoalStore";
-import { api } from "../app/api/apiClient";
-import AppText from "../components/AppText";
-import { colors, spacing, radius } from "../constants/theme";
-import FormErrorModal from "../components/FormErrorModal";
-import { confirmDelete } from "../components/confirmDelete";
+import { useGoalStore } from "../../app/stores/useGoalStore";
+import { api } from "../../app/api/apiClient";
+import AppText from "../../components/AppText";
+import { colors, spacing, radius } from "../../constants/theme";
+import FormErrorModal from "../../components/FormErrorModal";
+import { confirmDelete } from "../../components/confirmDelete";
 
 export type GoalFormScreenProps = {
   editingId?: number;

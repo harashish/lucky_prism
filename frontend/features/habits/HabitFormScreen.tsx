@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import AppText from "../components/AppText";
-import { colors, spacing, radius } from "../constants/theme";
-import { useHabitStore } from "../app/stores/useHabitStore";
-import { api } from "../app/api/apiClient";
-import FormErrorModal from "../components/FormErrorModal";
-import { confirmDelete } from "../components/confirmDelete";
+import AppText from "../../components/AppText";
+import { colors, spacing, radius } from "../../constants/theme";
+import { useHabitStore } from "../../app/stores/useHabitStore";
+import { api } from "../../app/api/apiClient";
+import FormErrorModal from "../../components/FormErrorModal";
+import { confirmDelete } from "../../components/confirmDelete";
 
 
 type HabitFormScreenProps = {

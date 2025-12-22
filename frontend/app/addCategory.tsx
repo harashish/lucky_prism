@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useNavigation } from "expo-router";
-import CategoryFormScreen from "../components/CategoryFormScreen";
+import CategoryFormScreen from "../features/todos/CategoryFormScreen";
 
 export default function AddCategory() {
   const navigation = useNavigation();

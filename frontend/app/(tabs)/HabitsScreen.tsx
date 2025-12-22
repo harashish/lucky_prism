@@ -5,7 +5,7 @@ import AppText from "../../components/AppText";
 import HeaderText from "../../components/HeaderText";
 import { colors } from "../../constants/theme";
 import { useRouter } from "expo-router";
-import HabitItem from "../../components/HabitItem";
+import HabitItem from "../../features/habits/HabitItem";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
 import FloatingButton from "../../components/FloatingButton";

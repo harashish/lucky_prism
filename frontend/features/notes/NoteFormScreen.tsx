@@ -6,11 +6,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import AppText from "./AppText";
-import { colors, radius, spacing } from "../constants/theme";
-import { api } from "../app/api/apiClient";
-import FormErrorModal from "../components/FormErrorModal";
-import { confirmDelete } from "../components/confirmDelete";
+import AppText from "../../components/AppText";
+import { colors, radius, spacing } from "../../constants/theme";
+import { api } from "../../app/api/apiClient";
+import FormErrorModal from "../../components/FormErrorModal";
+import { confirmDelete } from "../../components/confirmDelete";
 
 export type NoteFormScreenProps = {
   editingId?: number;

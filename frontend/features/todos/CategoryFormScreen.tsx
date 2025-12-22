@@ -6,13 +6,13 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import AppText from "./AppText";
-import { colors, spacing, radius } from "../constants/theme";
+import AppText from "../../components/AppText";
+import { colors, spacing, radius } from "../../constants/theme";
 import { useRouter } from "expo-router";
-import { useTodoStore } from "../app/stores/useTodoStore";
-import { api } from "../app/api/apiClient";
-import FormErrorModal from "../components/FormErrorModal";
-import { confirmDelete } from "../components/confirmDelete";
+import { useTodoStore } from "../../app/stores/useTodoStore";
+import { api } from "../../app/api/apiClient";
+import FormErrorModal from "../../components/FormErrorModal";
+import { confirmDelete } from "../../components/confirmDelete";
 
 export type CategoryFormScreenProps = {
   editingId?: number;

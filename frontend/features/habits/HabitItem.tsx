@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, Pressable } from "react-native";
-import AppText from "./AppText";
-import { colors, components, spacing } from "../constants/theme";
+import AppText from "../../components/AppText";
+import { colors, components, spacing } from "../../constants/theme";
 import { useRouter } from "expo-router";
-import { ItemHeader } from "./ItemHeader";
-import { ItemDetails } from "./ItemDetails";
+import { ItemHeader } from "../../components/ItemHeader";
+import { ItemDetails } from "../../components/ItemDetails";
 
 type HabitProps = {
   item: any;

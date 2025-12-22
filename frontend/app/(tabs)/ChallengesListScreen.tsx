@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, StyleSheet, SectionList } from "react-native";
 import { useChallengeStore, ChallengeWithUserInfo } from "../stores/useChallengeStore";
-import ChallengeItem from "../../components/ChallengeItem";
+import ChallengeItem from "../../features/challenges/ChallengeItem";
 import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";

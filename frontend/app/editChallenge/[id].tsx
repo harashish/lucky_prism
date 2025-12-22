@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import ChallengeFormScreen from "../../components/ChallengeFormScreen";
+import ChallengeFormScreen from "../../features/challenges/ChallengeFormScreen";
 
 export default function EditChallenge() {
   const navigation = useNavigation();

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
-import { useChallengeStore, ChallengeWithUserInfo } from "../app/stores/useChallengeStore";
-import AppText from "../components/AppText";
-import { colors, components, spacing } from "../constants/theme";
-import { api } from "../app/api/apiClient";
-import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
-import { useGamificationStore } from "../app/stores/useGamificationStore";
-import { ItemHeader } from "./ItemHeader";
-import { ItemDetails } from "./ItemDetails";
+import { useChallengeStore, ChallengeWithUserInfo } from "../../app/stores/useChallengeStore";
+import AppText from "../../components/AppText";
+import { colors, components, spacing } from "../../constants/theme";
+import { api } from "../../app/api/apiClient";
+import { useModuleSettingsStore } from "../../app/stores/useModuleSettingsStore";
+import { useGamificationStore } from "../../app/stores/useGamificationStore";
+import { ItemHeader } from "../../components/ItemHeader";
+import { ItemDetails } from "../../components/ItemDetails";
 
 type Props = {
   item: ChallengeWithUserInfo;
