@@ -35,7 +35,8 @@ export default function WeeklyActiveScreen() {
 
   const uc = activeWeekly[0];
   const ch = uc.challenge;
-  const progress = uc.progress_percent ?? 0;
+  const days = uc.progress_days ?? 1;
+
 
   const tryAnother = async () => {
     const ok = await discardUserChallenge(uc.id);
@@ -67,10 +68,28 @@ export default function WeeklyActiveScreen() {
       <AppText style={{ fontSize: 20, fontWeight: "700", marginBottom: 6 , lineHeight: 24, paddingBottom: 2 }}>{ch?.title}</AppText>
       <AppText style={{ marginBottom: 18, marginTop: 5 }}>{ch?.description}</AppText>
 
-      <View style={{ height: 10, backgroundColor: colors.card, borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
-        <View style={{ width: `${Math.round(progress)}%`, height: 10, backgroundColor: colors.buttonActive }} />
+      <View
+        style={{
+          height: 10,
+          backgroundColor: colors.card,
+          borderRadius: 6,
+          overflow: "hidden",
+          marginBottom: 8,
+        }}
+      >
+        <View
+          style={{
+            width: `${(days / 7) * 100}%`,
+            height: 10,
+            backgroundColor: colors.buttonActive,
+          }}
+        />
       </View>
-      <AppText style={{ marginBottom: 10 }}>{progress}% of progress</AppText>
+
+      <AppText style={{ marginBottom: 14 }}>
+        {days}/7 days
+      </AppText>
+
 
       <TouchableOpacity onPress={tryAnother} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10, marginBottom: 10 }}>
         <AppText style={{ textAlign: "center"}}>

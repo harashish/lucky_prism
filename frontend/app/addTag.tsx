@@ -1,5 +1,15 @@
+import { useLayoutEffect } from "react";
+import { useNavigation } from "expo-router";
 import TagsFormScreen from "../components/TagsFormScreen";
 
 export default function AddTag() {
-  return <TagsFormScreen />;
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: "Add Tag",
+    });
+  }, []);
+
+  return <TagsFormScreen/>;
 }

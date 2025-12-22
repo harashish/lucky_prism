@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import HabitItem from "../../components/HabitItem";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
+import FloatingButton from "../../components/FloatingButton";
 
 const userId = 1;
 
@@ -108,9 +109,9 @@ export default function HabitsScreen() {
           <AppText>{"<"}</AppText>
         </TouchableOpacity>
 
-        <HeaderText>
+        <AppText>
           {month ?? new Date().toISOString().slice(0, 7)}
-        </HeaderText>
+        </AppText>
 
         <TouchableOpacity
           onPress={() => {
@@ -153,24 +154,7 @@ export default function HabitsScreen() {
         onRefresh={() => loadMonth(userId, month)}
       />
 
-      {/* ADD BUTTON */}
-      <TouchableOpacity
-        onPress={() => router.push("/addHabit")}
-        style={{
-          position: "absolute",
-          right: 20,
-          bottom: 20,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: colors.buttonActive,
-          justifyContent: "center",
-          alignItems: "center",
-          elevation: 5,
-        }}
-      >
-        <AppText style={{ fontSize: 32, color: "#fff" }}>＋</AppText>
-      </TouchableOpacity>
+      <FloatingButton onPress={() => router.push("/addHabit")} />
     </View>
 
   );

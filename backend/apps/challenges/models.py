@@ -54,19 +54,17 @@ class UserChallenge(models.Model):
             self.save()
 
     @property
-    def weekly_progress_percent(self):
+    def weekly_progress_days(self):
         if self.challenge_type != "Weekly" or not self.weekly_deadline:
             return None
 
-        start_dt = timezone.make_aware(datetime.combine(self.start_date, time.min))
-        end_dt = timezone.make_aware(datetime.combine(self.weekly_deadline, time.min))
-        now = timezone.now()
+        start = self.start_date
+        today = timezone.now().date()
 
-        total_seconds = (end_dt - start_dt).total_seconds()
-        passed_seconds = (now - start_dt).total_seconds()
+        # min 1 dzień od razu w dniu startu
+        days_passed = (today - start).days + 1
 
-        progress = max(0, min(100, int((passed_seconds / total_seconds) * 100)))
-        return progress
+        return max(1, min(7, days_passed))
     
     def complete(self):
         if self.is_completed:

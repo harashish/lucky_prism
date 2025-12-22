@@ -7,10 +7,14 @@ import { api } from "../app/api/apiClient";
 import FormErrorModal from "../components/FormErrorModal";
 import { useLocalSearchParams } from "expo-router";
 
+export type TagsFormScreenProps = {
+  editingId?: number;
+};
 
-const TagsFormScreen = () => {
+
+export default function TagsFormScreen({ editingId }: TagsFormScreenProps) {
   const { id } = useLocalSearchParams();
-  const editingId = id ? Number(id) : null;
+  const isEdit = typeof editingId === "number";
   const router = useRouter();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -78,10 +82,6 @@ return (
   <>
     <ScrollView style={{ flex: 1, padding: 16, backgroundColor: colors.background }}>
 
-      <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: 16, color: colors.text }}>
-        {editingId ? "Edit tag" : "Add tag"}
-      </AppText>
-
       <AppText style={{ color: colors.text, marginBottom: 6 }}>Tag name:</AppText>
       <TextInput
         value={name}
@@ -141,4 +141,3 @@ return (
 );
 };
 
-export default TagsFormScreen;

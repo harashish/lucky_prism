@@ -1,12 +1,13 @@
-// frontend/components/HabitItem.tsx
 import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import AppText from "./AppText";
 import { colors, components, spacing } from "../constants/theme";
 import { useRouter } from "expo-router";
+import { ItemHeader } from "./ItemHeader";
+import { ItemDetails } from "./ItemDetails";
 
 type HabitProps = {
-  item: any; // Habit
+  item: any;
   onToggleToday: (habitId: number) => Promise<void>;
   onToggleDay: (habitId: number, date: string, newStatus: number) => Promise<void>;
 };
@@ -28,54 +29,33 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
       ]}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <AppText style={{ fontWeight: "bold" }}>{item.title}</AppText>
-
+        <ItemHeader
+            title={item.title}
+            difficulty={item.difficulty?.name}
+          />
 
         <Pressable
           onPress={() => onToggleToday(item.id)}
           style={{
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             borderRadius: 12,
+            marginRight: 10,
             backgroundColor: item.color || colors.buttonActive,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+          <AppText style={{ color: "#fff", fontSize: 16 }}>+</AppText>
         </Pressable>
 
       </View>
 
       {expanded && (
-        <View style={{ marginTop: 0 }}>
-          
-          {item.description ? (
-            <>
-              <AppText style={{ marginBottom: spacing.s }}>{item.description}</AppText>
-            </>
-          ) : null}
-
-                  <AppText style={{ fontSize: 12, color: "#777" }}>
-          {item.difficulty.name}
-        </AppText>
-
-          
-          {item.motivation_reason ? (
-          <AppText
-            style={{
-              fontSize: 12,
-              opacity: 0.8,
-              marginBottom: 4,
-            }}
-          >
-            Motivation: {item.motivation_reason}
-          </AppText>
-        ) : null}
-
-
-
-        </View>
+        <ItemDetails
+          description={item.description}
+          motivation={item.motivation_reason}
+        />
       )}
 
 

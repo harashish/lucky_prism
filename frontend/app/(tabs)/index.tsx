@@ -32,6 +32,7 @@ export default function DashboardScreen() {
   const [activeDaily, setActiveDaily] = useState<any | null>(null);
   const [activeWeekly, setActiveWeekly] = useState<any[]>([]);
   const [randomNote, setRandomNote] = useState<any | null>(null);
+  
 
   const GOAL_TILES: DashboardTileKey[] = [
     "goal_week",
@@ -41,7 +42,6 @@ export default function DashboardScreen() {
 
 
   const { modules } = useModuleSettingsStore();
-  const challengesEnabled = modules?.challenges;
   const fetchRandomTodo = async () => {
     try {
       const res = await api.get(`/todos/tasks/random/?user_id=${userId}`);
@@ -51,7 +51,7 @@ export default function DashboardScreen() {
     }
   };
 
-  // w DashboardScreen dodaj funkcję:
+
 const fetchRandomNote = async () => {
   try {
     const res = await api.get("/notes/random/");
@@ -132,14 +132,12 @@ const fetchRandomNote = async () => {
     );
   }
 
-  //const isTileEnabled = (key: string) => dashboardTiles.find(t => t.id === key && t.is_enabled);
   const canRenderTile = (key: DashboardTileKey) => {
   const tile = dashboardTiles?.find(
     (t:any) => t.key === key || t.id === key
   );
   if (!tile || !tile.is_enabled) return false;
 
-  // jeśli tile ma zależność modułową → sprawdź moduł
   if (tile.module_dependency) {
     return modules?.[tile.module_dependency] === true;
   }
@@ -191,7 +189,7 @@ const fetchRandomNote = async () => {
     {biggestStreak && biggestStreak?.title ? (
       <AppText>{biggestStreak.title} • {biggestStreak.biggest_streak} dni</AppText>
     ) : (
-      <AppText style={{ opacity: 0.6 }}>no habits - no streak</AppText>
+      <AppText style={{ opacity: 0.6 }}>no streak</AppText>
     )}
   </TouchableOpacity>
 )}
@@ -269,33 +267,92 @@ const fetchRandomNote = async () => {
         <View style={{ marginBottom: 12 }}>
           <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Week challenge</AppText>
           {activeWeekly && activeWeekly.length > 0 ? (
-            activeWeekly.map((uc: any) => (
-              <TouchableOpacity key={uc.id} onPress={() => router.push("/random/weekly/active")} onLongPress={() => onLongPressActiveChallenge(uc.challenge.id)}
-                style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10, marginBottom: 8 }}>
-                <AppText style={{ fontWeight: "700" }}>{uc.challenge?.title}</AppText>
-                <View style={{ height: 8, backgroundColor: colors.background, borderRadius: 6, overflow: "hidden", marginTop: 8 }}>
-                  <View style={{ width: `${Math.round(uc.progress_percent ?? 0)}%`, height: 8, backgroundColor: colors.buttonActive }} />
-                </View>
-                <AppText style={{ marginTop: 6 }}>{uc.progress_percent ?? 0}%</AppText>
-              </TouchableOpacity>
-            ))
+            activeWeekly.map((uc: any) => {
+              const days = uc.progress_days ?? 1;
+                return (
+                <TouchableOpacity
+                  key={uc.id}
+                  onPress={() => router.push("/random/weekly/active")}
+                  onLongPress={() => onLongPressActiveChallenge(uc.challenge.id)}
+                  style={{
+                    backgroundColor: colors.card,
+                    padding: 12,
+                    borderRadius: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  <AppText style={{ fontWeight: "700" }}>
+                    {uc.challenge?.title}
+                  </AppText>
+
+                  <View
+                    style={{
+                      height: 8,
+                      backgroundColor: colors.background,
+                      borderRadius: 6,
+                      overflow: "hidden",
+                      marginTop: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${(days / 7) * 100}%`,
+                        height: 8,
+                        backgroundColor: colors.buttonActive,
+                      }}
+                    />
+                  </View>
+
+                  <AppText style={{ marginTop: 6 }}>
+                    {days}/7 dni
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })
           ) : (
-            <TouchableOpacity onPress={() => router.push("/random/weekly")} style={{ backgroundColor: colors.buttonActive, padding: 12, borderRadius: 10 }}>
-              <AppText style={{ color: "#fff", fontWeight: "700" }}>Randomize challenge</AppText>
+            <TouchableOpacity
+              onPress={() => router.push("/random/weekly")}
+              style={{
+                backgroundColor: colors.buttonActive,
+                padding: 12,
+                borderRadius: 10,
+              }}
+            >
+              <AppText style={{ color: "#fff", fontWeight: "700" }}>
+                Randomize challenge
+              </AppText>
             </TouchableOpacity>
           )}
+
         </View>
       )}
 
       {/* RANDOM TODO */}
-      {canRenderTile("random_todo") && (
-        <>
-          <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Random todo</AppText>
-          <TouchableOpacity onPress={fetchRandomTodo} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 12, marginBottom: 12 }}>
-            <AppText>{randomTodo?.content || "—"}</AppText>
-          </TouchableOpacity>
-        </>
-      )}
+{canRenderTile("random_todo") && randomTodo && (
+  <View style={{ marginBottom: 16 }}>
+    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>
+      Random todo
+    </AppText>
+
+    <TouchableOpacity
+      onPress={fetchRandomTodo}
+      onLongPress={() =>
+        router.push({
+          pathname: "/editTodo/[id]",
+          params: { id: String(randomTodo.id) },
+        })
+      }
+      style={{
+        backgroundColor: colors.card,
+        padding: 12,
+        borderRadius: 12,
+      }}
+    >
+      <AppText>{randomTodo.content}</AppText>
+    </TouchableOpacity>
+  </View>
+)}
+
 
 {/* RANDOM NOTE */}
 {canRenderTile("random_note") && (
@@ -317,7 +374,6 @@ const fetchRandomNote = async () => {
             marginRight: 8,
           }}
         >
-          {/* FULL CONTENT – no trimming */}
           <AppText>{randomNote.content}</AppText>
         </TouchableOpacity>
       ) : (
@@ -335,7 +391,6 @@ const fetchRandomNote = async () => {
         </View>
       )}
 
-      {/* PLUS – SQUARE, NOT PUSHED */}
       <TouchableOpacity
         onPress={() => router.push("/addNote")}
         style={{

@@ -8,11 +8,17 @@ import { api } from "../app/api/apiClient";
 import FormErrorModal from "../components/FormErrorModal";
 import { confirmDelete } from "../components/confirmDelete";
 
-export default function HabitFormScreen() {
+
+type HabitFormScreenProps = {
+  editingId?: number;
+};
+
+export default function HabitFormScreen({ editingId }: HabitFormScreenProps) {
+  const isEdit = typeof editingId === "number";
 
   const router = useRouter();
   const params = useLocalSearchParams();
-  const editingId = params?.id ? parseInt(params.id as string, 10) : null;
+  //const editingId = params?.id ? parseInt(params.id as string, 10) : null;
   const { createHabit, updateHabit, deleteHabit, loadDifficulties, difficulties } = useHabitStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -35,6 +41,8 @@ export default function HabitFormScreen() {
 
   const userId = 1;
 
+
+
   useEffect(() => {
     loadDifficulties();
     if (editingId) {
@@ -48,10 +56,7 @@ export default function HabitFormScreen() {
           setColor(h.color || colorPalette[0]);
           setDifficultyId(h.difficulty?.id || null);
         })
-        .catch(err => {
-          console.error(err);
-          setErrorMessage("Failed to load habit");
-        })
+        .catch(() => setErrorMessage("Failed to load habit"))
         .finally(() => setLoading(false));
     }
   }, [editingId]);
@@ -113,10 +118,6 @@ const save = async () => {
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }} contentContainerStyle={{
     paddingBottom: 30
   }}>
-      <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
-        {editingId ? "Edit habit" : "Add habit"}
-      </AppText>
-
       <AppText style={{ marginBottom: 6 }}>Name:</AppText>
       <TextInput value={title} onChangeText={setTitle} style={{ borderWidth: 1, borderColor: colors.inputBorder, color: colors.text, padding: spacing.s, borderRadius: radius.md, marginBottom: spacing.m }} placeholderTextColor="#7a7891" />
 

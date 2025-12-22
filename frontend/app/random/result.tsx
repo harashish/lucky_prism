@@ -71,7 +71,7 @@ export default function RandomResultScreen(){
   };
 
   return (
-    <View style={{ flex:1, padding:18, backgroundColor: colors.background, justifyContent:"center" }}>
+    <View style={{ flex:1, padding:18,  justifyContent:"center" }}>
       {source === "challenge" && (
         <>
           <RandomResultCard

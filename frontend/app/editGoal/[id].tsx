@@ -1,5 +1,14 @@
+import { useLayoutEffect } from "react";
+import { useNavigation, useLocalSearchParams } from "expo-router";
 import GoalFormScreen from "../../components/GoalFormScreen";
 
 export default function EditGoal() {
-  return <GoalFormScreen />;
+  const navigation = useNavigation();
+  const { id } = useLocalSearchParams();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: "Edit Goal" });
+  }, [id]);
+
+  return <GoalFormScreen editingId={Number(id)} />;
 }

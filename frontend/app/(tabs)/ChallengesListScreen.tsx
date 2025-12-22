@@ -5,6 +5,7 @@ import ChallengeItem from "../../components/ChallengeItem";
 import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
+import FloatingButton from "../../components/FloatingButton";
 
 const ChallengesListScreen = () => {
   const router = useRouter();
@@ -17,8 +18,9 @@ const ChallengesListScreen = () => {
     loadUserChallenges 
   } = useChallengeStore();
 
-  const [selectedType, setSelectedType] = useState<"Daily" | "Weekly">("Daily");
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const { selectedType, setSelectedType } = useChallengeStore();
+
 
   //const { activeDaily, activeWeekly } = useChallengeStore();
 
@@ -61,7 +63,8 @@ const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
     ...uc.challenge,
     userChallengeId: uc.id,
     challenge_type: uc.challenge_type,
-    progress_percent: uc.progress_percent,
+    progress_days: uc.progress_days,
+
   }));
 
 
@@ -111,7 +114,7 @@ if (hasAssigned) {
 <ScrollView
   horizontal
   showsHorizontalScrollIndicator={false}
-  style={{ marginBottom: 10, height: 80, flexGrow: 0 }}
+  style={{ marginBottom: 10, height: 85, flexGrow: 0 }}
   contentContainerStyle={{ alignItems: "flex-start", paddingLeft: 0, paddingRight: 5, paddingBottom: 20 }}
 >
   {tags.map(tag => (
@@ -187,13 +190,14 @@ if (hasAssigned) {
   />
 )}
 
-      {/* Floating Button */}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={() => router.push("/addChallenge")}
-      >
-        <AppText style={{ fontSize: 32, color: "#fff" }}>＋</AppText>
-      </TouchableOpacity>
+      <FloatingButton
+        onPress={() =>
+          router.push({
+            pathname: "/addChallenge",
+            params: { type: selectedType },
+          })
+        }
+      />
     </View>
   );
 };
@@ -201,22 +205,6 @@ if (hasAssigned) {
 export default ChallengesListScreen;
 
 const styles = StyleSheet.create({
-  floatingButton: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.buttonActive,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
-  },
   addTagButton: {
     width: 40,
     height: 40,

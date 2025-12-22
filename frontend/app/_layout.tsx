@@ -1,4 +1,4 @@
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import {
   Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold
@@ -11,10 +11,14 @@ import { colors } from "../constants/theme";
 import XPPopup from "../components/XPPopup";
 import { useGamificationStore } from "./stores/useGamificationStore";
 import { useEffect } from "react";
+import { defaultHeaderOptions } from "../components/header";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 
 
 export default function RootLayout() {
   const fetchUser = useGamificationStore(s => s.fetchUser);
+
   const [loaded] = useFonts({
     Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold,
     Poppins_400Regular, Poppins_600SemiBold,
@@ -22,8 +26,16 @@ export default function RootLayout() {
     Manrope_400Regular, Manrope_600SemiBold,
   });
 
+  const AppTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: colors.background,
+    card: colors.background,
+  },
+};
 
-    useEffect(() => {
+  useEffect(() => {
     fetchUser(1);
   }, []);
 
@@ -35,11 +47,40 @@ export default function RootLayout() {
     );
   }
 
-return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Slot />
-      <XPPopup />
-    </View>
-  );
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+     <ThemeProvider value={AppTheme}>
+      <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
+        <Stack.Screen name="addHabit" options={defaultHeaderOptions} />
+        <Stack.Screen name="editHabit/[id]" options={defaultHeaderOptions}  />
+
+        <Stack.Screen name="addGoal" options={defaultHeaderOptions} />
+        <Stack.Screen name="editGoal/[id]" options={defaultHeaderOptions} />
+
+        <Stack.Screen name="addChallenge" options={defaultHeaderOptions} />
+        <Stack.Screen name="editChallenge/[id]" options={defaultHeaderOptions} />
+
+        <Stack.Screen name="addNote" options={defaultHeaderOptions} />
+        <Stack.Screen name="editNote/[id]" options={defaultHeaderOptions} />
+
+        <Stack.Screen name="addTag" options={defaultHeaderOptions} />
+        <Stack.Screen name="editTag/[id]" options={defaultHeaderOptions} />
+
+        <Stack.Screen name="addCategory" options={defaultHeaderOptions} />
+        <Stack.Screen name="editCategory/[id]" options={defaultHeaderOptions} />
+
+        <Stack.Screen name="random" options={{ headerShown: false }} />
+
+      </Stack>
+
+      <XPPopup />
+    </ThemeProvider>
+    </GestureHandlerRootView>
+  );
 }

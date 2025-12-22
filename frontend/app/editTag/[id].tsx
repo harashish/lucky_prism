@@ -1,9 +1,14 @@
+import { useLayoutEffect } from "react";
+import { useNavigation, useLocalSearchParams } from "expo-router";
 import TagsFormScreen from "../../components/TagsFormScreen";
-import { useLocalSearchParams } from "expo-router";
 
 export default function EditTag() {
-  const params = useLocalSearchParams();
-  const editingTagId = params?.id ? parseInt(params.id as string, 10) : undefined;
+  const navigation = useNavigation();
+  const { id } = useLocalSearchParams();
 
-  return <TagsFormScreen editingTagId={editingTagId} />;
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: "Edit Tag" });
+  }, [id]);
+
+  return <TagsFormScreen editingId={Number(id)} />;
 }

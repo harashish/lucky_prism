@@ -1,22 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, TextInput, ScrollView } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import AppText from "./AppText";
-import { colors } from "../constants/theme";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { colors, spacing, radius } from "../constants/theme";
+import { useRouter } from "expo-router";
 import { useTodoStore } from "../app/stores/useTodoStore";
 import { api } from "../app/api/apiClient";
 import FormErrorModal from "../components/FormErrorModal";
 import { confirmDelete } from "../components/confirmDelete";
 
-export default function CategoryForm() {
-  const { id } = useLocalSearchParams();
-  const editing = !!id;
+export type CategoryFormScreenProps = {
+  editingId?: number;
+};
+
+export default function CategoryFormScreen({ editingId }: CategoryFormScreenProps) {
+  const isEdit = typeof editingId === "number";
+
   const router = useRouter();
   const { addCategory, saveCategory, deleteCategory } = useTodoStore();
+
   const [name, setName] = useState("");
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [color, setColor] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const colorPalette = [
@@ -29,21 +42,31 @@ export default function CategoryForm() {
     "#A0B4EF",
   ];
 
+  // ---- load difficulties
   useEffect(() => {
-    api.get("/common/difficulties/").then(res => setDifficulties(res.data));
+    api
+      .get("/common/difficulties/")
+      .then(res => setDifficulties(res.data))
+      .catch(() => setErrorMessage("Failed to load difficulties"));
   }, []);
 
+  // ---- load category for edit
   useEffect(() => {
-    if (!editing) return;
-    api.get(`/todos/categories/${id}`)
+    if (!editingId) return;
+
+    setLoading(true);
+    api
+      .get(`/todos/categories/${editingId}`)
       .then(res => {
         setName(res.data.name);
         setDifficultyId(res.data.difficulty?.id || null);
         setColor(res.data.color || null);
       })
-      .catch(() => setErrorMessage("Failed to load category"));
-  }, [editing, id]);
+      .catch(() => setErrorMessage("Failed to load category"))
+      .finally(() => setLoading(false));
+  }, [editingId]);
 
+  // ---- save
   const save = async () => {
     if (!name.trim()) {
       setErrorMessage("Please enter category name");
@@ -54,76 +77,68 @@ export default function CategoryForm() {
       return;
     }
 
+    setLoading(true);
     const payload = {
       name: name.trim(),
       difficulty_id: difficultyId,
       color,
     };
 
-    const ok = editing
-      ? await saveCategory(Number(id), payload)
-      : await addCategory(payload);
-
-    if (!ok) {
+    try {
+      if (isEdit && editingId) {
+        await saveCategory(editingId, payload);
+      } else {
+        await addCategory(payload);
+      }
+      router.push("/TodosScreen");
+    } catch {
       setErrorMessage("Failed to save category");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/TodosScreen");
   };
 
-  const deleteCategoryHandler = async () => {
-    const ok = await deleteCategory(Number(id));
-    if (!ok) {
+  // ---- delete
+  const onDelete = async () => {
+    if (!editingId) return;
+
+    setLoading(true);
+    try {
+      await deleteCategory(editingId);
+      router.push("/TodosScreen");
+    } catch {
       setErrorMessage("Cannot delete last category");
-      return;
+    } finally {
+      setLoading(false);
     }
-    router.push("/TodosScreen");
   };
 
   return (
     <>
-      <ScrollView style={{ flex: 1, padding: 16 }}>
-        <AppText style={{ marginBottom: 8 }}>Category Name</AppText>
+      <ScrollView
+        style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingBottom: 30 }}
+      >
+        {/* NAME */}
+        <AppText style={{ marginBottom: 6 }}>Name:</AppText>
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="Name"
+          placeholder="Category name"
           placeholderTextColor="#7a7891"
           style={{
-            padding: 12,
-            borderRadius: 8,
-            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.inputBorder,
             color: colors.text,
-            marginBottom: 20,
+            padding: spacing.s,
+            borderRadius: radius.md,
+            marginBottom: spacing.m,
           }}
         />
 
-        <AppText style={{ marginBottom: 8 }}>Difficulty</AppText>
-        <View style={{ marginBottom: 20 }}>
-          {difficulties.map(d => (
-            <TouchableOpacity
-              key={d.id}
-              onPress={() => setDifficultyId(d.id)}
-              style={{
-                padding: 12,
-                borderRadius: 8,
-                marginBottom: 8,
-                backgroundColor:
-                  difficultyId === d.id ? colors.buttonActive : colors.card,
-              }}
-            >
-              <AppText
-                style={{ color: difficultyId === d.id ? "#fff" : colors.text }}
-              >
-                {d.name}
-              </AppText>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <AppText style={{ marginBottom: 8 }}>Color (optional)</AppText>
-        <View style={{ flexDirection: "row", marginBottom: 20 }}>
+        {/* COLOR */}
+        <AppText style={{ marginBottom: 6 }}>Color:</AppText>
+        <View style={{ flexDirection: "row", marginBottom: spacing.m }}>
           {colorPalette.map(c => (
             <TouchableOpacity
               key={c}
@@ -141,34 +156,61 @@ export default function CategoryForm() {
           ))}
         </View>
 
+        {/* DIFFICULTY */}
+        <AppText style={{ marginBottom: 6 }}>Difficulty:</AppText>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
+          {difficulties.map(d => (
+            <TouchableOpacity
+              key={d.id}
+              onPress={() => setDifficultyId(d.id)}
+              style={{
+                padding: spacing.s,
+                borderRadius: radius.md,
+                marginRight: spacing.s,
+                marginBottom: spacing.s,
+                backgroundColor:
+                  difficultyId === d.id ? colors.buttonActive : colors.button,
+              }}
+            >
+              <AppText>{d.name}</AppText>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* SAVE */}
         <TouchableOpacity
           onPress={save}
           style={{
-            padding: 14,
-            borderRadius: 10,
             backgroundColor: colors.buttonActive,
+            padding: spacing.m,
+            borderRadius: radius.md,
             alignItems: "center",
-            marginBottom: editing ? 12 : 0,
+            marginBottom: isEdit ? spacing.m : 0,
           }}
         >
-          <AppText style={{ color: "#fff", fontWeight: "bold" }}>
-            {editing ? "Save" : "Add"}
-          </AppText>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+              {isEdit ? "Save" : "Add category"}
+            </AppText>
+          )}
         </TouchableOpacity>
 
-        {editing && (
+        {/* DELETE */}
+        {isEdit && (
           <TouchableOpacity
             onPress={() =>
               confirmDelete({
                 title: "Delete category?",
                 message: "All tasks in this category will be deleted.",
-                onConfirm: deleteCategoryHandler,
+                onConfirm: onDelete,
               })
             }
             style={{
-              padding: 14,
-              borderRadius: 10,
               backgroundColor: colors.deleteButton,
+              padding: spacing.m,
+              borderRadius: radius.md,
               alignItems: "center",
             }}
           >

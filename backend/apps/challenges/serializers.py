@@ -48,7 +48,7 @@ class ChallengeDefinitionSerializer(serializers.ModelSerializer):
 
 class UserChallengeSerializer(serializers.ModelSerializer):
     challenge = serializers.SerializerMethodField()
-    progress_percent = serializers.SerializerMethodField()
+    progress_days = serializers.SerializerMethodField()
 
     class Meta:
         model = UserChallenge
@@ -58,12 +58,13 @@ class UserChallengeSerializer(serializers.ModelSerializer):
             "challenge_type",
             "start_date",
             "weekly_deadline",
-            "progress_percent",
+            "progress_days",
             "is_completed",
         ]
 
     def get_challenge(self, obj):
         return ChallengeDefinitionSerializer(obj.definition).data
 
-    def get_progress_percent(self, obj):
-        return obj.weekly_progress_percent
+    def get_progress_days(self, obj):
+        return obj.weekly_progress_days
+

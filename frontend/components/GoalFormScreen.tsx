@@ -8,11 +8,15 @@ import { colors, spacing, radius } from "../constants/theme";
 import FormErrorModal from "../components/FormErrorModal";
 import { confirmDelete } from "../components/confirmDelete";
 
-const GoalFormScreen = () => {
+export type GoalFormScreenProps = {
+  editingId?: number;
+};
+
+export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const editingId = params?.id ? parseInt(params.id as string, 10) : null;
-  const { periods, loadPeriods, loadUserGoals } = useGoalStore();
+  const isEdit = typeof editingId === "number";
+  const { periods, loadPeriods } = useGoalStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [why, setWhy] = useState("");
@@ -98,8 +102,8 @@ if (!why.trim()) {
       } else {
         await api.post("/goals/", payload);
       }
-      await loadUserGoals(userId);
-      router.push("/GoalsScreen");
+      router.back();
+
     } catch (err) {
       console.error(err);
       setErrorMessage("Failed to save goal");
@@ -113,8 +117,8 @@ if (!why.trim()) {
     setLoading(true);
     try {
       await api.delete(`/goals/${editingId}/`);
-      await loadUserGoals(userId);
-      router.push("/GoalsScreen");
+      router.back();
+
     } catch {
       setErrorMessage("Failed to delete goal");
     } finally {
@@ -128,9 +132,7 @@ if (!why.trim()) {
     paddingBottom: 30
   }}>
 
-      <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
-        {editingId ? "Edit goal" : "Add goal"}
-      </AppText>
+
 
       <AppText style={{ marginBottom: 6 }}>Name:</AppText>
       <TextInput
@@ -264,4 +266,3 @@ if (!why.trim()) {
   );
 };
 
-export default GoalFormScreen;

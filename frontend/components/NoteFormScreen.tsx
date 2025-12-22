@@ -5,9 +5,16 @@ import AppText from "./AppText";
 import { colors, spacing } from "../constants/theme";
 import { api } from "../app/api/apiClient";
 
-export default function NoteEditScreen() {
+export type NoteFormScreenProps = {
+  editingId?: number;
+};
+
+
+export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
+
+    const isEdit = typeof editingId === "number";
 
   const [content, setContent] = useState("");
 

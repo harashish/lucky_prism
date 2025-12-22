@@ -8,7 +8,12 @@ import { api } from "../app/api/apiClient";
 import FormErrorModal from "../components/FormErrorModal";
 import { confirmDelete } from "../components/confirmDelete";
 
-const ChallengeFormScreen = () => {
+export type ChallengeFormScreenProps = {
+  editingId?: number;
+};
+
+
+export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenProps) {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { tags, loadTags, loadChallenges } = useChallengeStore();
@@ -22,7 +27,7 @@ const ChallengeFormScreen = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const editingId = params?.id ? parseInt(params.id as string, 10) : null;
+  const isEdit = typeof editingId === "number";
 
   useEffect(() => { loadTags(); }, []);
 
@@ -129,10 +134,6 @@ return (
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }} contentContainerStyle={{
     paddingBottom: 30
   }}>
-
-      <AppText style={{ fontSize: 22, fontWeight: "bold", marginBottom: spacing.m }}>
-        {editingId ? "Edit challenge" : "Add challenge"}
-      </AppText>
 
       <AppText style={{ marginBottom: 6 }}>Name:</AppText>
       <TextInput
@@ -276,5 +277,4 @@ return (
 );
 };
 
-export default ChallengeFormScreen;
 

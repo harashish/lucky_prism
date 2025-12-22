@@ -1,6 +1,5 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AppText from "../../components/AppText";
 import { colors, fonts } from "../../constants/theme";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { View, ActivityIndicator } from "react-native";
@@ -80,10 +79,10 @@ export default function TabsLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    
       <Tabs
         initialRouteName="index"
-        screenOptions={({ route }) => {
+        screenOptions={( { route })  => {
           const config = TAB_CONFIG[route.name];
 
           return {
@@ -140,6 +139,5 @@ export default function TabsLayout() {
         <Tabs.Screen name="GamificationScreen" />
         <Tabs.Screen name="SettingsScreen" />
       </Tabs>
-    </GestureHandlerRootView>
   );
 }

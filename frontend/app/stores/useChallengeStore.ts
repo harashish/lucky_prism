@@ -5,7 +5,7 @@ export interface ChallengeTag { id: number; name: string; }
 export interface ChallengeType { id: number; name: string; }
 export interface DifficultyType { id: number; name: string; xp_value: number; }
 export interface Challenge { id:number; title:string; description:string; type:ChallengeType; difficulty:DifficultyType; tags:ChallengeTag[]; is_default:boolean; }
-export interface UserChallenge { id:number; challenge: Challenge; start_date: string; challenge_type: string; weekly_deadline?: string; progress_percent?: number; is_completed: boolean; }
+export interface UserChallenge { id:number; challenge: Challenge; start_date: string; challenge_type: string; weekly_deadline?: string; progress_days?: number; is_completed: boolean; }
 import type { XpResult } from "./useGamificationStore";
 
 
@@ -16,6 +16,9 @@ interface ChallengeStore {
   activeDaily: UserChallenge | null;
   activeWeekly: UserChallenge[]; // up to 3
   loading: boolean;
+
+  selectedType: "Daily" | "Weekly";
+  setSelectedType: (t: "Daily" | "Weekly") => void;
 
   loadChallenges: () => Promise<void>;
   loadTags: () => Promise<void>;
@@ -32,9 +35,8 @@ interface ChallengeStore {
 
 export interface ChallengeWithUserInfo extends Challenge {
   userChallengeId?: number;
-  // dodajemy pola UserChallenge, które potrzebujemy w UI
   challenge_type?: string;
-  progress_percent?: number;
+  progress_days?: number;
 }
 
 
@@ -46,6 +48,7 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
   activeDaily: null,
   activeWeekly: [],
   loading: false,
+  selectedType: "Daily",
 
   loadChallenges: async () => {
     set({ loading: true });
@@ -149,6 +152,7 @@ completeUserChallenge: async (id) => {
   }
 },
 
+setSelectedType: (t) => set({ selectedType: t }),
 
   reset: () => set({ challenges: [], tags: [], userChallenges: [], activeDaily: null, activeWeekly: [] }),
 }));

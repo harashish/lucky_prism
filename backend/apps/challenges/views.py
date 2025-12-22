@@ -77,6 +77,7 @@ class AssignChallengeView(APIView):
             user=user,
             definition=definition,
             challenge_type=challenge_type,
+            start_date=timezone.now().date()
         )
 
         if challenge_type == "Weekly":

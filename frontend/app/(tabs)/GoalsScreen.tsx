@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, TouchableOpacity, FlatList, Alert } from "react-native";
 import AppText from "../../components/AppText";
 import { colors, components } from "../../constants/theme";
 import { useGoalStore } from "../stores/useGoalStore";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
+import FloatingButton from "../../components/FloatingButton";
+import { ItemHeader } from "../../components/ItemHeader";
+import { ItemDetails } from "../../components/ItemDetails";
 
 dayjs.extend(isoWeek);
 
@@ -30,16 +33,31 @@ export default function GoalsScreen() {
   } = useGoalStore();
 
 
-const [selectedPeriod, setSelectedPeriod] =
-  useState<"weekly" | "monthly" | "yearly">("weekly");
+
 
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
 
+  // STATE
+  const [selectedPeriod, setSelectedPeriod] =
+    useState<"weekly" | "monthly" | "yearly">("weekly");
+
+  // EFFECT 1 – init
   useEffect(() => {
     loadPeriods();
-    loadUserGoals(userId, selectedPeriod);
     loadHistory();
+  }, []);
+
+  // EFFECT 2 – zmiana zakładki
+  useEffect(() => {
+    loadUserGoals(userId, selectedPeriod);
   }, [selectedPeriod]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUserGoals(userId, selectedPeriod);
+      loadHistory();
+    }, [selectedPeriod])
+  );
 
   const completedGoalIds = new Set(history.map(h => h.goal));
 
@@ -122,6 +140,7 @@ const [selectedPeriod, setSelectedPeriod] =
 
       {/* GOALS */}
       <FlatList
+        key={selectedPeriod}
         data={goals}
         keyExtractor={item => item.id.toString()}
         contentContainerStyle={{ paddingBottom: 140 }}
@@ -136,48 +155,32 @@ const [selectedPeriod, setSelectedPeriod] =
             >
               <View style={{ ...components.container, opacity: isCompleted ? 0.5 : 1 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <View style={{ flex: 1 }}>
-                    <AppText
-                      style={{
-                        fontWeight: "bold",
-                        textDecorationLine: isCompleted ? "line-through" : "none",
-                        color: isCompleted ? "#777" : colors.text,
-                      }}
-                    >
-                      {item.title}
-                    </AppText>
-
-                    <AppText
-                      style={{
-                        fontSize: 12,
-                        color: isCompleted ? "#777" : "#777",
-                        textDecorationLine: isCompleted ? "line-through" : "none",
-                      }}
-                    >
-                      {item.difficulty.name}
-                    </AppText>
-                  </View>
-
-
+                  <ItemHeader
+                    title={item.title}
+                    difficulty={item.difficulty?.name}
+                  />
                   {!isCompleted && (
                     <TouchableOpacity
                       onPress={() => onComplete(item.id, item.title)}
-                      style={components.completeButton}
+                      style={components.completeButton  
+                      }
+
                     >
                       <AppText style={{ color: "#fff" }}>+</AppText>
                     </TouchableOpacity>
                   )}
+
+
+
+
                 </View>
 
                 {isExpanded && (
-                  <View style={{ marginTop: 8 }}>
-                    {!!item.description && <AppText>{item.description}</AppText>}
-                    {!!item.motivation_reason && (
-                      <AppText style={{ fontSize: 12, opacity: 0.8 }}>
-                        Motivation: {item.motivation_reason}
-                      </AppText>
-                    )}
-                  </View>
+                  <ItemDetails
+                    description={item.description}
+                    motivation={item.motivation_reason}
+                  />
+
                 )}
               </View>
             </TouchableOpacity>
@@ -192,23 +195,7 @@ const [selectedPeriod, setSelectedPeriod] =
         }
       />
 
-      {/* ADD */}
-      <TouchableOpacity
-        onPress={() => router.push("/addGoal")}
-        style={{
-          position: "absolute",
-          right: 20,
-          bottom: 20,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: colors.buttonActive,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <AppText style={{ fontSize: 32, color: "#fff" }}>＋</AppText>
-      </TouchableOpacity>
+      <FloatingButton onPress={() => router.push("/addGoal")} />
     </View>
   );
 }

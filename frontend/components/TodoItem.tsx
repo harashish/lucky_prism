@@ -74,31 +74,29 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
         ]}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <AppText
-              style={{
-                textDecorationLine: isCompleted ? "line-through" : "none",
-                color: isCompleted ? "#777" : colors.text,
-                flexWrap: "wrap",
-              }}
-            >
-              {item.content}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <AppText
+                style={{
+                  textDecorationLine: isCompleted ? "line-through" : "none",
+                  color: isCompleted ? "#777" : colors.text,
+                }}
+              >
+                {item.content}
+              </AppText>
+            </View>
 
-              {gamificationOn && item.custom_difficulty && (
-                <AppText
-                  style={{
-                    fontWeight: "normal",
-                    color: isCompleted ? "#777" : colors.light,
-                  }}
-                >
-                  {" "}
-                  ({item.custom_difficulty.name})
-                </AppText>
-              )}
-            </AppText>
-
-
-
+            {gamificationOn && item.custom_difficulty && (
+              <AppText
+                style={{
+                  fontWeight: "normal",
+                  color: isCompleted ? "#777" : colors.light,
+                  textAlign: "right",
+                }}
+              >
+                ({item.custom_difficulty.name})
+              </AppText>
+            )}
           </View>
         </View>
       </Pressable>

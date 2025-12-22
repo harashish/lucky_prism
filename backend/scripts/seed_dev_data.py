@@ -157,26 +157,6 @@ for key, name, module_dep in dashboard_defaults:
         print(f"[DASHBOARD TILE] {key} exists")
 
 '''
-# =====================
-# MODULE XP CONFIG
-# =====================
-
-from apps.gamification.models import ModuleXPConfig
-
-module_configs = [
-    ("habits", 0.2),
-    ("challenges", 0.5),
-    ("todos", 0.15),
-    ("goals", 1.5),
-]
-
-for module_name, multiplier in module_configs:
-    obj, created = ModuleXPConfig.objects.get_or_create(
-        module=module_name,
-        defaults={"multiplier": multiplier},
-    )
-    print(f"[MODULE XP CONFIG] {module_name} {'created' if created else 'exists'} ({multiplier}x)")
-'''
 
 # =====================
 # DEFAULT GOALS
@@ -352,3 +332,4 @@ for name in habit_names:
 
 
 print("\n=== SEED DEV DATA DONE ===\n")
+'''

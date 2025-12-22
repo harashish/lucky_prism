@@ -7,6 +7,8 @@ import { colors, components, spacing } from "../constants/theme";
 import { api } from "../app/api/apiClient";
 import { useModuleSettingsStore } from "../app/stores/useModuleSettingsStore";
 import { useGamificationStore } from "../app/stores/useGamificationStore";
+import { ItemHeader } from "./ItemHeader";
+import { ItemDetails } from "./ItemDetails";
 
 type Props = {
   item: ChallengeWithUserInfo;
@@ -18,15 +20,15 @@ type Props = {
 
 export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigned }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [localProgress, setLocalProgress] = useState<number | null>(item.progress_percent ?? null);
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
+
+
 
  const assignChallenge = async () => {
     if (!userId) return;
     try {
       await api.post("/challenges/assign/", { user: userId, challenge: item.id });
-      // powodzenie: odśwież dane, nie pokazuj alertu — prosta UX decyzja
       onAssigned?.();
     } catch (e: any) {
       const detail = e.response?.data?.detail;
@@ -64,16 +66,10 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
     }
   };
 
-  const [localDays, setLocalDays] = useState<number>(
-  item.challenge_type === "Weekly" && localProgress != null
-    ? Math.round((localProgress / 100) * 7) // konwersja % → dni
-    : localProgress
-);
-
-const accelerateWeek = () => {
-  if (localDays == null) return;
-  setLocalDays(prev => Math.min(7, prev + 1)); // dodaj 1 dzień, max 7
-};
+  const days =
+  item.challenge_type === "Weekly"
+    ? item.progress_days ?? 1
+    : null;
 
   return (
     <TouchableOpacity
@@ -83,21 +79,10 @@ const accelerateWeek = () => {
     >
       <View style={components.container}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-       <View style={{ flex: 1 }}>
-      <AppText style={{ fontWeight: "bold", flexWrap: "wrap" }}>
-        {item.title}
-      </AppText>
-
-
-      <AppText
-        style={{
-          fontSize: 12,
-          color: "#777",
-        }}
-      >
-        {item.difficulty.name}
-      </AppText>
-            </View>
+      <ItemHeader
+          title={item.title}
+          difficulty={item.difficulty?.name}
+        />
 
 
       <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8, flexShrink: 0, gap: 8 }}>
@@ -112,39 +97,35 @@ const accelerateWeek = () => {
             <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
               <AppText style={{ color: "#fff", fontSize: 14 }}>Ukończ</AppText>
             </TouchableOpacity>
-
-            {item.challenge_type === "Weekly" && (
-              <TouchableOpacity onPress={accelerateWeek} style={{ ...components.addButton, backgroundColor: "#f39c12" }}>
-                <AppText style={{ color: "#fff", fontSize: 12 }}>Przyspiesz +1d</AppText>
-              </TouchableOpacity>
-            )}
           </>
         )}
         </View>
      </View>
 
       {/* Weekly progress bar */}
-      {alreadyAssigned && localDays != null && item.challenge_type === "Weekly" && (
-        <View style={{ marginTop: 8 }}>
-          <View style={{ height: 8, backgroundColor: "#eee", borderRadius: 4, overflow: "hidden" }}>
-            <View style={{
-              width: `${(localDays / 7) * 100}%`,
-              height: "100%",
-              backgroundColor: colors.buttonActive
-            }} />
+      {alreadyAssigned && days != null && item.challenge_type === "Weekly" && (
+        <>
+          <View style={{ height: 8, backgroundColor: "#eee", borderRadius: 4 }}>
+            <View
+              style={{
+                width: `${(days / 7) * 100}%`,
+                height: "100%",
+                backgroundColor: colors.buttonActive,
+              }}
+            />
           </View>
-          <AppText style={{ fontSize: 12, marginTop: 2, color: colors.text }}>
-            {localDays}/7 dni
+          <AppText style={{ fontSize: 12, marginTop: 2 }}>
+            {days}/7 dni
           </AppText>
-        </View>
+        </>
       )}
 
+
+
       {expanded && (
-      <View style={{ marginTop: spacing.s }}>
-        {item.description?.trim() ? (
-          <AppText>{item.description}</AppText>
-        ) : null}
-      </View>
+      <ItemDetails
+        description={item.description}
+      />
       )}
 
     </View>
