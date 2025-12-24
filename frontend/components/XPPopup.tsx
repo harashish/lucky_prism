@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import AppText from "./AppText";
 import { useGamificationStore } from "../app/stores/useGamificationStore";
+import { colors } from "../constants/theme";
 
 export default function XPPopup() {
   const { xpPopup, clearXpPopup } = useGamificationStore();
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   card: {
-    backgroundColor: "#8162a7ff",
+    backgroundColor: colors.special,
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 14,

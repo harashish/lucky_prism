@@ -9,6 +9,7 @@ export const colors = {
   inputBorderActive: "#c4a7e7",
   deleteButton: "#daa7e7",
   light: "#FFFFF1",
+  special: "#8162a7"
 };
 
 export const fonts = {

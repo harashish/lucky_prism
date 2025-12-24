@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
 import { useChallengeStore, ChallengeWithUserInfo } from "../../app/stores/useChallengeStore";
 import AppText from "../../components/AppText";
-import { colors, components, spacing } from "../../constants/theme";
+import { colors, components } from "../../constants/theme";
 import { api } from "../../app/api/apiClient";
 import { useModuleSettingsStore } from "../../app/stores/useModuleSettingsStore";
 import { useGamificationStore } from "../../app/stores/useGamificationStore";
@@ -22,8 +22,6 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
   const [expanded, setExpanded] = useState(false);
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
-
-
 
  const assignChallenge = async () => {
     if (!userId) return;
@@ -47,14 +45,12 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
 
     try {
       const res = await api.post(`/challenges/user-challenges/${item.userChallengeId}/complete/`);
-      const data = res.data; // { xp_gained, total_xp, current_level }
+      const data = res.data;
 
-      // jeśli gamification włączona i są xp -> użyj store aby wyzwolić XPPopup
       if (gamificationOn && data && data.xp_gained && data.xp_gained > 0) {
         useGamificationStore.getState().applyXpResult(data);
       }
 
-      // usuń challenge z lokalnego stanu (jak wcześniej)
       const { userChallenges } = useChallengeStore.getState();
       useChallengeStore.setState({
         userChallenges: userChallenges.filter(uc => uc.id !== item.userChallengeId),
@@ -83,8 +79,6 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
           title={item.title}
           difficulty={item.difficulty?.name}
         />
-
-
       <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8, flexShrink: 0, gap: 8 }}>
         {userId && !alreadyAssigned && (
           <TouchableOpacity onPress={assignChallenge} style={components.addButton}>
@@ -95,7 +89,7 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
         {userId && alreadyAssigned && (
           <>
             <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
-              <AppText style={{ color: "#fff", fontSize: 14 }}>Ukończ</AppText>
+              <AppText style={{ color: "#fff", fontSize: 14 }}>Complete</AppText>
             </TouchableOpacity>
           </>
         )}
@@ -105,7 +99,7 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
       {/* Weekly progress bar */}
       {alreadyAssigned && days != null && item.challenge_type === "Weekly" && (
         <>
-          <View style={{ height: 8, backgroundColor: "#eee", borderRadius: 4 }}>
+          <View style={{ height: 8, backgroundColor: colors.light, borderRadius: 4, marginVertical: 8 }}>
             <View
               style={{
                 width: `${(days / 7) * 100}%`,
@@ -119,9 +113,6 @@ export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigne
           </AppText>
         </>
       )}
-
-
-
       {expanded && (
       <ItemDetails
         description={item.description}

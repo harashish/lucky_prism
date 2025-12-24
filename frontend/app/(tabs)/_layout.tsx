@@ -4,7 +4,6 @@ import { colors, fonts } from "../../constants/theme";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { View, ActivityIndicator } from "react-native";
 import { useEffect } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function TabsLayout() {
   const { modules, fetchModules } = useModuleSettingsStore();

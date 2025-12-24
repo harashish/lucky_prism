@@ -288,7 +288,7 @@ const fetchRandomNote = async () => {
                   <View
                     style={{
                       height: 8,
-                      backgroundColor: colors.background,
+                      backgroundColor: colors.light,
                       borderRadius: 6,
                       overflow: "hidden",
                       marginTop: 8,

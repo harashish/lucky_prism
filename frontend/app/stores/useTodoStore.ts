@@ -128,14 +128,11 @@ quickAddTask: async (userId, categoryId, content, customDifficultyId = null) => 
   try {
     const res = await api.post(`/todos/tasks/${taskId}/complete/`);
 
-    // Znajdź kategorię ukończonego taska
     const currentTasks = get().tasks;
     const task = currentTasks.find(t => t.id === taskId);
     const categoryId = task?.category?.id;
 
-    // Odśwież tylko jedną kategorię (to naprawia bug)
     await get().loadTasks(1, categoryId);
-
     return res.data;
   } catch (e) {
     console.error(e);

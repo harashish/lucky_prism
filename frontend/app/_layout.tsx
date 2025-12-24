@@ -11,7 +11,7 @@ import { colors } from "../constants/theme";
 import XPPopup from "../components/XPPopup";
 import { useGamificationStore } from "./stores/useGamificationStore";
 import { useEffect } from "react";
-import { defaultHeaderOptions } from "../components/header";
+import { defaultHeaderOptions } from "../components/NavigationHeader";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 
