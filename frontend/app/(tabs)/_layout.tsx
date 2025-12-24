@@ -1,12 +1,30 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, fonts } from "../../constants/theme";
-import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
+import { ModuleKey, useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { View, ActivityIndicator } from "react-native";
 import { useEffect } from "react";
 
 export default function TabsLayout() {
   const { modules, fetchModules } = useModuleSettingsStore();
+
+  const TAB_MODULE_MAP: Record<string, ModuleKey | null> = {
+  index: null,
+  HabitsScreen: "habits",
+  TodosScreen: "todos",
+  ChallengesListScreen: "challenges",
+  GoalsScreen: "goals",
+  RandomHomeScreen: "random",
+  GamificationScreen: "gamification",
+  SettingsScreen: null,
+  };
+
+
+  const isTabEnabled = (routeName: string) => {
+    const module = TAB_MODULE_MAP[routeName];
+    if (!module) return true;
+    return modules?.[module];
+  };
 
   const TAB_CONFIG: Record<
     string,
@@ -129,14 +147,61 @@ export default function TabsLayout() {
           };
         }}
       >
-        <Tabs.Screen name="index" />
-        <Tabs.Screen name="ChallengesListScreen" />
-        <Tabs.Screen name="HabitsScreen" />
-        <Tabs.Screen name="TodosScreen" />
-        <Tabs.Screen name="GoalsScreen" />
-        <Tabs.Screen name="RandomHomeScreen" />
-        <Tabs.Screen name="GamificationScreen" />
-        <Tabs.Screen name="SettingsScreen" />
-      </Tabs>
+    <Tabs.Screen
+      name="index"
+      options={{
+        href: isTabEnabled("index") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="HabitsScreen"
+      options={{
+        href: isTabEnabled("HabitsScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="TodosScreen"
+      options={{
+        href: isTabEnabled("TodosScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="ChallengesListScreen"
+      options={{
+        href: isTabEnabled("ChallengesListScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="GoalsScreen"
+      options={{
+        href: isTabEnabled("GoalsScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="RandomHomeScreen"
+      options={{
+        href: isTabEnabled("RandomHomeScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="GamificationScreen"
+      options={{
+        href: isTabEnabled("GamificationScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="SettingsScreen"
+      options={{
+        href: isTabEnabled("SettingsScreen") ? undefined : null,
+      }}
+    />
+  </Tabs>
   );
 }

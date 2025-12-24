@@ -21,7 +21,7 @@ class TodoCategoryDetail(generics.RetrieveUpdateDestroyAPIView):
         if total_categories <= 1:
             return Response(
                 {"detail": "Cannot delete the last category."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
         
         cat.tasks.all().delete()
@@ -73,7 +73,9 @@ class RandomTodoTaskView(APIView):
     def get(self, request):
         user_id = request.query_params.get("user_id")
         if not user_id:
-            return Response({"detail": "user_id required"}, status=400)
+            return Response({"detail": "user_id required"}, 
+                            status=status.HTTP_400_BAD_REQUEST,
+            )
 
         qs = TodoTask.objects.filter(
             Q(user_id=user_id) | Q(is_default=True),

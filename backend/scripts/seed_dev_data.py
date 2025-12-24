@@ -141,6 +141,7 @@ dashboard_defaults = [
     ("random_note", "Random note", "notes"),
 ]
 
+
 for key, name, module_dep in dashboard_defaults:
     obj, created = DashboardTile.objects.get_or_create(
         user=user,

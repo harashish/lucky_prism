@@ -39,10 +39,22 @@ class DashboardTile(models.Model):
     ]
 
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
-    key = models.CharField(max_length=50)
+    key = models.CharField(
+    max_length=50,
+
+    # aby można było wybierać tylko z tile_keys
+    choices=TILE_KEYS
+    )
     name = models.CharField(max_length=120)
-    is_enabled = models.BooleanField(default=True)
-    module_dependency = models.CharField(max_length=30, blank=True, null=True)
+    is_enabled = models.BooleanField(default=True)    
+    module_dependency = models.CharField(
+    max_length=30,
+
+    # aby nie dało się wpisać nieistniejacego modułu
+    choices=ModuleDefinition.MODULE_CHOICES,
+    blank=True,
+    null=True
+)
 
     class Meta:
         unique_together = ("user", "key")

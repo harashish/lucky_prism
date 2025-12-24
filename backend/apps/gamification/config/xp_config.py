@@ -1,5 +1,3 @@
-# apps/gamification/config/xp_config.py
-
 BASE_XP = {
     "trivial": 0,
     "easy": 10,

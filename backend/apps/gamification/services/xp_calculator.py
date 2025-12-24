@@ -1,5 +1,3 @@
-# apps/gamification/services/xp_calculator.py
-
 from apps.gamification.config.xp_config import (
     BASE_XP,
     MODULE_MULTIPLIER,
@@ -14,7 +12,7 @@ def calculate_xp(
     period: str | None = None,
 ) -> int:
     """
-    JEDYNE miejsce liczenia XP w systemie.
+    JEDYNE miejsce liczenia XP w systemie
     """
 
     base_xp = BASE_XP[difficulty]

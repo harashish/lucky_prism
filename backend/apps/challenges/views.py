@@ -52,11 +52,15 @@ class AssignChallengeView(APIView):
 
         if challenge_type == "Daily":
             if UserChallenge.objects.filter(user=user, challenge_type="Daily", is_completed=False).exists():
-                return Response({"detail": "Active daily challenge already exists"}, status=400)
+                return Response({"detail": "Active daily challenge already exists"}, 
+                                status=status.HTTP_400_BAD_REQUEST,
+                )
 
         if challenge_type == "Weekly":
             if UserChallenge.objects.filter(user=user, challenge_type="Weekly", is_completed=False).exists():
-                return Response({"detail": "Active weekly challenge already exists"}, status=400)
+                return Response({"detail": "Active weekly challenge already exists"}, 
+                                status=status.HTTP_400_BAD_REQUEST,
+                )
 
 
         existing = UserChallenge.objects.filter(user=user, definition=definition).first()
@@ -129,7 +133,7 @@ class CompleteUserChallengeView(APIView):
             "xp_gained": xp,
             "total_xp": uc.user.total_xp,
             "current_level": uc.user.current_level
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
 class DiscardUserChallengeView(APIView):
     def post(self, request, pk):

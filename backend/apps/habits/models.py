@@ -4,7 +4,9 @@ class Habit(models.Model):
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
     title = models.CharField(max_length=70)
     description = models.TextField(blank=True)
-    motivation_reason = models.TextField(blank=True)
+
+    # motivation_reason obowiązkowe
+    motivation_reason = models.TextField()
     color = models.CharField(max_length=20, default="#908bab")
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True)
@@ -32,7 +34,9 @@ class HabitDay(models.Model):
     habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="days")
     date = models.DateField()
     status = models.IntegerField(choices=STATUS_CHOICES, default=STATUS_EMPTY)
-    xp_awarded = models.BooleanField(default=False)  # whether XP was granted for this day already
+
+    # w przypadku przyznania już xp
+    xp_awarded = models.BooleanField(default=False)  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

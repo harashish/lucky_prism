@@ -1,4 +1,3 @@
-# apps/habits/serializers.py
 from rest_framework import serializers
 from .models import Habit, HabitDay
 from apps.common.models import DifficultyType

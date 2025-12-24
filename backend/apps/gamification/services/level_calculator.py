@@ -1,5 +1,3 @@
-# apps/gamification/services/level_calculator.py
-
 from apps.gamification.config.xp_config import BASE_LEVEL_XP
 
 def calculate_level(total_xp: int) -> int:

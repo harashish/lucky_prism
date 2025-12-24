@@ -48,7 +48,7 @@ interface HabitStore {
     status?: number
   ) => Promise<ToggleDayResponse | null>;
 
-  reset: () => void;
+  resetHabits: () => void;
 }
 
 export const useHabitStore = create<HabitStore>((set) => ({
@@ -145,5 +145,5 @@ export const useHabitStore = create<HabitStore>((set) => ({
   },
 
 
-  reset: () => set({ habits: [] }),
+  resetHabits: () => set({ habits: [] }),
 }));

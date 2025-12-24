@@ -1,4 +1,3 @@
-# apps/habits/views.py
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -34,7 +33,9 @@ class HabitDayToggleView(APIView):
             try:
                 d = datetime.strptime(date_str, "%Y-%m-%d").date()
             except Exception:
-                return Response({"detail": "Invalid date format"}, status=400)
+                return Response({"detail": "Invalid date format"}, 
+                                status=status.HTTP_400_BAD_REQUEST,
+                )
         else:
             d = date.today()
 
@@ -91,8 +92,7 @@ class HabitDayToggleView(APIView):
             "total_xp": habit.user.total_xp,
             "current_level": habit.user.current_level,
             "already_completed": already_completed
-        }, status=200)
-
+        }, status=status.HTTP_200_OK)
 
 class HabitMonthView(APIView):
     def get(self, request, user_id):
@@ -104,7 +104,9 @@ class HabitMonthView(APIView):
         try:
             year, mon = [int(x) for x in month_q.split("-")]
         except Exception:
-            return Response({"detail": "Invalid month"}, status=400)
+            return Response({"detail": "Invalid month"}, 
+                            status=status.HTTP_400_BAD_REQUEST,
+            )
 
         _, last_day = calendar.monthrange(year, mon)
         first_date = date(year, mon, 1)

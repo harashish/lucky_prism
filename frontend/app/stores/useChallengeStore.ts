@@ -14,7 +14,7 @@ interface ChallengeStore {
   tags: ChallengeTag[];
   userChallenges: UserChallenge[];
   activeDaily: UserChallenge | null;
-  activeWeekly: UserChallenge[]; // up to 3
+  activeWeekly: UserChallenge[];
   loading: boolean;
 
   selectedType: "Daily" | "Weekly";
@@ -30,7 +30,7 @@ interface ChallengeStore {
   discardUserChallenge: (id: number) => Promise<boolean>;
   completeUserChallenge: (id: number) => Promise<XpResult | null>;
 
-  reset: () => void;
+  resetChallenges: () => void;
 }
 
 export interface ChallengeWithUserInfo extends Challenge {
@@ -154,5 +154,5 @@ completeUserChallenge: async (id) => {
 
 setSelectedType: (t) => set({ selectedType: t }),
 
-  reset: () => set({ challenges: [], tags: [], userChallenges: [], activeDaily: null, activeWeekly: [] }),
+  resetChallenges: () => set({ challenges: [], tags: [], userChallenges: [], activeDaily: null, activeWeekly: [] }),
 }));
