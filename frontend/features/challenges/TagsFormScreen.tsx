@@ -5,7 +5,6 @@ import AppText from "../../components/AppText";
 import { colors, radius, spacing } from "../../constants/theme";
 import { api } from "../../app/api/apiClient";
 import FormErrorModal from "../../components/FormErrorModal";
-import { useLocalSearchParams } from "expo-router";
 
 export type TagsFormScreenProps = {
   editingId?: number;
@@ -13,8 +12,6 @@ export type TagsFormScreenProps = {
 
 
 export default function TagsFormScreen({ editingId }: TagsFormScreenProps) {
-  const { id } = useLocalSearchParams();
-  const isEdit = typeof editingId === "number";
   const router = useRouter();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);

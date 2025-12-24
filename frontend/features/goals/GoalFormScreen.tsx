@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { useGoalStore } from "../../app/stores/useGoalStore";
 import { api } from "../../app/api/apiClient";
 import AppText from "../../components/AppText";
@@ -14,8 +14,6 @@ export type GoalFormScreenProps = {
 
 export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const isEdit = typeof editingId === "number";
   const { periods, loadPeriods } = useGoalStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -26,8 +24,6 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
   const [selectedPeriodObj, setSelectedPeriodObj] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const userId = 1;
 
   useEffect(() => {
     loadPeriods();
@@ -93,7 +89,6 @@ if (!why.trim()) {
       motivation_reason: why,
       period_id: period,
       difficulty_id: difficultyId,
-      user_id: userId,
     };
 
     try {

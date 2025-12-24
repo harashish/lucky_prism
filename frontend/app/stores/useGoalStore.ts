@@ -18,7 +18,6 @@ export interface Goal {
   motivation_reason?: string;
   period: GoalPeriod;
   difficulty: DifficultyType;
-  user: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -40,7 +39,7 @@ interface GoalStore {
   loadingHistory: boolean;
 
   loadPeriods: () => Promise<void>;
-  loadUserGoals: (userId: number, period?: string) => Promise<void>;
+  loadGoals: (period?: string) => Promise<void>;
   loadHistory: () => Promise<void>;
 
   addGoal: (payload: any) => Promise<void>;
@@ -51,6 +50,8 @@ interface GoalStore {
     total_xp: number;
     current_level: number;
   } | null>;
+
+  pickRandomGoal: (period?: string) => Promise<Goal | null>;
 
   resetGoals: () => void;
 }
@@ -69,24 +70,17 @@ export const useGoalStore = create<GoalStore>((set) => ({
     try {
       const res = await api.get<GoalPeriod[]>("/goals/periods/");
       set({ periods: res.data });
-    } catch (e) {
-      console.error("loadPeriods", e);
     } finally {
       set({ loadingPeriods: false });
     }
   },
 
-  loadUserGoals: async (userId: number, period?: string) => {
+  loadGoals: async (period?: string) => {
     set({ loadingGoals: true });
     try {
-      const url = period
-        ? `/goals/user-goals/${userId}/?period=${period}`
-        : `/goals/user-goals/${userId}/`;
-
+      const url = period ? `/goals/?period=${period}` : "/goals/";
       const res = await api.get<Goal[]>(url);
       set({ goals: res.data });
-    } catch (e) {
-      console.error("loadUserGoals", e);
     } finally {
       set({ loadingGoals: false });
     }
@@ -97,43 +91,41 @@ export const useGoalStore = create<GoalStore>((set) => ({
     try {
       const res = await api.get<GoalHistory[]>("/goals/history/");
       set({ history: res.data });
-    } catch (e) {
-      console.error("loadHistory", e);
     } finally {
       set({ loadingHistory: false });
     }
   },
 
   addGoal: async (payload) => {
-    try {
-      await api.post("/goals/", payload);
-    } catch (e) {
-      console.error("addGoal", e);
-    }
+    await api.post("/goals/", payload);
   },
 
   saveGoal: async (id, payload) => {
-    try {
-      await api.patch(`/goals/${id}/`, payload);
-    } catch (e) {
-      console.error("saveGoal", e);
-    }
+    await api.patch(`/goals/${id}/`, payload);
   },
 
   deleteGoal: async (id) => {
-    try {
-      await api.delete(`/goals/${id}/`);
-    } catch (e) {
-      console.error("deleteGoal", e);
-    }
+    await api.delete(`/goals/${id}/`);
   },
 
   completeGoal: async (id) => {
     try {
       const res = await api.post(`/goals/${id}/complete/`);
       return res.data;
+    } catch {
+      return null;
+    }
+  },
+
+  pickRandomGoal: async (period?: string) => {
+    try {
+      const url = period ? `/goals/?period=${period}` : "/goals/";
+      const res = await api.get(url);
+      const arr = res.data;
+      if (!arr?.length) return null;
+      return arr[Math.floor(Math.random() * arr.length)];
     } catch (e) {
-      console.error("completeGoal", e);
+      console.error("Error picking random goal:", e);
       return null;
     }
   },

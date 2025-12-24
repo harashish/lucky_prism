@@ -1,91 +1,153 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, ScrollView, Alert } from "react-native";
 import AppText from "../../../components/AppText";
-import { api } from "../../api/apiClient";
 import { colors } from "../../../constants/theme";
 import { useRouter } from "expo-router";
+import { useTodoStore } from "../../stores/useTodoStore";
 import RandomSpin from "../spin";
 
 export default function TodoPickScreen() {
   const router = useRouter();
-  const userId = 1;
 
-  const [categories, setCategories] = useState<any[]>([]);
+  const {
+    categories,
+    loadCategories,
+    pickRandomTask,
+    hasTasksInSelectedCategory,
+    checkCategoryHasTasks,
+  } = useTodoStore();
+
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-
   const [spinning, setSpinning] = useState(false);
   const [spinItems, setSpinItems] = useState<string[]>([]);
 
-  useEffect(()=>{ 
-    (async ()=>{ 
-      try { 
-        const res = await api.get("/todos/categories/"); 
-        setCategories(res.data); 
-        if(res.data.length) setSelectedCategory(res.data[0].id) 
-      } catch(e){console.error(e);} 
-    })(); 
+  // ---- load categories on mount
+  useEffect(() => {
+    loadCategories();
   }, []);
 
+  // ---- auto-select first category
+  useEffect(() => {
+    if (!categories.length) return;
+    if (selectedCategory === null) {
+      setSelectedCategory(categories[0].id);
+    }
+  }, [categories]);
+
+  // ---- check if selected category has tasks
+  useEffect(() => {
+    if (selectedCategory !== null) {
+      checkCategoryHasTasks(selectedCategory);
+    }
+  }, [selectedCategory]);
+
   const onLosuj = async () => {
-    if (!selectedCategory) return Alert.alert("Choose a category");
+    if (!selectedCategory) {
+      Alert.alert("Choose a category");
+      return;
+    }
+
+    if (hasTasksInSelectedCategory === false) {
+      Alert.alert("No tasks in this category.");
+      return;
+    }
 
     setSpinning(true);
     setSpinItems(["...", "Randomizing", "Searching", "Wait", "OK"]);
 
-    try {
-      const res = await api.get("/todos/tasks/", { params: { user_id: userId, category_id: selectedCategory }});
-      let arr = res.data.filter((t:any) => !t.is_completed);
-      if (!arr.length) {
-        setSpinning(false);
-        Alert.alert("No tasks in this category.");
-        return;
-      }
+    const picked = await pickRandomTask(selectedCategory);
 
-      setTimeout(() => {
-        const pickedIndex = Math.floor(Math.random() * arr.length);
-        const picked = arr[pickedIndex];
-        setSpinning(false);
-        router.push({ pathname: "/random/result", params: { item: JSON.stringify(picked), source: "todo", categoryId: String(selectedCategory) }});
-      }, 600);
-
-    } catch(e){ 
+    if (!picked) {
       setSpinning(false);
-      Alert.alert("Error", "Cannot load tasks." ); 
+      Alert.alert("No tasks in this category.");
+      return;
     }
+
+    setTimeout(() => {
+      setSpinning(false);
+      router.push({
+        pathname: "/random/result",
+        params: {
+          item: JSON.stringify(picked),
+          source: "todo",
+          categoryId: String(selectedCategory),
+        },
+      });
+    }, 600);
   };
 
-  if (spinning) return <RandomSpin items={spinItems.length ? spinItems : ["..."]} onFinish={() => {}} />;
+  if (spinning) {
+    return (
+      <RandomSpin
+        items={spinItems.length ? spinItems : ["..."]}
+        onFinish={() => {}}
+      />
+    );
+  }
+
+  const randomDisabled = hasTasksInSelectedCategory === false;
 
   return (
-    <View style={{ flex:1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: "center",
           alignItems: "center",
-          padding: 16
+          padding: 16,
         }}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity 
-          onPress={onLosuj} 
-          style={{ backgroundColor: colors.buttonActive, padding:16, borderRadius:10, marginBottom:12, width:"80%", alignItems:"center" }}
+        {/* RANDOM BUTTON */}
+        <TouchableOpacity
+          disabled={randomDisabled}
+          onPress={onLosuj}
+          style={{
+            backgroundColor: randomDisabled
+              ? colors.card
+              : colors.buttonActive,
+            padding: 16,
+            borderRadius: 10,
+            marginBottom: 8,
+            width: "80%",
+            alignItems: "center",
+            opacity: randomDisabled ? 0.6 : 1,
+          }}
         >
-          <AppText style={{ color:"#fff", fontWeight:"bold" }}>Randomize!</AppText>
+          <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+            Randomize!
+          </AppText>
         </TouchableOpacity>
 
-        <AppText style={{ marginBottom:8 }}>Choose a category:</AppText>
+        {/* EMPTY INFO */}
+        {hasTasksInSelectedCategory === false && (
+          <AppText style={{ marginBottom: 12, color: "#999" }}>
+            No tasks in this category
+          </AppText>
+        )}
 
-        <View style={{ flexDirection:"row", flexWrap:"wrap", justifyContent:"center", alignItems:"center" }}>
-          {categories.map(c => (
-            <TouchableOpacity 
-              key={c.id} 
-              onPress={()=>setSelectedCategory(c.id)} 
-              style={{ 
-                padding:8, 
-                margin:6, 
-                borderRadius:8, 
-                backgroundColor: selectedCategory===c.id ? colors.buttonActive : colors.card 
+        <AppText style={{ marginBottom: 8 }}>Choose a category:</AppText>
+
+        {/* CATEGORY PICKER */}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {categories.map((c) => (
+            <TouchableOpacity
+              key={c.id}
+              onPress={() => setSelectedCategory(c.id)}
+              style={{
+                padding: 8,
+                margin: 6,
+                borderRadius: 8,
+                backgroundColor:
+                  selectedCategory === c.id
+                    ? colors.buttonActive
+                    : colors.card,
               }}
             >
               <AppText>{c.name}</AppText>

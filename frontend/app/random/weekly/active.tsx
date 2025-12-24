@@ -9,7 +9,6 @@ import { useGamificationStore } from "../../stores/useGamificationStore";
 
 export default function WeeklyActiveScreen() {
   const router = useRouter();
-  const userId = 1;
   const { fetchActive, activeWeekly, discardUserChallenge, completeUserChallenge } = useChallengeStore();
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +18,7 @@ export default function WeeklyActiveScreen() {
 
   useEffect(() => {
     const load = async () => {
-      await fetchActive(userId);
+      await fetchActive();
       setLoading(false);
     };
     load();
@@ -42,7 +41,7 @@ export default function WeeklyActiveScreen() {
     const ok = await discardUserChallenge(uc.id);
     if (!ok) return Alert.alert("Error", "Could not discard the challenge");
 
-    await fetchActive(userId);
+    await fetchActive();
     const { activeWeekly: latestActive } = useChallengeStore.getState();
     router.replace(latestActive && latestActive.length > 0 ? "/random/weekly/active" : "/random/weekly");
   };
@@ -56,7 +55,7 @@ export default function WeeklyActiveScreen() {
     }
 
 
-    await fetchActive(userId);
+    await fetchActive();
     router.replace("/(tabs)/RandomHomeScreen");
   };
 

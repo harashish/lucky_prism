@@ -3,7 +3,16 @@ from apps.gamification.services.xp_calculator import calculate_xp
 
 
 class GoalPeriod(models.Model):
-    name = models.CharField(max_length=10)  # weekly, monthly, yearly
+    name = models.CharField(
+        max_length=10,
+        choices=[
+            ("weekly", "Weekly"),
+            ("monthly", "Monthly"),
+            ("yearly", "Yearly"),
+        ],
+        unique=True,
+    )
+
 
 class Goal(models.Model):
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)

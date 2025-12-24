@@ -8,7 +8,6 @@ import RandomSpin from "../spin";
 
 export default function WeeklyPickScreen() {
   const router = useRouter();
-  const userId = 1;
   const { loadTags, tags, randomChallenge } = useChallengeStore();
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [spinning, setSpinning] = useState(false);
@@ -20,7 +19,7 @@ export default function WeeklyPickScreen() {
 
   const onLosuj = async () => {
     if (!tags.length) return Alert.alert("No tags.");
-    const picked = await randomChallenge(userId, "Weekly", selectedTags);
+    const picked = await randomChallenge("weekly", selectedTags);
     if (!picked) {
       Alert.alert("No challenges with selected tags.");
       return;

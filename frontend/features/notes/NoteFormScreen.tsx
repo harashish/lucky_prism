@@ -8,9 +8,9 @@ import {
 import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
 import { colors, radius, spacing } from "../../constants/theme";
-import { api } from "../../app/api/apiClient";
 import FormErrorModal from "../../components/FormErrorModal";
 import { confirmDelete } from "../../components/confirmDelete";
+import { useNotesStore } from "../../app/stores/useNotesStore";
 
 export type NoteFormScreenProps = {
   editingId?: number;
@@ -18,31 +18,35 @@ export type NoteFormScreenProps = {
 
 export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
   const router = useRouter();
-  const isEdit = typeof editingId === "number";
+
+  const {
+    fetchById,
+    createNote,
+    updateNote,
+    deleteNote,
+  } = useNotesStore();
 
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // ---- load note (edit)
+  // ---- load note for edit
   useEffect(() => {
     if (!editingId) return;
 
-    const fetchNote = async () => {
+    const load = async () => {
       setLoading(true);
-      try {
-        const res = await api.get(`/notes/${editingId}/`);
-        setContent(res.data.content);
-      } catch (err) {
-        console.error(err);
+      const note = await fetchById(editingId);
+      if (!note) {
         setErrorMessage("Cannot load note");
-      } finally {
-        setLoading(false);
+      } else {
+        setContent(note.content);
       }
+      setLoading(false);
     };
 
-    fetchNote();
-  }, [editingId]);
+    load();
+  }, [editingId, fetchById]);
 
   // ---- save
   const save = async () => {
@@ -54,13 +58,12 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
     setLoading(true);
     try {
       if (editingId) {
-        await api.patch(`/notes/${editingId}/`, { content });
+        await updateNote(editingId, content);
       } else {
-        await api.post("/notes/", { content });
+        await createNote(content);
       }
       router.back();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setErrorMessage("Cannot save note");
     } finally {
       setLoading(false);
@@ -68,15 +71,14 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
   };
 
   // ---- delete
-  const deleteNote = async () => {
+  const deleteNoteHandler = async () => {
     if (!editingId) return;
 
     setLoading(true);
     try {
-      await api.delete(`/notes/${editingId}/`);
+      await deleteNote(editingId);
       router.back();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setErrorMessage("Cannot delete note");
     } finally {
       setLoading(false);
@@ -85,7 +87,13 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
 
   return (
     <>
-      <View style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          padding: spacing.m,
+          backgroundColor: colors.background,
+        }}
+      >
         <AppText style={{ fontWeight: "700", marginBottom: spacing.s }}>
           {editingId ? "Edit note" : "New note"}
         </AppText>
@@ -134,7 +142,7 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
               confirmDelete({
                 title: "Delete note?",
                 message: "This action cannot be undone.",
-                onConfirm: deleteNote,
+                onConfirm: deleteNoteHandler,
               })
             }
             style={{

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, ScrollView, StyleSheet, SectionList } from "react-native";
-import { useChallengeStore, ChallengeWithUserInfo } from "../stores/useChallengeStore";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, TouchableOpacity, SectionList, ScrollView } from "react-native";
+import { useChallengeStore } from "../stores/useChallengeStore";
 import ChallengeItem from "../../features/challenges/ChallengeItem";
 import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
@@ -9,103 +9,122 @@ import FloatingButton from "../../components/FloatingButton";
 
 const ChallengesListScreen = () => {
   const router = useRouter();
-  const { 
-    challenges, 
-    tags, 
-    userChallenges, 
-    loadChallenges, 
-    loadTags, 
-    loadUserChallenges 
+
+    const TYPES = [
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+] as const;
+
+
+  const {
+    challenges,
+    tags,
+    activeDaily,
+    activeWeekly,
+    selectedType,
+    setSelectedType,
+    loadTags,
   } = useChallengeStore();
 
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
-  const { selectedType, setSelectedType } = useChallengeStore();
+  const [showAll, setShowAll] = useState(false);
 
-
-  //const { activeDaily, activeWeekly } = useChallengeStore();
-
-  //const activeChallengeBox = activeDaily || activeWeekly[0]; // jeśli więcej weekly, bierzemy pierwszy
-
-  const userId = 1;
-
-  const fetchData = async () => {
-    await loadChallenges();
-    await loadTags();
-    await loadUserChallenges(userId);
-  };
-
+  /* ---------- INIT ---------- */
   useEffect(() => {
-    fetchData();
+    (async () => {
+      await loadTags();
+      await useChallengeStore.getState().refreshAll();
+    })();
   }, []);
 
+  /* ---------- FILTERS ---------- */
+
   const toggleTag = (id: number) => {
-    setSelectedTags(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    setSelectedTags((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  const filteredChallenges = challenges.filter(c =>
-    c.type.name === selectedType &&
-    (selectedTags.length === 0 || selectedTags.some(tid => c.tags.some(t => t.id === tid)))
+  const activeChallenges = useMemo(() => {
+    if (selectedType === "daily") {
+      return activeDaily ? [activeDaily] : [];
+    }
+    return activeWeekly;
+  }, [activeDaily, activeWeekly, selectedType]);
+
+  const activeDefinitionIds = new Set(
+    activeChallenges.map((uc) => uc.challenge.id)
   );
 
-  const userChallengeIds: number[] = userChallenges.map(uc => uc.challenge.id);
+  const filteredChallenges = useMemo(() => {
+    return challenges.filter((c) => {
+      if (c.type.name !== selectedType) return false;
+      if (activeDefinitionIds.has(c.id)) return false;
+      if (
+        selectedTags.length > 0 &&
+        !selectedTags.some((tid) => c.tags.some((t) => t.id === tid))
+      )
+        return false;
+      return true;
+    });
+  }, [challenges, selectedType, selectedTags, activeDefinitionIds]);
 
-  const unassignedChallenges: ChallengeWithUserInfo[] = filteredChallenges
-    .filter(c => !userChallengeIds.includes(c.id))
-    .map(c => ({ ...c }));
+  /* ---------- SECTIONS ---------- */
 
-const assignedChallenges: ChallengeWithUserInfo[] = userChallenges
-  .filter(uc => uc.challenge.type.name === selectedType &&
-       (selectedTags.length === 0 || selectedTags.some(tid => uc.challenge.tags.some(t => t.id === tid)))
-  )
-  .map(uc => ({
-    ...uc.challenge,
-    userChallengeId: uc.id,
-    challenge_type: uc.challenge_type,
-    progress_days: uc.progress_days,
+const sections = useMemo(() => {
+  const result = [];
 
-  }));
+  if (activeChallenges.length > 0) {
+    result.push({
+      title: "Actual challenge",
+      data: activeChallenges,
+      isUserChallenge: true,
+    });
 
-
-
-const [showAll, setShowAll] = useState(false);
-
-const hasAssigned = assignedChallenges.length > 0;
-const hasUnassigned = unassignedChallenges.length > 0;
-
-const sections = [];
-
-if (hasAssigned) {
-  sections.push({ title: "Actual challenge", data: assignedChallenges });
-  if (hasUnassigned) {
-    sections.push({ title: "Challenges list", data: showAll ? unassignedChallenges : [] });
+    if (filteredChallenges.length > 0) {
+      result.push({
+        title: "Challenges list",
+        data: showAll ? filteredChallenges : [],
+        isUserChallenge: false,
+      });
+    }
+  } else if (filteredChallenges.length > 0) {
+    result.push({
+      title: "Challenges list",
+      data: filteredChallenges,
+      isUserChallenge: false,
+    });
   }
-} else if (!hasAssigned && hasUnassigned) {
-  sections.push({ title: "Challenges list", data: unassignedChallenges });
-}
+
+
+  return result;
+}, [activeChallenges, filteredChallenges, showAll]);
+
 
 
   return (
     <View style={{ flex: 1, padding: 10, backgroundColor: colors.background }}>
     {/* Typy */}
 <View style={{ flexDirection: "row", marginBottom: 10 }}>
-  {["Daily", "Weekly"].map((t, i) => (
+  {TYPES.map(({ label, value }, i) => (
     <TouchableOpacity
-      key={t}
-      onPress={() => setSelectedType(t as "Daily" | "Weekly")}
+      key={value}
+      onPress={() => setSelectedType(value)}
       style={{
         flex: 1,
         padding: 15,
         marginRight: i === 0 ? 5 : 0,
         marginLeft: i === 1 ? 5 : 0,
         borderRadius: 10,
-        backgroundColor: selectedType === t ? colors.buttonActive : colors.button,
+        backgroundColor:
+          selectedType === value ? colors.buttonActive : colors.button,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <AppText style={{ color: colors.text, fontWeight: "bold" }}>{t}</AppText>
+      <AppText style={{ color: colors.text, fontWeight: "bold" }}>
+        {label}
+      </AppText>
     </TouchableOpacity>
   ))}
 </View>
@@ -152,23 +171,39 @@ if (hasAssigned) {
 
 {/* Lista challenge */}
 {challenges.length === 0 ? (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
-    <AppText style={{ color: "#777", fontSize: 16 }}>No challenges yet, add some!</AppText>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 50,
+    }}
+  >
+    <AppText style={{ color: "#777", fontSize: 16 }}>
+      No challenges yet, add some!
+    </AppText>
   </View>
-) : filteredChallenges.length === 0 ? (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
-    <AppText style={{ color: "#777", fontSize: 16 }}>No challenges with those tags</AppText>
+) : sections.length === 0 ? (
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 50,
+    }}
+  >
+    <AppText style={{ color: "#777", fontSize: 16 }}>
+      No challenges with those tags
+    </AppText>
   </View>
 ) : (
   <SectionList
     sections={sections}
     keyExtractor={(item) => item.id.toString()}
-    renderItem={({ item }) => (
+    renderItem={({ item, section }) => (
       <ChallengeItem
         item={item}
-        userId={userId}
-        alreadyAssigned={!!item.userChallengeId}
-        onAssigned={fetchData}
+        isUserChallenge={section.isUserChallenge}
       />
     )}
     renderSectionHeader={({ section: { title } }) => {
@@ -176,11 +211,17 @@ if (hasAssigned) {
       return (
         <TouchableOpacity
           onPress={() => {
-            if (isExpandable) setShowAll(prev => !prev);
+            if (isExpandable) setShowAll((prev) => !prev);
           }}
           style={{ marginVertical: 10 }}
         >
-          <AppText style={{ fontSize: 17, fontWeight: "bold", color: colors.text }}>
+          <AppText
+            style={{
+              fontSize: 17,
+              fontWeight: "bold",
+              color: colors.text,
+            }}
+          >
             {title}
           </AppText>
         </TouchableOpacity>
@@ -189,6 +230,8 @@ if (hasAssigned) {
     contentContainerStyle={{ paddingBottom: 100 }}
   />
 )}
+
+
 
       <FloatingButton
         onPress={() =>
@@ -204,13 +247,4 @@ if (hasAssigned) {
 
 export default ChallengesListScreen;
 
-const styles = StyleSheet.create({
-  addTagButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.buttonActive,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
 import { colors, spacing, radius } from "../../constants/theme";
 import { useHabitStore } from "../../app/stores/useHabitStore";
@@ -14,11 +14,7 @@ type HabitFormScreenProps = {
 };
 
 export default function HabitFormScreen({ editingId }: HabitFormScreenProps) {
-  const isEdit = typeof editingId === "number";
-
   const router = useRouter();
-  const params = useLocalSearchParams();
-  //const editingId = params?.id ? parseInt(params.id as string, 10) : null;
   const { createHabit, updateHabit, deleteHabit, loadDifficulties, difficulties } = useHabitStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -38,9 +34,6 @@ export default function HabitFormScreen({ editingId }: HabitFormScreenProps) {
   ];
 
   const [color, setColor] = useState<string>(colorPalette[0]);
-
-  const userId = 1;
-
 
 
   useEffect(() => {
@@ -82,7 +75,6 @@ const save = async () => {
       motivation_reason: why,
       color,
       difficulty_id: difficultyId,
-      user_id: userId,
     };
     try {
       if (editingId) {

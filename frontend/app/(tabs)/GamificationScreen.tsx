@@ -21,16 +21,22 @@ const SIZE = 180;
 const STROKE_WIDTH = 9;
 
 export default function GamificationScreen() {
-  const userId = 1;
 
   const { totalXp, currentLevel: level, fetchUser } =
     useGamificationStore();
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser();
+      fetchLogs();
+    }, [])
+  );
 
   const [xpLogs, setXpLogs] = useState<any[]>([]);
 
   const fetchLogs = async () => {
     try {
-      const res = await api.get(`/gamification/users/${userId}/`);
+      const res = await api.get("/gamification/me/");
       const sorted = (res.data.logs || []).sort(
         (a, b) =>
           new Date(b.created_at).getTime() -
@@ -44,7 +50,7 @@ export default function GamificationScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchUser(userId);
+      fetchUser();
       fetchLogs();
     }, [])
   );

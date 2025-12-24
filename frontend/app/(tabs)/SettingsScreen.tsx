@@ -3,9 +3,15 @@ import AppText from "../../components/AppText";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { colors, spacing } from "../../constants/theme";
 import { ScrollView } from "react-native-gesture-handler";
+import { useEffect } from "react";
 
 export default function SettingsScreen() {
-  const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleToggles } = useModuleSettingsStore();
+const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleToggles, fetchModules } =
+  useModuleSettingsStore();
+
+  useEffect(() => {
+  fetchModules();
+}, []);
 
   const capitalize = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);

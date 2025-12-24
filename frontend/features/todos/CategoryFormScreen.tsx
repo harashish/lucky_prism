@@ -19,6 +19,7 @@ export type CategoryFormScreenProps = {
 };
 
 export default function CategoryFormScreen({ editingId }: CategoryFormScreenProps) {
+  // do usunięcia
   const isEdit = typeof editingId === "number";
 
   const router = useRouter();

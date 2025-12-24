@@ -9,7 +9,6 @@ import { useGamificationStore } from "../../stores/useGamificationStore";
 
 export default function DailyActiveScreen() {
   const router = useRouter();
-  const userId = 1;
   const { fetchActive, activeDaily, discardUserChallenge, completeUserChallenge } = useChallengeStore();
   const [loading, setLoading] = useState(true);
 
@@ -18,7 +17,7 @@ export default function DailyActiveScreen() {
 
   useEffect(() => {
     const load = async () => {
-      await fetchActive(userId);
+      await fetchActive();
       setLoading(false);
     };
     load();
@@ -28,7 +27,7 @@ export default function DailyActiveScreen() {
     const ok = await discardUserChallenge(activeDaily?.id!);
     if (!ok) return Alert.alert("Error", "Could not discard the challenge");
 
-    await fetchActive(userId);
+    await fetchActive();
     const { activeDaily: latestActive } = useChallengeStore.getState();
     router.push(latestActive ? "/random/daily/active" : "/random/daily");
   };
@@ -42,7 +41,7 @@ export default function DailyActiveScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    await fetchActive(userId);
+    await fetchActive();
     router.push("/(tabs)/RandomHomeScreen");
   };
 

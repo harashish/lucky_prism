@@ -10,7 +10,7 @@ export type ModuleKey =
   | "gamification"
   | "notes";
 
-  export type DashboardTileKey =
+export type DashboardTileKey =
   | "level_gamification"
   | "biggest_streak"
   | "random_habit"
@@ -23,14 +23,12 @@ export type ModuleKey =
   | "random_note";
 
 type DashboardTileSetting = {
-  id: number; 
+  id: number;
   key: DashboardTileKey;
   name: string;
   is_enabled: boolean;
-  module_dependency?: ModuleKey; // jeśli tile zależy od modułu
+  module_dependency?: ModuleKey;
 };
-
-
 
 type ModuleSetting = {
   id: number;
@@ -50,16 +48,18 @@ type ModuleStore = {
   toggleTile: (id: DashboardTileKey, value: boolean) => void;
 };
 
-
 export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
   modules: null,
   raw: [],
   dashboardTiles: [],
   pendingModuleToggles: [],
 
- fetchModules: async () => {
+  /* ---------- LOAD ---------- */
+
+  fetchModules: async () => {
     if (get().modules) return;
-    const res = await api.get("/settings/modules/?user_id=1");
+
+    const res = await api.get("/settings/modules/");
 
     const modules: Record<ModuleKey, boolean> = {
       habits: false,
@@ -77,50 +77,78 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
 
     set({ modules, raw: res.data });
 
-    // pobierz tiles z backendu
+    // dashboard tiles
     try {
-      const tRes = await api.get("/settings/dashboard-tiles/?user_id=1");
+      const tRes = await api.get("/settings/dashboard-tiles/");
       set({ dashboardTiles: tRes.data });
     } catch (e) {
       console.warn("Can't load dashboard tiles:", e);
-      // fallback: zostaw pustą tablicę lub lokalny default
     }
   },
 
-  
+  /* ---------- MODULE TOGGLE ---------- */
 
-toggleModule: async (id, value) => {
-  const prevRaw = get().raw;
-  const prevModules = get().modules;
-  const changed = prevRaw.find(m => m.id === id);
-  // optimistic
-  const rawOptimistic = prevRaw.map(m => m.id === id ? { ...m, is_enabled: value } : m);
-  const modulesOptimistic = { ...(prevModules as Record<ModuleKey, boolean>) };
-  if (changed) modulesOptimistic[changed.module] = value;
+  toggleModule: async (id, value) => {
+    const prevRaw = get().raw;
+    const prevModules = get().modules;
 
-  // mark pending
-  set({ raw: rawOptimistic, modules: modulesOptimistic, pendingModuleToggles: [...get().pendingModuleToggles, id] });
+    const changed = prevRaw.find((m) => m.id === id);
 
-  try {
-    await api.patch(`/settings/modules/${id}/`, { is_enabled: value });
-    const tRes = await api.get("/settings/dashboard-tiles/?user_id=1");
-    set({ dashboardTiles: tRes.data });
-    set({ pendingModuleToggles: get().pendingModuleToggles.filter(x => x !== id) });
-  } catch (e) {
-    // rollback on error
-    set({ raw: prevRaw, modules: prevModules, pendingModuleToggles: get().pendingModuleToggles.filter(x => x !== id) });
-    console.error("toggleModule failed", e);
-  }
-},
+    // optimistic update
+    const rawOptimistic = prevRaw.map((m) =>
+      m.id === id ? { ...m, is_enabled: value } : m
+    );
 
-toggleTile: async (id: DashboardTileKey, value: boolean) => {
-    // zakładamy id jest numericznym pk gdy tiles pobrane z backendu
-    const tile = get().dashboardTiles.find((t:any) => t.key === id || t.id === id);
-    if (!tile) return;
+    const modulesOptimistic = { ...(prevModules as Record<ModuleKey, boolean>) };
+    if (changed) modulesOptimistic[changed.module] = value;
+
+    set({
+      raw: rawOptimistic,
+      modules: modulesOptimistic,
+      pendingModuleToggles: [...get().pendingModuleToggles, id],
+    });
+
     try {
-      await api.patch(`/settings/dashboard-tiles/${tile.id}/`, { is_enabled: value });
+      await api.patch(`/settings/modules/${id}/`, { is_enabled: value });
+
+      const tRes = await api.get("/settings/dashboard-tiles/");
+      set({ dashboardTiles: tRes.data });
+
       set({
-        dashboardTiles: get().dashboardTiles.map((t:any) =>
+        pendingModuleToggles: get().pendingModuleToggles.filter(
+          (x) => x !== id
+        ),
+      });
+    } catch (e) {
+      // rollback
+      set({
+        raw: prevRaw,
+        modules: prevModules,
+        pendingModuleToggles: get().pendingModuleToggles.filter(
+          (x) => x !== id
+        ),
+      });
+
+      console.error("toggleModule failed", e);
+    }
+  },
+
+  /* ---------- TILE TOGGLE ---------- */
+
+  toggleTile: async (id: DashboardTileKey, value: boolean) => {
+    const tile = get().dashboardTiles.find(
+      (t: any) => t.key === id || t.id === id
+    );
+
+    if (!tile) return;
+
+    try {
+      await api.patch(`/settings/dashboard-tiles/${tile.id}/`, {
+        is_enabled: value,
+      });
+
+      set({
+        dashboardTiles: get().dashboardTiles.map((t: any) =>
           t.id === tile.id ? { ...t, is_enabled: value } : t
         ),
       });

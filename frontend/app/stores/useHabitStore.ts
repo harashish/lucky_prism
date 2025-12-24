@@ -14,7 +14,6 @@ export interface Habit {
   motivation_reason?: string;
   color?: string;
   difficulty: { id: number; name: string; xp_value: number };
-  user: number;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -29,13 +28,29 @@ interface ToggleDayResponse {
   day?: any;
 }
 
+export interface BestHabitStreak {
+  habit_id: number | null;
+  title: string | null;
+  biggest_streak: number;
+  current_streak: number;
+}
+
+export interface RandomHabitSummary {
+  id: number;
+  title: string;
+  reason?: string;
+  done: number;
+  total: number;
+}
+
 
 interface HabitStore {
   habits: Habit[];
   loading: boolean;
   difficulties: { id: number; name: string; xp_value: number }[];
+  biggestStreak: BestHabitStreak | null;
 
-  loadMonth: (userId: number, month?: string) => Promise<void>;
+  loadMonth: (month?: string) => Promise<void>;
   loadDifficulties: () => Promise<void>;
 
   createHabit: (payload: any) => Promise<void>;
@@ -48,20 +63,25 @@ interface HabitStore {
     status?: number
   ) => Promise<ToggleDayResponse | null>;
 
+  getRandomHabitSummary: () => RandomHabitSummary | null;
+
+  fetchStreaks: () => Promise<BestHabitStreak | null>;
+
   resetHabits: () => void;
 }
+export const useHabitStore = create<HabitStore>((set, get) => ({
 
-export const useHabitStore = create<HabitStore>((set) => ({
   habits: [],
   loading: false,
   difficulties: [],
+  biggestStreak: null,
 
-  loadMonth: async (userId: number, month?: string) => {
+  loadMonth: async (month?: string) => {
     set({ loading: true });
     try {
       const url = month
-        ? `/habits/user-habits/${userId}/month/?month=${month}`
-        : `/habits/user-habits/${userId}/month/`;
+        ? `/habits/month/?month=${month}`
+        : `/habits/month/`;
 
       const res = await api.get(url);
       set({ habits: res.data.habits || [] });
@@ -144,6 +164,37 @@ export const useHabitStore = create<HabitStore>((set) => ({
     }
   },
 
+  fetchStreaks: async () => {
+    try {
+      const res = await api.get("/habits/streaks/");
+      set({ biggestStreak: res.data });
+      return res.data;
+    } catch (e) {
+      console.error("Error fetching habit streaks:", e);
+      return null;
+    }
+  },
+
+  getRandomHabitSummary: () => {
+    const habits = get().habits;
+
+    if (!habits || habits.length === 0) return null;
+
+    const h = habits[Math.floor(Math.random() * habits.length)];
+
+    const done =
+      h.days?.filter((d) => d.status === 2).length ?? 0;
+
+    const total = h.days?.length ?? 0;
+
+    return {
+      id: h.id,
+      title: h.title,
+      reason: h.motivation_reason,
+      done,
+      total,
+    };
+  },
 
   resetHabits: () => set({ habits: [] }),
 }));

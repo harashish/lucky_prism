@@ -1,444 +1,275 @@
-// frontend/app/(tabs)/DashboardScreen.tsx
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
-  TouchableOpacity,
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import AppText from "../../components/AppText";
 import { colors, spacing } from "../../constants/theme";
 import { useRouter } from "expo-router";
-import { api } from "../api/apiClient";
-import { DashboardTileKey, useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useFocusEffect } from "@react-navigation/native";
+
+import { DashboardTileKey, useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
-
-
-const userId = 1;
+import { useChallengeStore } from "../stores/useChallengeStore";
+import { RandomHabitSummary, useHabitStore } from "../stores/useHabitStore";
+import { useGoalStore } from "../stores/useGoalStore";
+import { useTodoStore } from "../stores/useTodoStore";
+import { useNotesStore } from "../stores/useNotesStore";
+import { LevelTile } from "../../components/dashboard/LevelTile";
+import { BiggestStreakTile } from "../../components/dashboard/BiggestStreak";
+import { RandomGoalTile } from "../../components/dashboard/RandomGoalTile";
+import { DailyChallengeTile } from "../../components/dashboard/DailyChallengeTile";
+import { WeeklyChallengeTile } from "../../components/dashboard/WeeklyChallengeTile";
+import { RandomTodoTile } from "../../components/dashboard/RandomTodoTile";
+import { RandomNoteTile } from "../../components/dashboard/RandomNoteTile";
+import { RandomHabitTile } from "../../components/dashboard/RandomHabitTile";
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { dashboardTiles } = useModuleSettingsStore();
 
+  /* ===== STORES ===== */
+  const { dashboardTiles, modules, fetchModules } = useModuleSettingsStore();
+
+  const {
+    totalXp,
+    currentLevel: level,
+    fetchUser,
+  } = useGamificationStore();
+
+  const {
+    fetchActive,
+    activeDaily,
+    activeWeekly,
+  } = useChallengeStore();
+
+  const {
+    fetchStreaks,
+    biggestStreak,
+    loadMonth,
+  } = useHabitStore();
+
+  const { pickRandomGoal } = useGoalStore();
+  const { pickRandomTask } = useTodoStore();
+  const { randomNote, refreshRandomNote } = useNotesStore();
+
+  /* ===== LOCAL UI STATE ===== */
   const [loading, setLoading] = useState(true);
-  const { totalXp, currentLevel: level } = useGamificationStore();
-  const [biggestStreak, setBiggestStreak] = useState<any>(null);
-  const [goalWeek, setGoalWeek] = useState<any>(null);
-  const [goalMonth, setGoalMonth] = useState<any>(null);
-  const [goalYear, setGoalYear] = useState<any>(null);
-  const [randomTodo, setRandomTodo] = useState<any>(null);
-  const [randomHabit, setRandomHabit] = useState<any>(null);
-  const [activeDaily, setActiveDaily] = useState<any | null>(null);
-  const [activeWeekly, setActiveWeekly] = useState<any[]>([]);
-  const [randomNote, setRandomNote] = useState<any | null>(null);
-  
+  const [goalWeek, setGoalWeek] = useState<any | null>(null);
+  const [goalMonth, setGoalMonth] = useState<any | null>(null);
+  const [goalYear, setGoalYear] = useState<any | null>(null);
+  const [randomTodo, setRandomTodo] = useState<any | null>(null);
+  const [randomHabit, setRandomHabit] = useState<RandomHabitSummary | null>(null);
 
-  const GOAL_TILES: DashboardTileKey[] = [
-    "goal_week",
-    "goal_month",
-    "goal_year",
+
+  const GOAL_CONFIG: {
+    key: DashboardTileKey;
+    label: string;
+    goal: any | null;
+  }[] = [
+    {
+      key: "goal_week",
+      label: "Random week goal",
+      goal: goalWeek,
+    },
+    {
+      key: "goal_month",
+      label: "Random month goal",
+      goal: goalMonth,
+    },
+    {
+      key: "goal_year",
+      label: "Random year goal",
+      goal: goalYear,
+    },
   ];
 
 
-  const { modules } = useModuleSettingsStore();
-  const fetchRandomTodo = async () => {
-    try {
-      const res = await api.get(`/todos/tasks/random/?user_id=${userId}`);
-      setRandomTodo(res.data);
-    } catch {
-      setRandomTodo(null);
-    }
-  };
-
-
-const fetchRandomNote = async () => {
-  try {
-    const res = await api.get("/notes/random/");
-    setRandomNote(res.data);
-  } catch {
-    setRandomNote(null);
-  }
-};
-
+  /* ===== FETCH ORCHESTRATION ===== */
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-
-      const st = await api.get(`/habits/user-habits/${userId}/streaks/`);
-      setBiggestStreak(st.data);
-
-      const pick = (arr: any[]) => arr?.length ? arr[Math.floor(Math.random() * arr.length)] : null;
-
-      const [gw, gm, gy] = await Promise.all([
-        api.get(`/goals/user-goals/${userId}/?period=weekly`),
-        api.get(`/goals/user-goals/${userId}/?period=monthly`),
-        api.get(`/goals/user-goals/${userId}/?period=yearly`),
+      await Promise.all([
+        fetchModules?.(),
+        fetchUser?.(),
+        fetchActive?.(),
+        fetchStreaks?.(),
+        refreshRandomNote?.(),
+        loadMonth?.(),
       ]);
 
-      setGoalWeek(pick(gw.data));
-      setGoalMonth(pick(gm.data));
-      setGoalYear(pick(gy.data));
+      const [gw, gm, gy] = await Promise.all([
+        pickRandomGoal?.("weekly"),
+        pickRandomGoal?.("monthly"),
+        pickRandomGoal?.("yearly"),
+      ]);
 
-      await fetchRandomTodo();
+      setGoalWeek(gw ?? null);
+      setGoalMonth(gm ?? null);
+      setGoalYear(gy ?? null);
 
-      const ac = await api.get(`/challenges/active/${userId}/`);
-      setActiveDaily(ac.data.daily ?? null);
-      setActiveWeekly(ac.data.weekly ?? []);
+      const todo = await pickRandomTask?.();
+      setRandomTodo(todo ?? null);
 
-      const hm = await api.get(`/habits/user-habits/${userId}/month/?month=${new Date().toISOString().slice(0, 7)}`);
-      if (hm.data.habits?.length) {
-        const h = pick(hm.data.habits);
-        setRandomHabit({
-          id: h.id,
-          title: h.title,
-          reason: h.motivation_reason,
-          done: h.days.filter((d: any) => d.status === 2).length,
-          total: h.days.length,
-        });
-      }
+      const rh = useHabitStore.getState().getRandomHabitSummary();
+      setRandomHabit(rh);
 
-      try {
-        const rn = await api.get("/notes/random/");
-        setRandomNote(rn.data);
-      } catch {
-        setRandomNote(null);
-      }
     } catch (e) {
-      console.error(e);
+      console.error("Dashboard fetch error:", e);
     } finally {
       setLoading(false);
     }
   }, []);
 
-    useFocusEffect(
+  useFocusEffect(
     useCallback(() => {
       fetchAll();
-    }, [])
+    }, [fetchAll])
   );
 
-  const xpForLevel = (lvl: number) => 50 * lvl * (lvl - 1);
-  const xpRemaining = Math.max(0, xpForLevel(level + 1) - totalXp);
 
-  const onLongPressActiveChallenge = (challengeId: number) => {
-    router.push({ pathname: "/editChallenge/[id]", params: { id: String(challengeId) } });
+  const canRenderTile = (key: DashboardTileKey) => {
+    const tile = dashboardTiles?.find(
+      (t: any) => t.key === key || t.id === key
+    );
+    if (!tile || !tile.is_enabled) return false;
+
+    if (tile.module_dependency) {
+      return modules?.[tile.module_dependency] === true;
+    }
+
+    return true;
   };
 
+  /* ===== LOADING ===== */
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.buttonActive} />
       </View>
     );
   }
 
-  const canRenderTile = (key: DashboardTileKey) => {
-  const tile = dashboardTiles?.find(
-    (t:any) => t.key === key || t.id === key
-  );
-  if (!tile || !tile.is_enabled) return false;
-
-  if (tile.module_dependency) {
-    return modules?.[tile.module_dependency] === true;
-  }
-
-  return true;
-};
-
-
-
   return (
     <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background}} contentContainerStyle={{
-    paddingBottom: 30,
-  }}>
+      paddingBottom: 30,
+    }}>
 
-      {/* LEVEL */}
-{canRenderTile("level_gamification") && (
-  <TouchableOpacity
-    onPress={() => router.push("/GamificationScreen")}
-    style={{ backgroundColor: colors.card, padding: 16, borderRadius: 12, marginBottom: 20 }}
-  >
-    {/* Nagłówek: Level i XP */}
-    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
-      <AppText style={{ fontSize: 18, fontWeight: "700" }}>Lv {level}</AppText>
-      <AppText style={{ fontSize: 14, color: "#777" }}>{xpRemaining} XP to next level</AppText>
-    </View>
-
-    {/* Pasek postępu */}
-    <View style={{ height: 12, backgroundColor: "#eee", borderRadius: 6, overflow: "hidden" }}>
-      <View
-        style={{
-          width: `${Math.min(100, Math.round(((totalXp - xpForLevel(level)) / (xpForLevel(level + 1) - xpForLevel(level))) * 100))}%`,
-          height: 12,
-          backgroundColor: colors.buttonActive,
-        }}
-      />
-    </View>
-  </TouchableOpacity>
-)}
-
-
-{/* BIGGEST STREAK */}
-{canRenderTile("biggest_streak") && (
-  <TouchableOpacity
-    onPress={() => router.push("/HabitsScreen")}
-    onLongPress={() => biggestStreak?.habit_id && router.push({ pathname: "/editHabit/[id]", params: { id: String(biggestStreak.habit_id) } })}
-    style={{ backgroundColor: colors.card, padding: 12, borderRadius: 12, marginBottom: 12 }}
-  >
-    <AppText style={{ fontWeight: "700" }}>Biggest streak</AppText>
-    {biggestStreak && biggestStreak?.title ? (
-      <AppText>{biggestStreak.title} • {biggestStreak.biggest_streak} dni</AppText>
-    ) : (
-      <AppText style={{ opacity: 0.6 }}>no streak</AppText>
-    )}
-  </TouchableOpacity>
-)}
-
-
-{/* GOALS */}
-{GOAL_TILES.map((key, idx) => {
-  const goal = [goalWeek, goalMonth, goalYear][idx];
-  const label = ["Random week goal", "Random month goal", "Random year goal"][idx];
-
-  if (!canRenderTile(key) || !goal) return null;
-
-  return (
-    <View key={key} style={{ marginBottom: 16 }}>
-      {/* HEADER – poza tile */}
-      <AppText style={{ fontWeight: "700", marginBottom: 8 }}>
-        {label}
-      </AppText>
-
-      {/* TILE – tylko treść */}
-      <TouchableOpacity
-        onPress={() =>
-          router.push({
-            pathname: "/editGoal/[id]",
-            params: { id: String(goal.id) },
-          })
-        }
-        style={{
-          backgroundColor: colors.card,
-          padding: 12,
-          borderRadius: 12,
-        }}
-      >
-        <AppText style={{ fontWeight: "600" }}>
-          {goal.title}
-        </AppText>
-
-        {goal.motivation_reason && (
-          <AppText
-            style={{
-              fontSize: 13,
-              opacity: 0.7,
-              marginTop: 4,
-            }}
-          >
-            {goal.motivation_reason}
-          </AppText>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-})}
-
-
-      {/* DAILY CHALLENGE */}
-      {canRenderTile("daily_challenge") && (
-        <View style={{ marginBottom: 12 }}>
-          <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Daily challenge</AppText>
-          {activeDaily ? (
-            <TouchableOpacity onPress={() => router.push("/random/daily/active")} onLongPress={() => onLongPressActiveChallenge(activeDaily.challenge.id)}
-              style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10 }}>
-              <AppText style={{ fontWeight: "700" }}>{activeDaily.challenge?.title}</AppText>
-              <AppText numberOfLines={2}>{activeDaily.challenge?.description}</AppText>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => router.push("/random/daily")} style={{ backgroundColor: colors.buttonActive, padding: 12, borderRadius: 10 }}>
-              <AppText style={{ color: "#fff", fontWeight: "700" }}>Randomize challenge</AppText>
-            </TouchableOpacity>
-          )}
-        </View>
+      {canRenderTile("level_gamification") && (
+        <LevelTile
+          level={level}
+          totalXp={totalXp}
+          onPress={() => router.push("/GamificationScreen")}
+        />
       )}
 
-      {/* WEEKLY CHALLENGE */}
-      {canRenderTile("weekly_challenge") && (
-        <View style={{ marginBottom: 12 }}>
-          <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Week challenge</AppText>
-          {activeWeekly && activeWeekly.length > 0 ? (
-            activeWeekly.map((uc: any) => {
-              const days = uc.progress_days ?? 1;
-                return (
-                <TouchableOpacity
-                  key={uc.id}
-                  onPress={() => router.push("/random/weekly/active")}
-                  onLongPress={() => onLongPressActiveChallenge(uc.challenge.id)}
-                  style={{
-                    backgroundColor: colors.card,
-                    padding: 12,
-                    borderRadius: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <AppText style={{ fontWeight: "700" }}>
-                    {uc.challenge?.title}
-                  </AppText>
 
-                  <View
-                    style={{
-                      height: 8,
-                      backgroundColor: colors.light,
-                      borderRadius: 6,
-                      overflow: "hidden",
-                      marginTop: 8,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: `${(days / 7) * 100}%`,
-                        height: 8,
-                        backgroundColor: colors.buttonActive,
-                      }}
-                    />
-                  </View>
-
-                  <AppText style={{ marginTop: 6 }}>
-                    {days}/7 dni
-                  </AppText>
-                </TouchableOpacity>
-              );
+      {canRenderTile("biggest_streak") && (
+        <BiggestStreakTile
+          streak={biggestStreak}
+          onPress={() => router.push("/HabitsScreen")}
+          onEditHabit={(id) =>
+            router.push({
+              pathname: "/editHabit/[id]",
+              params: { id: String(id) },
             })
-          ) : (
-            <TouchableOpacity
-              onPress={() => router.push("/random/weekly")}
-              style={{
-                backgroundColor: colors.buttonActive,
-                padding: 12,
-                borderRadius: 10,
-              }}
-            >
-              <AppText style={{ color: "#fff", fontWeight: "700" }}>
-                Randomize challenge
-              </AppText>
-            </TouchableOpacity>
-          )}
-
-        </View>
-      )}
-
-      {/* RANDOM TODO */}
-{canRenderTile("random_todo") && randomTodo && (
-  <View style={{ marginBottom: 16 }}>
-    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>
-      Random todo
-    </AppText>
-
-    <TouchableOpacity
-      onPress={fetchRandomTodo}
-      onLongPress={() =>
-        router.push({
-          pathname: "/editTodo/[id]",
-          params: { id: String(randomTodo.id) },
-        })
-      }
-      style={{
-        backgroundColor: colors.card,
-        padding: 12,
-        borderRadius: 12,
-      }}
-    >
-      <AppText>{randomTodo.content}</AppText>
-    </TouchableOpacity>
-  </View>
-)}
-
-
-{/* RANDOM NOTE */}
-{canRenderTile("random_note") && (
-  <View style={{ marginBottom: 16 }}>
-    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Note</AppText>
-
-    <View style={{ flexDirection: "row", alignItems: "stretch" }}>
-      {randomNote ? (
-        <TouchableOpacity
-          onPress={fetchRandomNote}
-          onLongPress={() =>
-            router.push({ pathname: "/editNote/[id]", params: { id: randomNote.id } })
           }
-          style={{
-            flex: 1,
-            backgroundColor: colors.card,
-            padding: 14,
-            borderRadius: 12,
-            marginRight: 8,
-          }}
-        >
-          <AppText>{randomNote.content}</AppText>
-        </TouchableOpacity>
-      ) : (
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: colors.card,
-            padding: 14,
-            borderRadius: 12,
-            marginRight: 8,
-            justifyContent: "center",
-          }}
-        >
-          <AppText style={{ opacity: 0.6 }}>No notes</AppText>
-        </View>
+        />
       )}
 
-      <TouchableOpacity
-        onPress={() => router.push("/addNote")}
-        style={{
-          width: 44,
-          borderRadius: 10,
-          backgroundColor: colors.buttonActive,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <AppText style={{ color: "#fff", fontSize: 22 }}>＋</AppText>
-      </TouchableOpacity>
-    </View>
-  </View>
-)}
+      {GOAL_CONFIG.map(({ key, label, goal }) =>
+          canRenderTile(key) ? (
+            <RandomGoalTile
+              key={key}
+              label={label}
+              goal={goal}
+              onPress={() =>
+                router.push({
+                  pathname: "/editGoal/[id]",
+                  params: { id: String(goal.id) },
+                })
+              }
+            />
+          ) : null
+        )}
 
-      {/* RANDOM HABIT */}
-      {canRenderTile("random_habit") && randomHabit && (
-  <>
-    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Random habit</AppText>
-    <TouchableOpacity
-      onPress={() => router.push("/HabitsScreen")}
-      onLongPress={() =>
-        router.push({ pathname: "/editHabit/[id]", params: { id: String(randomHabit.id) } })
-      }
-      style={{ backgroundColor: colors.card, padding: 12, borderRadius: 12 }}
-    >
-      <AppText style={{ fontWeight: "600" }}>
-  {randomHabit.title}
-</AppText>
+        {canRenderTile("daily_challenge") && (
+          <DailyChallengeTile
+            activeDaily={activeDaily}
+            onGoToActive={() => router.push("/random/daily/active")}
+            onRandomize={() => router.push("/random/daily")}
+            onEdit={(id) =>
+              router.push({
+                pathname: "/editChallenge/[id]",
+                params: { id: String(id) },
+              })
+            }
+          />
+        )}
 
-{randomHabit.reason ? (
-  <AppText style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>
-    {randomHabit.reason}
-  </AppText>
-) : null}
+        {canRenderTile("weekly_challenge") && (
+          <WeeklyChallengeTile
+            activeWeekly={activeWeekly}
+            onGoToActive={() => router.push("/random/weekly/active")}
+            onRandomize={() => router.push("/random/weekly")}
+            onEdit={(id) =>
+              router.push({
+                pathname: "/editChallenge/[id]",
+                params: { id: String(id) },
+              })
+            }
+          />
+        )}
 
-      <AppText style={{ marginTop: 6 }}>
-        {randomHabit.done} / {randomHabit.total} days
-      </AppText>
-    </TouchableOpacity>
-  </>
-)}
+        {canRenderTile("random_todo") && (
+          <RandomTodoTile
+            todo={randomTodo}
+            onRefresh={async () => {
+              const todo = await pickRandomTask?.();
+              setRandomTodo(todo ?? null);
+            }}
+            onEdit={(id) =>
+              router.push({
+                pathname: "/editTodo/[id]",
+                params: { id: String(id) },
+              })
+            }
+          />
+        )}
 
+        {canRenderTile("random_note") && (
+          <RandomNoteTile
+            note={randomNote}
+            onRefresh={refreshRandomNote}
+            onEdit={(id) =>
+              router.push({
+                pathname: "/editNote/[id]",
+                params: { id: String(id) },
+              })
+            }
+            onAdd={() => router.push("/addNote")}
+          />
+        )}
 
-
+        {canRenderTile("random_habit") && (
+          <RandomHabitTile
+            habit={randomHabit}
+            onOpenHabits={() => router.push("/HabitsScreen")}
+            onEdit={(id) =>
+              router.push({
+                pathname: "/editHabit/[id]",
+                params: { id: String(id) },
+              })
+            }
+          />
+        )}
 
     </ScrollView>
-    
   );
 }

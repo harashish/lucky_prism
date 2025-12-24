@@ -1,6 +1,8 @@
 from django.db import models
 
 class Habit(models.Model):
+
+    # POMYŚLEĆ CZY ZOSTAWIĆ
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
     title = models.CharField(max_length=70)
     description = models.TextField(blank=True)

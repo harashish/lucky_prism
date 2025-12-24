@@ -3,27 +3,40 @@ from .views import (
     ChallengeListCreate,
     ChallengeDetail,
     ChallengeTagListCreate,
-    ChallengeTypeListCreate,
-    CompleteUserChallengeView,
-    AssignChallengeView,
-    UserChallengeList,
-    RandomChallengeView,
-    DiscardUserChallengeView,
-    ActiveChallengesView,
     ChallengeTagDetail,
+    ChallengeTypeListCreate,
+    AssignChallengeView,
+    RandomChallengeView,
+    ActiveChallengesView,
+    CompleteUserChallengeView,
+    DiscardUserChallengeView,
 )
 
 urlpatterns = [
-    path("", ChallengeListCreate.as_view()),
-    path("<int:pk>/", ChallengeDetail.as_view()),
-    path("tags/", ChallengeTagListCreate.as_view()),
-    path("tags/<int:pk>/", ChallengeTagDetail.as_view(), name="tag-detail"),
-    path("types/", ChallengeTypeListCreate.as_view()),
-    path("assign/", AssignChallengeView.as_view()),
-    path("random/", RandomChallengeView.as_view()),
-    path("active/<int:user_id>/", ActiveChallengesView.as_view()),
-    path("user-challenges/<int:pk>/complete/", CompleteUserChallengeView.as_view()),
-    path("user-challenges/<int:pk>/discard/", DiscardUserChallengeView.as_view()),
-    path("user-challenges/<int:user_id>/", UserChallengeList.as_view()),
-]
+    # --- challenge definitions ---
+    path("", ChallengeListCreate.as_view(), name="challenge-list"),
+    path("<int:pk>/", ChallengeDetail.as_view(), name="challenge-detail"),
 
+    # --- tags ---
+    path("tags/", ChallengeTagListCreate.as_view(), name="challenge-tags"),
+    path("tags/<int:pk>/", ChallengeTagDetail.as_view(), name="challenge-tag-detail"),
+
+    # --- types (daily / weekly) ---
+    path("types/", ChallengeTypeListCreate.as_view(), name="challenge-types"),
+
+    # --- user challenge actions ---
+    path("assign/", AssignChallengeView.as_view(), name="challenge-assign"),
+    path("random/", RandomChallengeView.as_view(), name="challenge-random"),
+    path("active/", ActiveChallengesView.as_view(), name="challenge-active"),
+
+    path(
+        "user-challenges/<int:pk>/complete/",
+        CompleteUserChallengeView.as_view(),
+        name="user-challenge-complete",
+    ),
+    path(
+        "user-challenges/<int:pk>/discard/",
+        DiscardUserChallengeView.as_view(),
+        name="user-challenge-discard",
+    ),
+]

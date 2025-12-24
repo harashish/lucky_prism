@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-
-export interface DifficultyType { id: number; name: string;}
+export interface DifficultyType {
+  id: number;
+  name: string;
+}
 
 export interface TodoCategory {
   id: number;
@@ -13,7 +15,6 @@ export interface TodoCategory {
 
 export interface TodoTask {
   id: number;
-  user: number;
   content: string;
   is_default: boolean;
   custom_difficulty?: DifficultyType | null;
@@ -27,16 +28,32 @@ interface TodoStore {
   tasks: TodoTask[];
   loading: boolean;
 
+  selectedCategoryId: number | null;
+
   loadCategories: () => Promise<void>;
-  loadTasks: (userId: number, categoryId: number) => Promise<void>;
+  loadTasks: (categoryId: number) => Promise<void>;
 
   addCategory: (payload: any) => Promise<TodoCategory | null>;
   saveCategory: (id: number, payload: any) => Promise<boolean>;
   deleteCategory: (id: number) => Promise<boolean>;
-  quickAddTask: (userId: number, categoryId: number, content: string, customDifficultyId?: number | null) => Promise<TodoTask | null>;
-  completeTask: (taskId: number) => Promise<{ xp_gained: number; total_xp: number; current_level: number } | null>;
+
+  quickAddTask: (
+    categoryId: number,
+    content: string,
+    customDifficultyId?: number | null
+  ) => Promise<TodoTask | null>;
+
+  completeTask: (
+    taskId: number
+  ) => Promise<{ xp_gained: number; total_xp: number; current_level: number } | null>;
+
   deleteTask: (taskId: number) => Promise<boolean>;
-  selectedCategoryId: number | null;
+
+  pickRandomTask: (categoryId?: number) => Promise<TodoTask | null>;
+
+  hasTasksInSelectedCategory: boolean | null;
+  checkCategoryHasTasks: (categoryId: number) => Promise<void>;
+
   setSelectedCategoryId: (id: number | null) => void;
 }
 
@@ -44,6 +61,10 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   categories: [],
   tasks: [],
   loading: false,
+  selectedCategoryId: null,
+  hasTasksInSelectedCategory: null,
+
+  // -------- categories --------
 
   loadCategories: async () => {
     set({ loading: true });
@@ -51,38 +72,18 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       const res = await api.get<TodoCategory[]>("/todos/categories/");
       set({ categories: res.data });
     } catch (e: any) {
-      console.error("loadCategories", e.response?.data || e.message || e);
+      console.error("loadCategories", e);
     } finally {
       set({ loading: false });
     }
   },
-
-loadTasks: async (userId, categoryId) => {
-  if (!categoryId) {
-    console.warn("loadTasks called without categoryId");
-    return;
-  }
-
-  set({ loading: true });
-  try {
-    const res = await api.get<TodoTask[]>("/todos/tasks/", {
-      params: { user_id: userId, category_id: categoryId },
-    });
-    set({ tasks: res.data });
-  } catch (e) {
-    console.error(e);
-  } finally {
-    set({ loading: false });
-  }
-},
-
 
   addCategory: async (payload) => {
     try {
       const res = await api.post("/todos/categories/", payload);
       await get().loadCategories();
       return res.data;
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       return null;
     }
@@ -93,7 +94,7 @@ loadTasks: async (userId, categoryId) => {
       await api.patch(`/todos/categories/${id}/`, payload);
       await get().loadCategories();
       return true;
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       return false;
     }
@@ -105,75 +106,103 @@ loadTasks: async (userId, categoryId) => {
     return true;
   },
 
+  // -------- tasks --------
 
-quickAddTask: async (userId, categoryId, content, customDifficultyId = null) => {
-  try {
-    const payload: any = { 
-      user_id: userId, 
-      category_id: categoryId, 
-      content, 
-      custom_difficulty_id: customDifficultyId ?? null 
-    };
-    const res = await api.post("/todos/tasks/", payload);
-    await get().loadTasks(userId, categoryId);
-    return res.data;
-  } catch (e: any) {
-    console.error(e);
-    return null;
-  }
-},
+  loadTasks: async (categoryId: number) => {
+    if (!categoryId) return;
 
+    set({ loading: true });
+    try {
+      const res = await api.get<TodoTask[]>("/todos/tasks/", {
+        params: { category_id: categoryId },
+      });
+      set({
+        tasks: res.data,
+        hasTasksInSelectedCategory: res.data.length > 0,
+      });
+    } catch (e) {
+      console.error(e);
+      set({ hasTasksInSelectedCategory: false });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  quickAddTask: async (categoryId, content, customDifficultyId = null) => {
+    try {
+      const res = await api.post("/todos/tasks/", {
+        category_id: categoryId,
+        content,
+        custom_difficulty_id: customDifficultyId,
+      });
+      await get().loadTasks(categoryId);
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  },
 
   completeTask: async (taskId) => {
-  try {
-    const res = await api.post(`/todos/tasks/${taskId}/complete/`);
+    try {
+      const res = await api.post(`/todos/tasks/${taskId}/complete/`);
+      const task = get().tasks.find(t => t.id === taskId);
+      if (task) {
+        await get().loadTasks(task.category.id);
+      }
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  },
 
-    const currentTasks = get().tasks;
-    const task = currentTasks.find(t => t.id === taskId);
-    const categoryId = task?.category?.id;
+  deleteTask: async (taskId) => {
+    try {
+      const task = get().tasks.find(t => t.id === taskId);
+      await api.delete(`/todos/tasks/${taskId}/`);
+      if (task) {
+        await get().loadTasks(task.category.id);
+      }
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  },
 
-    await get().loadTasks(1, categoryId);
-    return res.data;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-},
+  // -------- random --------
 
-deleteTask: async (taskId) => {
-  try {
-    const tasks = get().tasks;
-    const task = tasks.find(t => t.id === taskId);
-    const categoryId = task?.category?.id;
+  pickRandomTask: async (categoryId) => {
+    try {
+      const res = await api.get<TodoTask>("/todos/tasks/random/", {
+        params: categoryId ? { category_id: categoryId } : {},
+      });
+      return res.data || null;
+    } catch (e) {
+      console.error("pickRandomTask", e);
+      return null;
+    }
+  },
 
-    await api.delete(`/todos/tasks/${taskId}/`);
-    await get().loadTasks(1, categoryId);
+  checkCategoryHasTasks: async (categoryId) => {
+    try {
+      const res = await api.get<TodoTask[]>("/todos/tasks/", {
+        params: { category_id: categoryId },
+      });
+      set({ hasTasksInSelectedCategory: res.data.length > 0 });
+    } catch (e) {
+      console.error("checkCategoryHasTasks", e);
+      set({ hasTasksInSelectedCategory: false });
+    }
+  },
 
-    return true;
-  } catch (e) {
-    console.error(e);
-    return false;
-  }
-},
+  // -------- selection --------
 
-randomTask: async (userId = 1, categoryId?: number) => {
-  try {
-    const params: any = { user_id: userId };
-    if (categoryId) params.category_id = categoryId;
-
-    const res = await api.get<TodoTask[]>("/todos/tasks/", { params });
-    const list = res.data;
-    if (!list.length) return null;
-
-    return list[Math.floor(Math.random() * list.length)];
-  } catch (e: any) {
-    console.log("randomTask error:", e.response?.data || e.message);
-    return null;
-  }
-},
-selectedCategoryId: null,
-
-setSelectedCategoryId: (id) => set({ selectedCategoryId: id }),
-
-
+  setSelectedCategoryId: (id) =>
+    set({
+      selectedCategoryId: id,
+      tasks: [],
+      hasTasksInSelectedCategory: null,
+    }),
 }));

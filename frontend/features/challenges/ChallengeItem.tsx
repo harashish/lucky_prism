@@ -1,125 +1,150 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
-import { useChallengeStore, ChallengeWithUserInfo } from "../../app/stores/useChallengeStore";
+import { useChallengeStore } from "../../app/stores/useChallengeStore";
 import AppText from "../../components/AppText";
 import { colors, components } from "../../constants/theme";
-import { api } from "../../app/api/apiClient";
 import { useModuleSettingsStore } from "../../app/stores/useModuleSettingsStore";
 import { useGamificationStore } from "../../app/stores/useGamificationStore";
 import { ItemHeader } from "../../components/ItemHeader";
 import { ItemDetails } from "../../components/ItemDetails";
 
 type Props = {
-  item: ChallengeWithUserInfo;
-  onLongPress?: (item: ChallengeWithUserInfo) => void;
-  userId?: number;
-  alreadyAssigned?: boolean;
-  onAssigned?: () => void;
+  item: any; // Challenge OR UserChallenge – zgodnie z nowym screenem
+  isUserChallenge: boolean;
 };
 
-export default function ChallengeItem({ item, userId, alreadyAssigned, onAssigned }: Props) {
+export default function ChallengeItem({ item, isUserChallenge }: Props) {
   const [expanded, setExpanded] = useState(false);
+
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
- const assignChallenge = async () => {
-    if (!userId) return;
-    try {
-      await api.post("/challenges/assign/", { user: userId, challenge: item.id });
-      onAssigned?.();
-    } catch (e: any) {
-      const detail = e.response?.data?.detail;
-      if (detail === "Active daily challenge already exists") {
-        Alert.alert("Error", "You already have an active Daily challenge!");
-      } else if (detail === "Active weekly challenge already exists") {
-        Alert.alert("Error", "You already have an active Weekly challenge!");
-      } else {
-        Alert.alert("Error", "Cannot assign challenge.");
-      }
+  const {
+    assignChallenge,
+    completeUserChallenge,
+    fetchActive,
+  } = useChallengeStore();
+
+  /* ---------- ACTIONS ---------- */
+
+  const onAssign = async () => {
+    const res = await assignChallenge(item.id);
+    if (!res) {
+      Alert.alert("Error", "Cannot assign challenge.");
     }
   };
 
-  const completeChallenge = async () => {
-    if (!item.userChallengeId || !userId) return;
+  const onComplete = async () => {
+    const res = await completeUserChallenge(item.id);
 
-    try {
-      const res = await api.post(`/challenges/user-challenges/${item.userChallengeId}/complete/`);
-      const data = res.data;
-
-      if (gamificationOn && data && data.xp_gained && data.xp_gained > 0) {
-        useGamificationStore.getState().applyXpResult(data);
-      }
-
-      const { userChallenges } = useChallengeStore.getState();
-      useChallengeStore.setState({
-        userChallenges: userChallenges.filter(uc => uc.id !== item.userChallengeId),
-      });
-
-      onAssigned?.();
-    } catch (err) {
+    if (!res) {
       Alert.alert("Error", "Cannot complete challenge.");
+      return;
     }
+
+    if (gamificationOn && res.xp_gained > 0) {
+      useGamificationStore.getState().applyXpResult(res);
+    }
+
+    await fetchActive();
   };
+
+  /* ---------- WEEKLY PROGRESS ---------- */
 
   const days =
-  item.challenge_type === "Weekly"
-    ? item.progress_days ?? 1
-    : null;
+    isUserChallenge && item.challenge_type?.name === "weekly"
+      ? item.progress_days ?? 1
+      : null;
+
+  /* ---------- RENDER ---------- */
 
   return (
     <TouchableOpacity
-      onPress={() => setExpanded(prev => !prev)}
+      onPress={() => setExpanded((prev) => !prev)}
       onLongPress={() => router.push(`/editChallenge/${item.id}`)}
       delayLongPress={300}
     >
       <View style={components.container}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-      <ItemHeader
-          title={item.title}
-          difficulty={item.difficulty?.name}
-        />
-      <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8, flexShrink: 0, gap: 8 }}>
-        {userId && !alreadyAssigned && (
-          <TouchableOpacity onPress={assignChallenge} style={components.addButton}>
-            <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
-          </TouchableOpacity>
-        )}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <ItemHeader
+            title={isUserChallenge ? item.challenge.title : item.title}
+            difficulty={
+              isUserChallenge
+                ? item.challenge.difficulty?.name
+                : item.difficulty?.name
+            }
+          />
 
-        {userId && alreadyAssigned && (
-          <>
-            <TouchableOpacity onPress={completeChallenge} style={components.completeButton}>
-              <AppText style={{ color: "#fff", fontSize: 14 }}>Complete</AppText>
-            </TouchableOpacity>
-          </>
-        )}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginLeft: 8,
+              flexShrink: 0,
+              gap: 8,
+            }}
+          >
+            {!isUserChallenge && (
+              <TouchableOpacity onPress={onAssign} style={components.addButton}>
+                <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+              </TouchableOpacity>
+            )}
+
+            {isUserChallenge && (
+              <TouchableOpacity
+                onPress={onComplete}
+                style={components.completeButton}
+              >
+                <AppText style={{ color: "#fff", fontSize: 14 }}>
+                  Complete
+                </AppText>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-     </View>
 
-      {/* Weekly progress bar */}
-      {alreadyAssigned && days != null && item.challenge_type === "Weekly" && (
-        <>
-          <View style={{ height: 8, backgroundColor: colors.light, borderRadius: 4, marginVertical: 8 }}>
+        {/* Weekly progress bar */}
+        {isUserChallenge && days != null && (
+          <>
             <View
               style={{
-                width: `${(days / 7) * 100}%`,
-                height: "100%",
-                backgroundColor: colors.buttonActive,
+                height: 8,
+                backgroundColor: colors.light,
+                borderRadius: 4,
+                marginVertical: 8,
               }}
-            />
-          </View>
-          <AppText style={{ fontSize: 12, marginTop: 2 }}>
-            {days}/7 dni
-          </AppText>
-        </>
-      )}
-      {expanded && (
-      <ItemDetails
-        description={item.description}
-      />
-      )}
+            >
+              <View
+                style={{
+                  width: `${(days / 7) * 100}%`,
+                  height: "100%",
+                  backgroundColor: colors.buttonActive,
+                }}
+              />
+            </View>
+            <AppText style={{ fontSize: 12, marginTop: 2 }}>
+              {days}/7 dni
+            </AppText>
+          </>
+        )}
 
-    </View>
-  </TouchableOpacity>
+        {expanded && (
+          <ItemDetails
+            description={
+              isUserChallenge
+                ? item.challenge.description
+                : item.description
+            }
+          />
+        )}
+      </View>
+    </TouchableOpacity>
   );
 }

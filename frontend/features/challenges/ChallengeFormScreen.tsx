@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter} from "expo-router";
 import { useChallengeStore, Challenge, ChallengeType, DifficultyType } from "../../app/stores/useChallengeStore";
 import { colors, spacing, radius } from "../../constants/theme";
 import AppText from "../../components/AppText";
@@ -15,7 +15,6 @@ export type ChallengeFormScreenProps = {
 
 export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenProps) {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const { tags, loadTags, loadChallenges } = useChallengeStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -26,8 +25,6 @@ export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenPr
   const [availableDifficulties, setAvailableDifficulties] = useState<DifficultyType[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const isEdit = typeof editingId === "number";
 
   useEffect(() => { loadTags(); }, []);
 

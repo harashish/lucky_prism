@@ -18,7 +18,6 @@ const periodNames = ["weekly", "monthly", "yearly"] as const;
 
 export default function GoalsScreen() {
   const router = useRouter();
-  const userId = 1;
 
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
@@ -27,76 +26,61 @@ export default function GoalsScreen() {
     goals,
     history,
     loadPeriods,
-    loadUserGoals,
+    loadGoals,
     loadHistory,
     completeGoal,
   } = useGoalStore();
 
-
-
-
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
-
-  // STATE
   const [selectedPeriod, setSelectedPeriod] =
     useState<"weekly" | "monthly" | "yearly">("weekly");
 
-  // EFFECT 1 – init
   useEffect(() => {
     loadPeriods();
     loadHistory();
   }, []);
 
-  // EFFECT 2 – zmiana zakładki
   useEffect(() => {
-    loadUserGoals(userId, selectedPeriod);
+    loadGoals(selectedPeriod);
   }, [selectedPeriod]);
 
   useFocusEffect(
     useCallback(() => {
-      loadUserGoals(userId, selectedPeriod);
+      loadGoals(selectedPeriod);
       loadHistory();
     }, [selectedPeriod])
   );
 
   const completedGoalIds = new Set(history.map(h => h.goal));
-
-  const completedCount = goals.filter(g =>
-    completedGoalIds.has(g.id)
-  ).length;
-
-  const progress =
-    goals.length === 0 ? 0 : completedCount / goals.length;
+  const completedCount = goals.filter(g => completedGoalIds.has(g.id)).length;
+  const progress = goals.length === 0 ? 0 : completedCount / goals.length;
 
   const now = dayjs();
   const timeProgress =
     selectedPeriod === "weekly"
-      ? now.diff(now.startOf("isoWeek")) / now.endOf("isoWeek").diff(now.startOf("isoWeek"))
+      ? now.diff(now.startOf("isoWeek")) /
+        now.endOf("isoWeek").diff(now.startOf("isoWeek"))
       : selectedPeriod === "monthly"
-      ? now.diff(now.startOf("month")) / now.endOf("month").diff(now.startOf("month"))
-      : now.diff(now.startOf("year")) / now.endOf("year").diff(now.startOf("year"));
+      ? now.diff(now.startOf("month")) /
+        now.endOf("month").diff(now.startOf("month"))
+      : now.diff(now.startOf("year")) /
+        now.endOf("year").diff(now.startOf("year"));
 
   const onComplete = (goalId: number, title: string) => {
-    Alert.alert(
-      "Complete goal?",
-      title,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes",
-          onPress: async () => {
-            const res = await completeGoal(goalId);
-
-            if (res && gamificationOn && res.xp_gained > 0) {
-              useGamificationStore.getState().applyXpResult(res);
-            }
-
-            loadUserGoals(userId, selectedPeriod);
-            loadHistory();
-          },
+    Alert.alert("Complete goal?", title, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Yes",
+        onPress: async () => {
+          const res = await completeGoal(goalId);
+          if (res && gamificationOn && res.xp_gained > 0) {
+            useGamificationStore.getState().applyXpResult(res);
+          }
+          loadGoals(selectedPeriod);
+          loadHistory();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -112,7 +96,8 @@ export default function GoalsScreen() {
               marginHorizontal: 4,
               padding: 14,
               borderRadius: 12,
-              backgroundColor: selectedPeriod === p ? colors.buttonActive : colors.card,
+              backgroundColor:
+                selectedPeriod === p ? colors.buttonActive : colors.card,
               alignItems: "center",
             }}
           >
@@ -150,11 +135,23 @@ export default function GoalsScreen() {
 
           return (
             <TouchableOpacity
-              onPress={() => setExpandedGoalId(isExpanded ? null : item.id)}
+              onPress={() =>
+                setExpandedGoalId(isExpanded ? null : item.id)
+              }
               onLongPress={() => router.push(`/editGoal/${item.id}`)}
             >
-              <View style={{ ...components.container, opacity: isCompleted ? 0.5 : 1 }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <View
+                style={{
+                  ...components.container,
+                  opacity: isCompleted ? 0.5 : 1,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
                   <ItemHeader
                     title={item.title}
                     difficulty={item.difficulty?.name}
@@ -162,17 +159,11 @@ export default function GoalsScreen() {
                   {!isCompleted && (
                     <TouchableOpacity
                       onPress={() => onComplete(item.id, item.title)}
-                      style={components.completeButton  
-                      }
-
+                      style={components.completeButton}
                     >
                       <AppText style={{ color: "#fff" }}>+</AppText>
                     </TouchableOpacity>
                   )}
-
-
-
-
                 </View>
 
                 {isExpanded && (
@@ -180,7 +171,6 @@ export default function GoalsScreen() {
                     description={item.description}
                     motivation={item.motivation_reason}
                   />
-
                 )}
               </View>
             </TouchableOpacity>

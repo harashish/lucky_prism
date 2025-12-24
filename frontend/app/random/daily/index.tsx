@@ -8,7 +8,6 @@ import RandomSpin from "../spin";
 
 export default function DailyPickScreen() {
   const router = useRouter();
-  const userId = 1;
   const { loadTags, tags, randomChallenge } = useChallengeStore();
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [spinning, setSpinning] = useState(false);
@@ -20,7 +19,7 @@ export default function DailyPickScreen() {
 
   const onLosuj = async () => {
     if (!tags.length) return Alert.alert("No tags.");
-    const picked = await randomChallenge(userId, "Daily", selectedTags);
+    const picked = await randomChallenge("daily", selectedTags);
     if (!picked) return Alert.alert("No challenges with selected tags.");
 
     setSpinning(true);

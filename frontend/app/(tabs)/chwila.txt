@@ -1,0 +1,295 @@
+  return (
+    <ScrollView style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background}} contentContainerStyle={{
+    paddingBottom: 30,
+  }}>
+
+      {/* LEVEL */}
+{canRenderTile("level_gamification") && (
+  <TouchableOpacity
+    onPress={() => router.push("/GamificationScreen")}
+    style={{ backgroundColor: colors.card, padding: 16, borderRadius: 12, marginBottom: 20 }}
+  >
+    {/* Nagłówek: Level i XP */}
+    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+      <AppText style={{ fontSize: 18, fontWeight: "700" }}>Lv {level}</AppText>
+      <AppText style={{ fontSize: 14, color: "#777" }}>{xpRemaining} XP to next level</AppText>
+    </View>
+
+    {/* Pasek postępu */}
+    <View style={{ height: 12, backgroundColor: "#eee", borderRadius: 6, overflow: "hidden" }}>
+      <View
+        style={{
+          width: `${Math.min(100, Math.round(((totalXp - xpForLevel(level)) / (xpForLevel(level + 1) - xpForLevel(level))) * 100))}%`,
+          height: 12,
+          backgroundColor: colors.buttonActive,
+        }}
+      />
+    </View>
+  </TouchableOpacity>
+)}
+
+
+{/* BIGGEST STREAK */}
+{canRenderTile("biggest_streak") && (
+  <TouchableOpacity
+    onPress={() => router.push("/HabitsScreen")}
+    onLongPress={() => biggestStreak?.habit_id && router.push({ pathname: "/editHabit/[id]", params: { id: String(biggestStreak.habit_id) } })}
+    style={{ backgroundColor: colors.card, padding: 12, borderRadius: 12, marginBottom: 12 }}
+  >
+    <AppText style={{ fontWeight: "700" }}>Biggest streak</AppText>
+    {biggestStreak && biggestStreak?.title ? (
+      <AppText>{biggestStreak.title} • {biggestStreak.biggest_streak} dni</AppText>
+    ) : (
+      <AppText style={{ opacity: 0.6 }}>no streak</AppText>
+    )}
+  </TouchableOpacity>
+)}
+
+
+{/* GOALS */}
+{GOAL_TILES.map((key, idx) => {
+  const goal = [goalWeek, goalMonth, goalYear][idx];
+  const label = ["Random week goal", "Random month goal", "Random year goal"][idx];
+
+  if (!canRenderTile(key) || !goal) return null;
+
+  return (
+    <View key={key} style={{ marginBottom: 16 }}>
+      {/* HEADER – poza tile */}
+      <AppText style={{ fontWeight: "700", marginBottom: 8 }}>
+        {label}
+      </AppText>
+
+      {/* TILE – tylko treść */}
+      <TouchableOpacity
+        onPress={() =>
+          router.push({
+            pathname: "/editGoal/[id]",
+            params: { id: String(goal.id) },
+          })
+        }
+        style={{
+          backgroundColor: colors.card,
+          padding: 12,
+          borderRadius: 12,
+        }}
+      >
+        <AppText style={{ fontWeight: "600" }}>
+          {goal.title}
+        </AppText>
+
+        {goal.motivation_reason && (
+          <AppText
+            style={{
+              fontSize: 13,
+              opacity: 0.7,
+              marginTop: 4,
+            }}
+          >
+            {goal.motivation_reason}
+          </AppText>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+})}
+
+
+      {/* DAILY CHALLENGE */}
+      {canRenderTile("daily_challenge") && (
+        <View style={{ marginBottom: 12 }}>
+          <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Daily challenge</AppText>
+          {activeDaily ? (
+            <TouchableOpacity onPress={() => router.push("/random/daily/active")} onLongPress={() => onLongPressActiveChallenge(activeDaily.challenge.id)}
+              style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10 }}>
+              <AppText style={{ fontWeight: "700" }}>{activeDaily.challenge?.title}</AppText>
+              <AppText numberOfLines={2}>{activeDaily.challenge?.description}</AppText>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => router.push("/random/daily")} style={{ backgroundColor: colors.buttonActive, padding: 12, borderRadius: 10 }}>
+              <AppText style={{ color: "#fff", fontWeight: "700" }}>Randomize challenge</AppText>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* WEEKLY CHALLENGE */}
+      {canRenderTile("weekly_challenge") && (
+        <View style={{ marginBottom: 12 }}>
+          <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Week challenge</AppText>
+          {activeWeekly && activeWeekly.length > 0 ? (
+            activeWeekly.map((uc: any) => {
+              const days = uc.progress_days ?? 1;
+                return (
+                <TouchableOpacity
+                  key={uc.id}
+                  onPress={() => router.push("/random/weekly/active")}
+                  onLongPress={() => onLongPressActiveChallenge(uc.challenge.id)}
+                  style={{
+                    backgroundColor: colors.card,
+                    padding: 12,
+                    borderRadius: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  <AppText style={{ fontWeight: "700" }}>
+                    {uc.challenge?.title}
+                  </AppText>
+
+                  <View
+                    style={{
+                      height: 8,
+                      backgroundColor: colors.light,
+                      borderRadius: 6,
+                      overflow: "hidden",
+                      marginTop: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${(days / 7) * 100}%`,
+                        height: 8,
+                        backgroundColor: colors.buttonActive,
+                      }}
+                    />
+                  </View>
+
+                  <AppText style={{ marginTop: 6 }}>
+                    {days}/7 dni
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <TouchableOpacity
+              onPress={() => router.push("/random/weekly")}
+              style={{
+                backgroundColor: colors.buttonActive,
+                padding: 12,
+                borderRadius: 10,
+              }}
+            >
+              <AppText style={{ color: "#fff", fontWeight: "700" }}>
+                Randomize challenge
+              </AppText>
+            </TouchableOpacity>
+          )}
+
+        </View>
+      )}
+
+      {/* RANDOM TODO */}
+{canRenderTile("random_todo") && randomTodo && (
+  <View style={{ marginBottom: 16 }}>
+    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>
+      Random todo
+    </AppText>
+
+    <TouchableOpacity
+      onPress={fetchRandomTodo}
+      onLongPress={() =>
+        router.push({
+          pathname: "/editTodo/[id]",
+          params: { id: String(randomTodo.id) },
+        })
+      }
+      style={{
+        backgroundColor: colors.card,
+        padding: 12,
+        borderRadius: 12,
+      }}
+    >
+      <AppText>{randomTodo.content}</AppText>
+    </TouchableOpacity>
+  </View>
+)}
+
+
+{/* RANDOM NOTE */}
+{canRenderTile("random_note") && (
+  <View style={{ marginBottom: 16 }}>
+    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Note</AppText>
+
+    <View style={{ flexDirection: "row", alignItems: "stretch" }}>
+      {randomNote ? (
+        <TouchableOpacity
+          onPress={fetchRandomNote}
+          onLongPress={() =>
+            router.push({ pathname: "/editNote/[id]", params: { id: randomNote.id } })
+          }
+          style={{
+            flex: 1,
+            backgroundColor: colors.card,
+            padding: 14,
+            borderRadius: 12,
+            marginRight: 8,
+          }}
+        >
+          <AppText>{randomNote.content}</AppText>
+        </TouchableOpacity>
+      ) : (
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.card,
+            padding: 14,
+            borderRadius: 12,
+            marginRight: 8,
+            justifyContent: "center",
+          }}
+        >
+          <AppText style={{ opacity: 0.6 }}>No notes</AppText>
+        </View>
+      )}
+
+      <TouchableOpacity
+        onPress={() => router.push("/addNote")}
+        style={{
+          width: 44,
+          borderRadius: 10,
+          backgroundColor: colors.buttonActive,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <AppText style={{ color: "#fff", fontSize: 22 }}>＋</AppText>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
+      {/* RANDOM HABIT */}
+      {canRenderTile("random_habit") && randomHabit && (
+  <>
+    <AppText style={{ fontWeight: "700", marginBottom: 8 }}>Random habit</AppText>
+    <TouchableOpacity
+      onPress={() => router.push("/HabitsScreen")}
+      onLongPress={() =>
+        router.push({ pathname: "/editHabit/[id]", params: { id: String(randomHabit.id) } })
+      }
+      style={{ backgroundColor: colors.card, padding: 12, borderRadius: 12 }}
+    >
+      <AppText style={{ fontWeight: "600" }}>
+  {randomHabit.title}
+</AppText>
+
+{randomHabit.reason ? (
+  <AppText style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>
+    {randomHabit.reason}
+  </AppText>
+) : null}
+
+      <AppText style={{ marginTop: 6 }}>
+        {randomHabit.done} / {randomHabit.total} days
+      </AppText>
+    </TouchableOpacity>
+  </>
+)}
+
+
+
+
+    </ScrollView>
+    
+  );
+}

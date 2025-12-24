@@ -51,8 +51,9 @@ for name, order in difficulties:
 # CHALLENGE TYPES
 # =====================
 
-daily_type, _ = ChallengeType.objects.get_or_create(name="Daily")
-weekly_type, _ = ChallengeType.objects.get_or_create(name="Weekly")
+daily_type, _ = ChallengeType.objects.get_or_create(name="daily")
+weekly_type, _ = ChallengeType.objects.get_or_create(name="weekly")
+
 
 print("[CHALLENGE TYPE] Daily / Weekly ready")
 

@@ -66,7 +66,7 @@ export default function RandomResultScreen(){
 
   const goToActive = () => {
     if (!currentItem) return router.replace("/(tabs)/RandomHomeScreen");
-    const dest = currentItem.type?.name === "Daily" ? "/random/daily/active" : "/random/weekly/active";
+    const dest = currentItem.type?.name === "daily" ? "/random/daily/active" : "/random/weekly/active";
     router.replace(dest);
   };
 

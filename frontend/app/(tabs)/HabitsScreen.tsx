@@ -2,15 +2,12 @@ import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, FlatList, Alert } from "react-native";
 import { useHabitStore } from "../stores/useHabitStore";
 import AppText from "../../components/AppText";
-import HeaderText from "../../components/HeaderText";
 import { colors } from "../../constants/theme";
 import { useRouter } from "expo-router";
 import HabitItem from "../../features/habits/HabitItem";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
 import FloatingButton from "../../components/FloatingButton";
-
-const userId = 1;
 
 export default function HabitsScreen() {
 
@@ -30,7 +27,7 @@ export default function HabitsScreen() {
 
   useEffect(() => {
     loadDifficulties();
-    loadMonth(userId, month);
+    loadMonth(month);
   }, [month]);
 
   const onToggleToday = async (habitId: number) => {
@@ -42,16 +39,16 @@ export default function HabitsScreen() {
       Alert.alert("Error", "Cannot save day.");
       return;
     }
-      if (res.already_completed) {
+
+    if (res.already_completed) {
       if (gamificationOn) {
         Alert.alert("Info", "This habit was already marked for today.");
       }
     } else if (res.xp_gained > 0 && gamificationOn) {
-      useGamificationStore
-        .getState()
-        .applyXpResult(res);
+      useGamificationStore.getState().applyXpResult(res);
     }
-    await loadMonth(userId, month);
+
+    await loadMonth(month);
   };
 
   const onToggleDay = async (
@@ -67,13 +64,10 @@ export default function HabitsScreen() {
     }
 
     if (res.xp_gained > 0 && gamificationOn) {
-      useGamificationStore
-        .getState()
-        .applyXpResult(res);
+      useGamificationStore.getState().applyXpResult(res);
     }
 
-
-    await loadMonth(userId, month);
+    await loadMonth(month);
   };
 
   return (
@@ -143,19 +137,25 @@ export default function HabitsScreen() {
           />
         )}
         ListEmptyComponent={() => (
-              <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
-                <AppText style={{ color: "#777", fontSize: 16 }}>
-                  no habits yet, add some!
-                </AppText>
-              </View>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 50,
+            }}
+          >
+            <AppText style={{ color: "#777", fontSize: 16 }}>
+              no habits yet, add some!
+            </AppText>
+          </View>
         )}
         contentContainerStyle={{ paddingBottom: 140 }}
         refreshing={loading}
-        onRefresh={() => loadMonth(userId, month)}
+        onRefresh={() => loadMonth(month)}
       />
 
       <FloatingButton onPress={() => router.push("/addHabit")} />
     </View>
-
   );
 }
