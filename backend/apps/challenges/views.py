@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
 from django.utils import timezone
-from datetime import timedelta
+from django.db.models import Q
 import random
 
 from .models import (
@@ -121,6 +121,7 @@ class RandomChallengeView(APIView):
         user = get_user()
         type_name = request.GET.get("type")
         tags = request.GET.get("tags")
+        difficulty_id = request.GET.get("difficulty_id")
 
         qs = ChallengeDefinition.objects.all()
 
@@ -137,6 +138,15 @@ class RandomChallengeView(APIView):
         ).values_list("definition_id", flat=True)
 
         qs = qs.exclude(id__in=active_defs)
+
+        if difficulty_id:
+            try:
+                did = int(difficulty_id)
+                qs = qs.filter(difficulty_id=did)
+            except ValueError:
+                pass
+        
+            
 
         if not qs.exists():
             return Response(

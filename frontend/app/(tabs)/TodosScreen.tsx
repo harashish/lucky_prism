@@ -13,7 +13,7 @@ import { colors } from "../../constants/theme";
 import { useTodoStore } from "../stores/useTodoStore";
 import { useRouter } from "expo-router";
 import TodoItem from "../../features/todos/TodoItem";
-import BottomInputBar from "../../components/BottomInputBar";
+import BottomInputBar from "../../features/todos/BottomInputBar";
 import CustomDifficultyPicker from "../../features/todos/customDifficultyPicker";
 import EditTodoPopup from "../../features/todos/editTodoPopup";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
@@ -141,6 +141,8 @@ export default function TodosScreen() {
                     : cat.color || colors.card,
                 minWidth: 80,
                 alignItems: "center",
+                borderWidth: selectedCategoryId === cat.id ? 2 : 0,
+                borderColor: colors.light,
               }}
             >
               <AppText>{cat.name}</AppText>

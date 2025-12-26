@@ -15,7 +15,6 @@ export default function WeeklyActiveScreen() {
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
-
   useEffect(() => {
     const load = async () => {
       await fetchActive();
@@ -24,26 +23,22 @@ export default function WeeklyActiveScreen() {
     load();
   }, []);
 
-  if (loading || !activeWeekly || activeWeekly.length === 0) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.buttonActive} />
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (!loading && (!activeWeekly || activeWeekly.length === 0)) {
+      router.replace("/random/weekly");
+    }
+  }, [loading, activeWeekly]);
+
 
   const uc = activeWeekly[0];
   const ch = uc.challenge;
   const days = uc.progress_days ?? 1;
 
-
   const tryAnother = async () => {
     const ok = await discardUserChallenge(uc.id);
     if (!ok) return Alert.alert("Error", "Could not discard the challenge");
 
-    await fetchActive();
-    const { activeWeekly: latestActive } = useChallengeStore.getState();
-    router.replace(latestActive && latestActive.length > 0 ? "/random/weekly/active" : "/random/weekly");
+    router.replace("/random/weekly");
   };
 
   const onComplete = async () => {
@@ -54,10 +49,18 @@ export default function WeeklyActiveScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-
-    await fetchActive();
     router.replace("/(tabs)/RandomHomeScreen");
+  
   };
+
+  if (loading) {
+    return <ActivityIndicator />
+  }
+
+  if (!activeWeekly || activeWeekly.length === 0) {
+    return null;
+  }
+  
 
   return (
     <View style={{ flex: 1, padding: 24, backgroundColor: colors.background, justifyContent: "center" }}>

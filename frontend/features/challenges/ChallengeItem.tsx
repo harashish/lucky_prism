@@ -10,7 +10,7 @@ import { ItemHeader } from "../../components/ItemHeader";
 import { ItemDetails } from "../../components/ItemDetails";
 
 type Props = {
-  item: any; // Challenge OR UserChallenge – zgodnie z nowym screenem
+  item: any;
   isUserChallenge: boolean;
 };
 
@@ -93,7 +93,7 @@ export default function ChallengeItem({ item, isUserChallenge }: Props) {
           >
             {!isUserChallenge && (
               <TouchableOpacity onPress={onAssign} style={components.addButton}>
-                <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
+                <AppText style={{ color: "#fff", fontSize: 18 }}>+</AppText>
               </TouchableOpacity>
             )}
 

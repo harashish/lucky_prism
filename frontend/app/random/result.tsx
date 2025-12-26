@@ -10,7 +10,6 @@ import RandomResultCard from "../../components/RandomResultCard";
 export default function RandomResultScreen(){
   const { item, source, categoryId } = useLocalSearchParams() as any;
   const router = useRouter();
-  const userId = 1;
 
   const [currentItem, setCurrentItem] = useState(item ? JSON.parse(item) : null);
   const [assigning, setAssigning] = useState(false);
@@ -22,7 +21,7 @@ export default function RandomResultScreen(){
       (async () => {
         setAssigning(true);
         try {
-          await api.post("/challenges/assign/", { user: userId, challenge: currentItem.id });
+          await api.post("/challenges/assign/", { challenge: currentItem.id });
           setAssigned(true);
         } catch (e: any) {
           const err = e.response?.data?.detail || e.response?.data || e.message || e;
@@ -34,6 +33,13 @@ export default function RandomResultScreen(){
     }
   }, [source, currentItem]);
 
+  useEffect(() => {
+    if (!currentItem) {
+      router.replace("/(tabs)/RandomHomeScreen");
+    }
+  }, [currentItem]);
+
+
   const slideTodo = (nextItem: any) => {
     Animated.timing(slideAnim, { toValue: -50, duration: 250, useNativeDriver: true }).start(() => {
       setCurrentItem(nextItem);
@@ -44,7 +50,7 @@ export default function RandomResultScreen(){
 
   const onReroll = async () => {
     try {
-      const res = await api.get("/todos/tasks/", { params: { user_id: userId, category_id: categoryId }});
+      const res = await api.get("/todos/tasks/", { params: { category_id: categoryId }});
       const arr = res.data.filter((t:any) => !t.is_completed);
       if (!arr.length) { Alert.alert("Empty List", "No todos."); return; }
       const next = arr[Math.floor(Math.random() * arr.length)];
@@ -98,13 +104,13 @@ export default function RandomResultScreen(){
       {source === "todo" && (
         <>
           {todoCard}
-          <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
+          <TouchableOpacity onPress={() => router.replace("/random/todo")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
             <AppText style={{ textAlign: "center" }}>OK</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={onReroll} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>
             <AppText style={{ textAlign: "center", color:"#fff" }}>Reroll</AppText>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: colors.card, padding:14, borderRadius:10 }}>
+          <TouchableOpacity onPress={() => router.replace("/random/todo")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10 }}>
             <AppText style={{ textAlign: "center" }}>Change category</AppText>
           </TouchableOpacity>
         </>

@@ -45,6 +45,7 @@ export interface UserChallenge {
 interface ChallengeStore {
   challenges: Challenge[];
   tags: ChallengeTag[];
+  difficulties: DifficultyType[]; 
 
   activeDaily: UserChallenge | null;
   activeWeekly: UserChallenge[];
@@ -56,14 +57,17 @@ interface ChallengeStore {
 
   loadChallenges: () => Promise<void>;
   loadTags: () => Promise<void>;
+  loadDifficulties: () => Promise<void>;
   fetchActive: () => Promise<void>;
 
   refreshAll: () => Promise<void>;
 
   randomChallenge: (
-    type: "daily" | "weekly",
-    tagIds?: number[]
+  type: "daily" | "weekly",
+  tagIds?: number[],
+  difficultyId?: number | null
   ) => Promise<Challenge | null>;
+
 
   assignChallenge: (challengeId: number) => Promise<UserChallenge | null>;
   discardUserChallenge: (id: number) => Promise<boolean>;
@@ -77,6 +81,7 @@ interface ChallengeStore {
 export const useChallengeStore = create<ChallengeStore>((set, get) => ({
   challenges: [],
   tags: [],
+  difficulties: [],
   activeDaily: null,
   activeWeekly: [],
   loading: false,
@@ -109,6 +114,16 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
     }
   },
 
+  loadDifficulties: async () => {
+    try {
+      const res = await api.get<DifficultyType[]>("/common/difficulties/");
+      set({ difficulties: res.data });
+    } catch (e) {
+      console.error("loadDifficulties", e);
+      set({ difficulties: [] });
+    }
+  },
+
   fetchActive: async () => {
     try {
       const res = await api.get("/challenges/active/");
@@ -133,10 +148,15 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
 
   /* ---------- ACTIONS ---------- */
 
-  randomChallenge: async (type, tagIds = []) => {
+  randomChallenge: async (
+    type,
+    tagIds = [],
+    difficultyId: number | null = null
+  ) => {
     try {
       const params: any = { type };
       if (tagIds.length) params.tags = tagIds.join(",");
+      if (difficultyId) params.difficulty_id = difficultyId;
 
       const res = await api.get<Challenge>("/challenges/random/", { params });
       return res.data;
@@ -146,6 +166,7 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
       return null;
     }
   },
+
 
   assignChallenge: async (challengeId) => {
     try {

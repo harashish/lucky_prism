@@ -50,7 +50,7 @@ export default function DashboardScreen() {
 
   const { pickRandomGoal } = useGoalStore();
   const { pickRandomTask } = useTodoStore();
-  const { randomNote, refreshRandomNote } = useNotesStore();
+  const { randomNote, fetchRandom } = useNotesStore();
 
   /* ===== LOCAL UI STATE ===== */
   const [loading, setLoading] = useState(true);
@@ -93,7 +93,7 @@ export default function DashboardScreen() {
         fetchUser?.(),
         fetchActive?.(),
         fetchStreaks?.(),
-        refreshRandomNote?.(),
+        fetchRandom?.(),
         loadMonth?.(),
       ]);
 
@@ -246,7 +246,7 @@ export default function DashboardScreen() {
         {canRenderTile("random_note") && (
           <RandomNoteTile
             note={randomNote}
-            onRefresh={refreshRandomNote}
+            onRefresh={fetchRandom}
             onEdit={(id) =>
               router.push({
                 pathname: "/editNote/[id]",

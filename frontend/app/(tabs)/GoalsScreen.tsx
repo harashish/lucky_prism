@@ -11,6 +11,7 @@ import { useGamificationStore } from "../stores/useGamificationStore";
 import FloatingButton from "../../components/FloatingButton";
 import { ItemHeader } from "../../components/ItemHeader";
 import { ItemDetails } from "../../components/ItemDetails";
+import GoalItem from "../../features/goals/GoalItem";
 
 dayjs.extend(isoWeek);
 
@@ -134,46 +135,16 @@ export default function GoalsScreen() {
           const isExpanded = expandedGoalId === item.id;
 
           return (
-            <TouchableOpacity
-              onPress={() =>
+            <GoalItem
+              item={item}
+              isCompleted={isCompleted}
+              isExpanded={isExpanded}
+              onToggleExpand={() =>
                 setExpandedGoalId(isExpanded ? null : item.id)
               }
-              onLongPress={() => router.push(`/editGoal/${item.id}`)}
-            >
-              <View
-                style={{
-                  ...components.container,
-                  opacity: isCompleted ? 0.5 : 1,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <ItemHeader
-                    title={item.title}
-                    difficulty={item.difficulty?.name}
-                  />
-                  {!isCompleted && (
-                    <TouchableOpacity
-                      onPress={() => onComplete(item.id, item.title)}
-                      style={components.completeButton}
-                    >
-                      <AppText style={{ color: "#fff" }}>+</AppText>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {isExpanded && (
-                  <ItemDetails
-                    description={item.description}
-                    motivation={item.motivation_reason}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
+              onEdit={() => router.push(`/editGoal/${item.id}`)}
+              onComplete={() => onComplete(item.id, item.title)}
+            />
           );
         }}
         ListEmptyComponent={

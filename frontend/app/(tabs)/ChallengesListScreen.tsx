@@ -10,11 +10,10 @@ import FloatingButton from "../../components/FloatingButton";
 const ChallengesListScreen = () => {
   const router = useRouter();
 
-    const TYPES = [
+  const TYPES = [
   { label: "Daily", value: "daily" },
   { label: "Weekly", value: "weekly" },
-] as const;
-
+  ] as const;
 
   const {
     challenges,
@@ -230,9 +229,6 @@ const sections = useMemo(() => {
     contentContainerStyle={{ paddingBottom: 100 }}
   />
 )}
-
-
-
       <FloatingButton
         onPress={() =>
           router.push({

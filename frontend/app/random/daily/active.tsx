@@ -23,13 +23,17 @@ export default function DailyActiveScreen() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!loading && !activeDaily) {
+      router.replace("/random/daily");
+    }
+  }, [loading, activeDaily]);
+
   const tryAnother = async () => {
-    const ok = await discardUserChallenge(activeDaily?.id!);
+    const ok = await discardUserChallenge(activeDaily!.id);
     if (!ok) return Alert.alert("Error", "Could not discard the challenge");
 
-    await fetchActive();
-    const { activeDaily: latestActive } = useChallengeStore.getState();
-    router.push(latestActive ? "/random/daily/active" : "/random/daily");
+    router.replace("/random/daily");
   };
 
   const onComplete = async () => {
@@ -41,16 +45,15 @@ export default function DailyActiveScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    await fetchActive();
-    router.push("/(tabs)/RandomHomeScreen");
+    router.replace("/(tabs)/RandomHomeScreen");
   };
 
-  if (loading || !activeDaily) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.buttonActive} />
-      </View>
-    );
+  if (loading) {
+  return <ActivityIndicator />
+  }
+
+  if (!activeDaily) {
+    return null;
   }
 
   const ch = activeDaily.challenge;

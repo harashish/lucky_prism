@@ -6,7 +6,6 @@ from apps.gamification.models import User, XPLog
 class GamificationTests(TestCase):
 
     def test_calculate_xp_easy_returns_positive_value(self):
-        # używamy poprawnego klucza modułu: "habits"
         xp = calculate_xp(
             module="habits",
             difficulty="easy"

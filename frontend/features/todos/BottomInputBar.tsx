@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
-import AppText from "./AppText";
-import { colors } from "../constants/theme";
+import AppText from "../../components/AppText";
+import { colors } from "../../constants/theme";
 
 export default function BottomInputBar({
   quickText,

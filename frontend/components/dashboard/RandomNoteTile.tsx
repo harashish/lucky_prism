@@ -62,7 +62,7 @@ export function RandomNoteTile({
             justifyContent: "center",
           }}
         >
-          <AppText style={{ color: "#fff", fontSize: 22 }}>＋</AppText>
+          <AppText style={{ color: "#fff", fontSize: 22 }}>+</AppText>
         </TouchableOpacity>
       </View>
     </View>
