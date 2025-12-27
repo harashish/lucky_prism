@@ -1,12 +1,14 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-export interface GoalPeriod {
+/* ---------- TYPES ---------- */
+
+export interface DifficultyType {
   id: number;
   name: string;
 }
 
-export interface DifficultyType {
+export interface GoalPeriod {
   id: number;
   name: string;
 }
@@ -18,117 +20,193 @@ export interface Goal {
   motivation_reason?: string;
   period: GoalPeriod;
   difficulty: DifficultyType;
-  created_at?: string;
-  updated_at?: string;
+  is_completed: boolean;
+  completed_at?: string | null;
 }
 
-export interface GoalHistory {
-  id: number;
-  goal: number;
-  completion_date: string;
-  xp_gained: number;
-}
+/* ---------- STORE ---------- */
 
 interface GoalStore {
   goals: Goal[];
   periods: GoalPeriod[];
-  history: GoalHistory[];
 
-  loadingGoals: boolean;
-  loadingPeriods: boolean;
-  loadingHistory: boolean;
+  currentPeriod?: string;
 
+  loading: {
+    list: boolean;      // goals
+    periods: boolean;
+    meta: boolean;      // difficulties
+    saving: boolean;    // create/update/delete
+  };
+
+  /* --- load --- */
   loadPeriods: () => Promise<void>;
   loadGoals: (period?: string) => Promise<void>;
-  loadHistory: () => Promise<void>;
+  loadDifficulties: () => Promise<DifficultyType[]>;
 
-  addGoal: (payload: any) => Promise<void>;
-  saveGoal: (id: number, payload: any) => Promise<void>;
-  deleteGoal: (id: number) => Promise<void>;
+  /* --- crud --- */
+  createGoal: (payload: any) => Promise<boolean>;
+  saveGoal: (id: number, payload: any) => Promise<boolean>;
+  deleteGoal: (id: number) => Promise<boolean>;
+
+
+  /* --- actions --- */
   completeGoal: (id: number) => Promise<{
     xp_gained: number;
     total_xp: number;
     current_level: number;
   } | null>;
 
+  /* --- helpers --- */
   pickRandomGoal: (period?: string) => Promise<Goal | null>;
+  getGoalById: (id: number) => Promise<Goal | null>;
 
-  resetGoals: () => void;
 }
 
-export const useGoalStore = create<GoalStore>((set) => ({
+/* ---------- INITIAL STATE ---------- */
+
+const initialState = {
   goals: [],
   periods: [],
-  history: [],
+  currentPeriod: undefined,
+  loading: {
+    list: false,
+    periods: false,
+    meta: false,
+    saving: false,
+  },
+};
 
-  loadingGoals: false,
-  loadingPeriods: false,
-  loadingHistory: false,
+/* ---------- IMPLEMENTATION ---------- */
+
+export const useGoalStore = create<GoalStore>((set, get) => ({
+  ...initialState,
+
+  /* ---------- LOAD ---------- */
 
   loadPeriods: async () => {
-    set({ loadingPeriods: true });
+    set((s) => ({ loading: { ...s.loading, periods: true } }));
     try {
       const res = await api.get<GoalPeriod[]>("/goals/periods/");
       set({ periods: res.data });
+    } catch (e) {
+      console.error("loadPeriods", e);
     } finally {
-      set({ loadingPeriods: false });
+      set((s) => ({ loading: { ...s.loading, periods: false } }));
     }
   },
 
-  loadGoals: async (period?: string) => {
-    set({ loadingGoals: true });
+  loadGoals: async (period) => {
+    set((s) => ({ loading: { ...s.loading, list: true } }));
     try {
       const url = period ? `/goals/?period=${period}` : "/goals/";
       const res = await api.get<Goal[]>(url);
-      set({ goals: res.data });
+
+      set({
+        goals: res.data,
+        currentPeriod: period,
+      });
+    } catch (e) {
+      console.error("loadGoals", e);
     } finally {
-      set({ loadingGoals: false });
+      set((s) => ({ loading: { ...s.loading, list: false } }));
     }
   },
 
-  loadHistory: async () => {
-    set({ loadingHistory: true });
+
+  loadDifficulties: async () => {
+    set((s) => ({ loading: { ...s.loading, meta: true } }));
     try {
-      const res = await api.get<GoalHistory[]>("/goals/history/");
-      set({ history: res.data });
+      const res = await api.get<DifficultyType[]>("/common/difficulties/");
+      return res.data;
+    } catch (e) {
+      console.error("loadDifficulties", e);
+      return [];
     } finally {
-      set({ loadingHistory: false });
+      set((s) => ({ loading: { ...s.loading, meta: false } }));
     }
   },
 
-  addGoal: async (payload) => {
-    await api.post("/goals/", payload);
+  /* ---------- CRUD ---------- */
+
+  createGoal: async (payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.post("/goals/", payload);
+      await get().loadGoals(get().currentPeriod);
+      return true;
+    } catch (e) {
+      console.error("createGoal", e);
+      return false;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
   },
+
 
   saveGoal: async (id, payload) => {
-    await api.patch(`/goals/${id}/`, payload);
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.patch(`/goals/${id}/`, payload);
+      await get().loadGoals(get().currentPeriod);
+      return true;
+    } catch (e) {
+      console.error("saveGoal", e);
+      return false;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
   },
 
+
   deleteGoal: async (id) => {
-    await api.delete(`/goals/${id}/`);
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.delete(`/goals/${id}/`);
+      await get().loadGoals(get().currentPeriod);
+      return true;
+    } catch (e) {
+      console.error("deleteGoal", e);
+      return false;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
   },
+
+
+  /* ---------- ACTIONS ---------- */
 
   completeGoal: async (id) => {
     try {
       const res = await api.post(`/goals/${id}/complete/`);
       return res.data;
-    } catch {
+    } catch (e) {
+      console.error("completeGoal", e);
+      return null;
+    }
+  },
+
+  /* ---------- HELPERS ---------- */
+
+  getGoalById: async (id) => {
+    try {
+      const res = await api.get(`/goals/${id}/`);
+      return res.data;
+    } catch (e) {
+      console.error("getGoalById", e);
       return null;
     }
   },
 
   pickRandomGoal: async (period?: string) => {
     try {
-      const url = period ? `/goals/?period=${period}` : "/goals/";
-      const res = await api.get(url);
-      const arr = res.data;
-      if (!arr?.length) return null;
-      return arr[Math.floor(Math.random() * arr.length)];
+      const url = period ? `/goals/random/?period=${period}` : "/goals/random/";
+      const res = await api.get<Goal | null>(url);
+      return res.data; // backend zwraca null lub serialized Goal
     } catch (e) {
-      console.error("Error picking random goal:", e);
+      console.error("pickRandomGoal", e);
       return null;
     }
   },
 
-  resetGoals: () => set({ goals: [], history: [] }),
 }));

@@ -41,6 +41,7 @@ export function RandomGoalTile({ label, goal, onPress }: Props) {
             {goal.motivation_reason}
           </AppText>
         )}
+
       </TouchableOpacity>
     </View>
   );

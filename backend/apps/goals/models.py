@@ -25,26 +25,6 @@ class Goal(models.Model):
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
-class GoalHistory(models.Model):
-    goal = models.ForeignKey(Goal, on_delete=models.CASCADE)
-    completion_date = models.DateTimeField(auto_now_add=True)
-    xp_gained = models.IntegerField(default=0)
-
-    def complete(self):
-        xp = calculate_xp(
-            module="goals",
-            difficulty=self.goal.difficulty.name.lower(),
-            period=self.goal.period.name.lower(),
-        )
-
-        self.xp_gained = xp
-        self.save()
-
-        self.goal.user.add_xp(
-            xp=xp,
-            source="goal",
-            source_id=self.id,
-        )
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
 

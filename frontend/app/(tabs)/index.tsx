@@ -49,8 +49,8 @@ export default function DashboardScreen() {
   } = useHabitStore();
 
   const { pickRandomGoal } = useGoalStore();
-  const { pickRandomTask } = useTodoStore();
-  const { randomNote, fetchRandom } = useNotesStore();
+  const { fetchRandomTask } = useTodoStore();
+  const { randomNote, fetchRandomNote } = useNotesStore();
 
   /* ===== LOCAL UI STATE ===== */
   const [loading, setLoading] = useState(true);
@@ -93,7 +93,7 @@ export default function DashboardScreen() {
         fetchUser?.(),
         fetchActive?.(),
         fetchStreaks?.(),
-        fetchRandom?.(),
+        fetchRandomNote?.(),
         loadMonth?.(),
       ]);
 
@@ -107,11 +107,15 @@ export default function DashboardScreen() {
       setGoalMonth(gm ?? null);
       setGoalYear(gy ?? null);
 
-      const todo = await pickRandomTask?.();
+      const todo = await fetchRandomTask?.();
       setRandomTodo(todo ?? null);
 
-      const rh = useHabitStore.getState().getRandomHabitSummary();
-      setRandomHabit(rh);
+      const rh = await useHabitStore
+        .getState()
+        .pickRandomHabitSummary();
+
+      setRandomHabit(rh ?? null);
+
 
     } catch (e) {
       console.error("Dashboard fetch error:", e);
@@ -231,7 +235,7 @@ export default function DashboardScreen() {
           <RandomTodoTile
             todo={randomTodo}
             onRefresh={async () => {
-              const todo = await pickRandomTask?.();
+              const todo = await fetchRandomTask?.();
               setRandomTodo(todo ?? null);
             }}
             onEdit={(id) =>
@@ -246,7 +250,7 @@ export default function DashboardScreen() {
         {canRenderTile("random_note") && (
           <RandomNoteTile
             note={randomNote}
-            onRefresh={fetchRandom}
+            onRefresh={fetchRandomNote}
             onEdit={(id) =>
               router.push({
                 pathname: "/editNote/[id]",

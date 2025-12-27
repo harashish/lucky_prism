@@ -11,7 +11,7 @@ export default function WeeklyPickScreen() {
   const {
     loadTags,
     tags,
-    randomChallenge,
+    fetchRandomChallenge,
     loadDifficulties,
     difficulties,
   } = useChallengeStore();
@@ -34,7 +34,7 @@ export default function WeeklyPickScreen() {
         return;
       }
 
-      const test = await randomChallenge(
+      const test = await fetchRandomChallenge(
         "weekly",
         selectedTags,
         selectedDifficulty
@@ -64,18 +64,18 @@ export default function WeeklyPickScreen() {
     const hasDifficulty = selectedDifficulty !== null;
 
     if (hasTags) {
-      picked = await randomChallenge(
+      picked = await fetchRandomChallenge(
         "weekly",
         selectedTags,
         selectedDifficulty
       );
 
       if (!picked) {
-        picked = await randomChallenge("weekly", selectedTags, null);
+        picked = await fetchRandomChallenge("weekly", selectedTags, null);
       }
 
     } else if (hasDifficulty) {
-      picked = await randomChallenge("weekly", [], selectedDifficulty);
+      picked = await fetchRandomChallenge("weekly", [], selectedDifficulty);
     }
 
     if (!picked) {

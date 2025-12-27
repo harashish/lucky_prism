@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import AppText from "../../components/AppText";
 import { colors, spacing, radius } from "../../constants/theme";
 import { useRouter } from "expo-router";
 import { useTodoStore } from "../../app/stores/useTodoStore";
-import { api } from "../../app/api/apiClient";
 import FormErrorModal from "../../components/FormErrorModal";
 import { confirmDelete } from "../../components/confirmDelete";
 
@@ -19,17 +12,22 @@ export type CategoryFormScreenProps = {
 };
 
 export default function CategoryFormScreen({ editingId }: CategoryFormScreenProps) {
-  // do usunięcia
-  const isEdit = typeof editingId === "number";
-
   const router = useRouter();
-  const { addCategory, saveCategory, deleteCategory } = useTodoStore();
+  const isEdit = Boolean(editingId);
+
+  const {
+    createCategory,
+    saveCategory,
+    deleteCategory,
+    getCategoryById,
+    loadDifficulties,
+  } = useTodoStore();
 
   const [name, setName] = useState("");
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [color, setColor] = useState<string | null>(null);
-  const { categories } = useTodoStore();
+
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -43,28 +41,35 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     "#A0B4EF",
   ];
 
-  // ---- load difficulties
+  // ---- load meta
   useEffect(() => {
-    api
-      .get("/common/difficulties/")
-      .then(res => setDifficulties(res.data))
-      .catch(() => setErrorMessage("Failed to load difficulties"));
+    const loadMeta = async () => {
+      const diffs = await loadDifficulties();
+      setDifficulties(diffs);
+    };
+    loadMeta();
   }, []);
 
   // ---- load category for edit
   useEffect(() => {
     if (!editingId) return;
 
-    setLoading(true);
-    api
-      .get(`/todos/categories/${editingId}/`)
-      .then(res => {
-        setName(res.data.name);
-        setDifficultyId(res.data.difficulty?.id || null);
-        setColor(res.data.color || null);
-      })
-      .catch(() => setErrorMessage("Failed to load category"))
-      .finally(() => setLoading(false));
+    const load = async () => {
+      setLoading(true);
+      const c = await getCategoryById(editingId);
+
+      if (!c) {
+        setErrorMessage("Failed to load category");
+      } else {
+        setName(c.name);
+        setDifficultyId(c.difficulty?.id || null);
+        setColor(c.color || null);
+      }
+
+      setLoading(false);
+    };
+
+    load();
   }, [editingId]);
 
   // ---- save
@@ -79,6 +84,7 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     }
 
     setLoading(true);
+
     const payload = {
       name: name.trim(),
       difficulty_id: difficultyId,
@@ -89,30 +95,36 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
       if (isEdit && editingId) {
         await saveCategory(editingId, payload);
       } else {
-        await addCategory(payload);
+        await createCategory(payload);
       }
-      router.push("/TodosScreen");
-    } catch {
-      setErrorMessage("Failed to save category");
-    } finally {
+      router.back();
+    } catch (err: any) {
+      setErrorMessage(
+        err?.response?.data?.detail || "Failed to save category"
+      );
+    }
+    finally {
       setLoading(false);
     }
   };
 
-  const onDelete = async () => {
+  // ---- delete
+  const deleteHandler = async () => {
     if (!editingId) return;
+
     setLoading(true);
     try {
       await deleteCategory(editingId);
-      router.push("/TodosScreen");
+      router.back();
     } catch (err: any) {
-      const msg = err.response?.data?.detail;
-      setErrorMessage(msg || "Cannot delete category");
-    } finally {
+      setErrorMessage(
+        err?.response?.data?.detail || "Failed to delete category"
+      );
+    }
+    finally {
       setLoading(false);
     }
   };
-
 
   return (
     <>
@@ -120,11 +132,11 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
         style={{ flex: 1, padding: spacing.m, backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 30 }}
       >
-        {/* NAME */}
         <AppText style={{ marginBottom: 6 }}>Name:</AppText>
         <TextInput
           value={name}
           onChangeText={setName}
+          editable={!loading}
           placeholder="Category name"
           placeholderTextColor="#7a7891"
           style={{
@@ -137,12 +149,12 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
           }}
         />
 
-        {/* COLOR */}
         <AppText style={{ marginBottom: 6 }}>Color:</AppText>
         <View style={{ flexDirection: "row", marginBottom: spacing.m }}>
           {colorPalette.map(c => (
             <TouchableOpacity
               key={c}
+              disabled={loading}
               onPress={() => setColor(c)}
               style={{
                 width: 36,
@@ -157,12 +169,12 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
           ))}
         </View>
 
-        {/* DIFFICULTY */}
         <AppText style={{ marginBottom: 6 }}>Difficulty:</AppText>
         <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: spacing.m }}>
           {difficulties.map(d => (
             <TouchableOpacity
               key={d.id}
+              disabled={loading}
               onPress={() => setDifficultyId(d.id)}
               style={{
                 padding: spacing.s,
@@ -178,8 +190,8 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
           ))}
         </View>
 
-        {/* SAVE */}
         <TouchableOpacity
+          disabled={loading}
           onPress={save}
           style={{
             backgroundColor: colors.buttonActive,
@@ -198,14 +210,14 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
           )}
         </TouchableOpacity>
 
-        {/* DELETE */}
         {isEdit && (
           <TouchableOpacity
+            disabled={loading}
             onPress={() =>
               confirmDelete({
                 title: "Delete category?",
                 message: "All tasks in this category will be deleted.",
-                onConfirm: onDelete,
+                onConfirm: deleteHandler,
               })
             }
             style={{

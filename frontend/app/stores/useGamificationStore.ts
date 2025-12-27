@@ -21,7 +21,6 @@ type GamificationState = {
   fetchUser: () => Promise<void>;
   applyXpResult: (result: XpResult) => void;
   clearXpPopup: () => void;
-  resetGamification: () => void;
 };
 
 
@@ -61,11 +60,4 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
     set({ xpPopup: null });
   },
 
-  resetGamification: () => {
-    set({
-      totalXp: 0,
-      currentLevel: 1,
-      xpPopup: null,
-    });
-  },
 }));

@@ -43,20 +43,6 @@ export const radius = {
 };
 
 export const components = {
-  buttonPrimary: {
-    backgroundColor: colors.button,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: radius.md,
-    alignItems: "center",
-  },
-  buttonSmall: {
-    backgroundColor: colors.button,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: radius.md,
-    alignItems: "center",
-  },
     container: {
     padding: spacing.m,
     marginVertical: spacing.s,

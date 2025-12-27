@@ -63,8 +63,10 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
         await createNote(content);
       }
       router.back();
-    } catch {
-      setErrorMessage("Cannot save note");
+    } catch (err: any) {
+      setErrorMessage(
+        err?.response?.data?.detail || "Failed to save note"
+      );
     } finally {
       setLoading(false);
     }
@@ -78,8 +80,10 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
     try {
       await deleteNote(editingId);
       router.back();
-    } catch {
-      setErrorMessage("Cannot delete note");
+    } catch (err: any) {
+      setErrorMessage(
+        err?.response?.data?.detail || "Failed to delete note"
+      );
     } finally {
       setLoading(false);
     }
@@ -102,7 +106,7 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
           value={content}
           onChangeText={setContent}
           multiline
-          placeholder="Treść notatki..."
+          placeholder="Note content..."
           placeholderTextColor="#7a7891"
           selectionColor={colors.buttonActive}
           style={{

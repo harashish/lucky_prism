@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import AppText from "../../components/AppText";
 import { colors, spacing, radius } from "../../constants/theme";
 import { useHabitStore } from "../../app/stores/useHabitStore";
-import { api } from "../../app/api/apiClient";
 import FormErrorModal from "../../components/FormErrorModal";
 import { confirmDelete } from "../../components/confirmDelete";
 
@@ -15,7 +14,7 @@ type HabitFormScreenProps = {
 
 export default function HabitFormScreen({ editingId }: HabitFormScreenProps) {
   const router = useRouter();
-  const { createHabit, updateHabit, deleteHabit, loadDifficulties, difficulties } = useHabitStore();
+  const { createHabit, updateHabit, deleteHabit, loadDifficulties, difficulties, getHabitById } = useHabitStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [why, setWhy] = useState("");
@@ -38,23 +37,28 @@ export default function HabitFormScreen({ editingId }: HabitFormScreenProps) {
 
   useEffect(() => {
     loadDifficulties();
-    if (editingId) {
+
+    if (!editingId) return;
+
+    const load = async () => {
       setLoading(true);
-      api.get(`/habits/${editingId}/`)
-        .then(res => {
-          const h = res.data;
-          setTitle(h.title);
-          setDescription(h.description || "");
-          setWhy(h.motivation_reason || "");
-          setColor(h.color || colorPalette[0]);
-          setDifficultyId(h.difficulty?.id || null);
-        })
-        .catch(() => setErrorMessage("Failed to load habit"))
-        .finally(() => setLoading(false));
-    }
+      const h = await getHabitById(editingId);
+      if (!h) {
+        setErrorMessage("Failed to load habit");
+      } else {
+        setTitle(h.title);
+        setDescription(h.description || "");
+        setWhy(h.motivation_reason || "");
+        setColor(h.color || colorPalette[0]);
+        setDifficultyId(h.difficulty?.id || null);
+      }
+      setLoading(false);
+    };
+
+    load();
   }, [editingId]);
 
-const save = async () => {
+  const save = async () => {
     if (!title.trim()) {
       setErrorMessage("Please enter habit name");
       return;
@@ -64,7 +68,7 @@ const save = async () => {
       return;
     }
     if (!why.trim()) {
-      setErrorMessage("Please fill: Why it's important");
+      setErrorMessage("Please enter Why it's important");
       return;
     }
 
@@ -82,11 +86,13 @@ const save = async () => {
       } else {
         await createHabit(payload);
       }
-      router.push("/HabitsScreen");
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Failed to save habit");
-    } finally {
+      router.back();
+    } catch (err: any) {
+      setErrorMessage(
+        err?.response?.data?.detail || "Failed to save habit"
+      );
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -96,10 +102,13 @@ const save = async () => {
     setLoading(true);
     try {
       await deleteHabit(editingId);
-      router.push("/HabitsScreen");
-    } catch {
-      setErrorMessage("Failed to delete habit");
-    } finally {
+      router.back();
+    } catch (err: any) {
+      setErrorMessage(
+        err?.response?.data?.detail || "Failed to delete habit"
+       );
+    }
+    finally {
       setLoading(false);
     }
     
@@ -111,13 +120,53 @@ const save = async () => {
     paddingBottom: 30
   }}>
       <AppText style={{ marginBottom: 6 }}>Name:</AppText>
-      <TextInput value={title} onChangeText={setTitle} style={{ borderWidth: 1, borderColor: colors.inputBorder, color: colors.text, padding: spacing.s, borderRadius: radius.md, marginBottom: spacing.m }} placeholderTextColor="#7a7891" />
+        <TextInput 
+          value={title} 
+          onChangeText={setTitle} 
+          style={{ 
+            borderWidth: 1, 
+            borderColor: 
+            colors.inputBorder, 
+            color: colors.text, 
+            padding: spacing.s, 
+            borderRadius: radius.md, 
+            marginBottom: spacing.m 
+          }} 
+          placeholderTextColor="#7a7891" 
+        />
 
       <AppText style={{ marginBottom: 6 }}>Description:</AppText>
-      <TextInput value={description} onChangeText={setDescription} multiline style={{ borderWidth: 1, borderColor: colors.inputBorder, color: colors.text, padding: spacing.s, borderRadius: radius.md, marginBottom: spacing.m, minHeight: 80 }} placeholderTextColor="#7a7891" />
+        <TextInput 
+          value={description} 
+          onChangeText={setDescription} 
+          multiline 
+          style={{ 
+            borderWidth: 1, 
+            borderColor: colors.inputBorder, 
+            color: colors.text, 
+            padding: spacing.s, 
+            borderRadius: radius.md, 
+            marginBottom: spacing.m, 
+            minHeight: 90 
+            }} 
+          placeholderTextColor="#7a7891" 
+        />
 
       <AppText style={{ marginBottom: 6 }}>Why it's important:</AppText>
-      <TextInput value={why} onChangeText={setWhy} multiline style={{ borderWidth: 1, borderColor: colors.inputBorder, color: colors.text, padding: spacing.s, borderRadius: radius.md, marginBottom: spacing.m, minHeight: 80 }} placeholderTextColor="#7a7891" />
+        <TextInput 
+          value={why} 
+          onChangeText={setWhy} 
+          multiline style={{ 
+            borderWidth: 1, 
+            borderColor: colors.inputBorder, 
+            color: colors.text, 
+            padding: spacing.s, 
+            borderRadius: radius.md, 
+            marginBottom: spacing.m, 
+            minHeight: 80 
+          }} 
+          placeholderTextColor="#7a7891" 
+        />
 
       <AppText style={{ marginBottom: 6 }}>Color:</AppText>
       <View style={{ flexDirection: "row", marginBottom: spacing.m }}>
@@ -138,12 +187,13 @@ const save = async () => {
         ))}
       </View>
 
-      <TouchableOpacity onPress={save} style={{ backgroundColor: colors.buttonActive, padding: spacing.m, borderRadius: radius.md, alignItems: "center", marginBottom: editingId ? spacing.m : 0 }}>
+      <TouchableOpacity onPress={save} disabled={loading} style={{ backgroundColor: colors.buttonActive, padding: spacing.m, borderRadius: radius.md, alignItems: "center", marginBottom: editingId ? spacing.m : 0 }}>
         {loading ? <ActivityIndicator color="#fff" /> : <AppText style={{ color: "#fff", fontWeight: "bold" }}>{editingId ? "Save" : "Add habit"}</AppText>}
       </TouchableOpacity>
 
       {editingId && (
         <TouchableOpacity
+          disabled={loading}
           onPress={() =>
             confirmDelete({
               title: "Delete habit?",

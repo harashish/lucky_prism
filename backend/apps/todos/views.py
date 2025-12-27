@@ -1,15 +1,15 @@
+from django.utils import timezone
+from apps.gamification.services.xp_calculator import calculate_xp
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db import transaction
 import random
 
-from .models import TodoCategory, TodoTask, TodoHistory
+from .models import TodoCategory, TodoTask
 from .serializers import (
     TodoCategorySerializer,
     TodoTaskSerializer,
-    TodoHistorySerializer,
 )
 from apps.gamification.utils import get_user
 
@@ -54,16 +54,6 @@ class TodoTaskDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return TodoTask.objects.filter(user=get_user())
 
-
-class TodoHistoryList(generics.ListAPIView):
-    serializer_class = TodoHistorySerializer
-
-    def get_queryset(self):
-        return TodoHistory.objects.filter(
-            task__user=get_user()
-        ).order_by("-completion_date")
-
-
 class CompleteTodoTaskView(APIView):
     def post(self, request, pk):
         task = get_object_or_404(
@@ -72,26 +62,41 @@ class CompleteTodoTaskView(APIView):
             user=get_user(),
         )
 
-        with transaction.atomic():
-            if task.is_completed:
-                return Response(
-                    {
-                        "detail": "Task already completed",
-                        "already_completed": True,
-                    },
-                    status=status.HTTP_200_OK,
-                )
+        if task.is_completed:
+            return Response(
+                {
+                    "detail": "Task already completed",
+                    "already_completed": True,
+                },
+                status=status.HTTP_200_OK,
+            )
 
-            history = TodoHistory.objects.create(task=task, xp_gained=0)
-            history.complete()
+        diff = task.custom_difficulty or task.category.difficulty
+        xp = (
+            calculate_xp(
+                module="todos",
+                difficulty=diff.name.lower(),
+            )
+            if diff
+            else 0
+        )
 
-            task.is_completed = True
-            task.save(update_fields=["is_completed", "updated_at"])
+        # --- XP LOG (JEDYNA HISTORIA) ---
+        task.user.add_xp(
+            xp=xp,
+            source="todo",
+            source_id=task.id,
+        )
+
+        # --- STATE ---
+        task.is_completed = True
+        task.completed_at = timezone.now()
+        task.save(update_fields=["is_completed", "completed_at", "updated_at"])
 
         return Response(
             {
                 "task_id": task.id,
-                "xp_gained": history.xp_gained,
+                "xp_gained": xp,
                 "total_xp": task.user.total_xp,
                 "current_level": task.user.current_level,
             },
@@ -115,3 +120,13 @@ class RandomTodoTaskView(APIView):
 
         task = random.choice(list(qs))
         return Response(TodoTaskSerializer(task).data)
+
+class CategoryHasUncompletedTasksView(APIView):
+    def get(self, request, category_id):
+        exists = TodoTask.objects.filter(
+            user=get_user(),
+            category_id=category_id,
+            is_completed=False,
+        ).exists()
+
+        return Response({"has_tasks": exists})

@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, FlatList, Alert } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { useHabitStore } from "../stores/useHabitStore";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
@@ -10,29 +16,35 @@ import { useGamificationStore } from "../stores/useGamificationStore";
 import FloatingButton from "../../components/FloatingButton";
 
 export default function HabitsScreen() {
+  const router = useRouter();
 
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
-  const router = useRouter();
   const {
     habits,
+    loading,
     loadMonth,
     loadDifficulties,
     toggleDay,
-    loading,
   } = useHabitStore();
 
   const [month, setMonth] = useState<string | undefined>(undefined);
 
+  /* ---------- INIT ---------- */
+
   useEffect(() => {
     loadDifficulties();
+  }, []);
+
+  useEffect(() => {
     loadMonth(month);
   }, [month]);
 
+  /* ---------- ACTIONS ---------- */
+
   const onToggleToday = async (habitId: number) => {
     const today = new Date().toISOString().slice(0, 10);
-
     const res = await toggleDay(habitId, today);
 
     if (!res) {
@@ -48,7 +60,8 @@ export default function HabitsScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    await loadMonth(month);
+    // ⬅️ reload miesiąca po akcji
+    await loadMonth(month, { silent: true });
   };
 
   const onToggleDay = async (
@@ -67,8 +80,10 @@ export default function HabitsScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    await loadMonth(month);
+    await loadMonth(month, { silent: true });
   };
+
+  /* ---------- UI ---------- */
 
   return (
     <View
@@ -126,34 +141,37 @@ export default function HabitsScreen() {
       </View>
 
       {/* LIST */}
-      <FlatList
-        data={habits}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <HabitItem
-            item={item}
-            onToggleToday={onToggleToday}
-            onToggleDay={onToggleDay}
-          />
-        )}
-        ListEmptyComponent={() => (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: 50,
-            }}
-          >
-            <AppText style={{ color: "#777", fontSize: 16 }}>
-              no habits yet, add some!
-            </AppText>
-          </View>
-        )}
-        contentContainerStyle={{ paddingBottom: 140 }}
-        refreshing={loading}
-        onRefresh={() => loadMonth(month)}
-      />
+      {loading.list ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.buttonActive} />
+        </View>
+      ) : habits.length === 0 ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 50,
+          }}
+        >
+          <AppText style={{ color: "#777", fontSize: 16 }}>
+            no habits yet, add some!
+          </AppText>
+        </View>
+      ) : (
+        <FlatList
+          data={habits}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <HabitItem
+              item={item}
+              onToggleToday={onToggleToday}
+              onToggleDay={onToggleDay}
+            />
+          )}
+          contentContainerStyle={{ paddingBottom: 140 }}
+        />
+      )}
 
       <FloatingButton onPress={() => router.push("/addHabit")} />
     </View>

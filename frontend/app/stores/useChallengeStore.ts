@@ -17,7 +17,6 @@ export interface ChallengeType {
 export interface DifficultyType {
   id: number;
   name: string;
-  xp_value: number;
 }
 
 export interface Challenge {
@@ -45,35 +44,49 @@ export interface UserChallenge {
 interface ChallengeStore {
   challenges: Challenge[];
   tags: ChallengeTag[];
-  difficulties: DifficultyType[]; 
+  difficulties: DifficultyType[];
 
   activeDaily: UserChallenge | null;
   activeWeekly: UserChallenge[];
 
-  loading: boolean;
+  loading: {
+    list: boolean;      // challenges / active
+    meta: boolean;      // tags / difficulties / types
+    saving: boolean;    // create / update / delete / assign
+  };
 
   selectedType: "daily" | "weekly";
   setSelectedType: (t: "daily" | "weekly") => void;
 
+  /* --- load --- */
   loadChallenges: () => Promise<void>;
   loadTags: () => Promise<void>;
-  loadDifficulties: () => Promise<void>;
+  loadDifficulties: () => Promise<DifficultyType[]>;
+  loadTypes: () => Promise<ChallengeType[]>;
   fetchActive: () => Promise<void>;
 
-  refreshAll: () => Promise<void>;
-
-  randomChallenge: (
-  type: "daily" | "weekly",
-  tagIds?: number[],
-  difficultyId?: number | null
+  /* --- gameplay --- */
+  fetchRandomChallenge: (
+    type: "daily" | "weekly",
+    tagIds?: number[],
+    difficultyId?: number | null
   ) => Promise<Challenge | null>;
 
-
   assignChallenge: (challengeId: number) => Promise<UserChallenge | null>;
-  discardUserChallenge: (id: number) => Promise<boolean>;
+  discardUserChallenge: (id: number) => Promise<void>;
   completeUserChallenge: (id: number) => Promise<XpResult | null>;
 
-  resetChallenges: () => void;
+  /* --- crud (admin) --- */
+  getChallengeById: (id: number) => Promise<Challenge | null>;
+  createChallenge: (payload: any) => Promise<void>;
+  updateChallenge: (id: number, payload: any) => Promise<void>;
+  deleteChallenge: (id: number) => Promise<void>;
+
+  /* --- tags --- */
+  getTagById: (id: number) => Promise<ChallengeTag | null>;
+  createTag: (payload: { name: string }) => Promise<void>;
+  updateTag: (id: number, payload: { name: string }) => Promise<void>;
+  deleteTag: (id: number) => Promise<void>;
 }
 
 /* ---------- IMPLEMENTATION ---------- */
@@ -84,75 +97,86 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
   difficulties: [],
   activeDaily: null,
   activeWeekly: [],
-  loading: false,
   selectedType: "daily",
+
+  loading: {
+    list: false,
+    meta: false,
+    saving: false,
+  },
 
   /* ---------- UI ---------- */
 
   setSelectedType: (t) => set({ selectedType: t }),
 
-  /* ---------- LOADERS ---------- */
+  /* ---------- LOAD ---------- */
 
   loadChallenges: async () => {
-    set({ loading: true });
+    set((s) => ({ loading: { ...s.loading, list: true } }));
     try {
       const res = await api.get<Challenge[]>("/challenges/");
       set({ challenges: res.data });
-    } catch (e: any) {
-      console.error("loadChallenges", e.response?.data || e.message || e);
+    } catch (e) {
+      console.error("loadChallenges", e);
     } finally {
-      set({ loading: false });
+      set((s) => ({ loading: { ...s.loading, list: false } }));
     }
   },
 
   loadTags: async () => {
+    set((s) => ({ loading: { ...s.loading, meta: true } }));
     try {
       const res = await api.get<ChallengeTag[]>("/challenges/tags/");
       set({ tags: res.data });
-    } catch (e: any) {
-      console.error("loadTags", e.response?.data || e.message || e);
+    } catch (e) {
+      console.error("loadTags", e);
+    } finally {
+      set((s) => ({ loading: { ...s.loading, meta: false } }));
     }
   },
 
   loadDifficulties: async () => {
+    set((s) => ({ loading: { ...s.loading, meta: true } }));
     try {
       const res = await api.get<DifficultyType[]>("/common/difficulties/");
       set({ difficulties: res.data });
+      return res.data;
     } catch (e) {
       console.error("loadDifficulties", e);
-      set({ difficulties: [] });
+      return [];
+    } finally {
+      set((s) => ({ loading: { ...s.loading, meta: false } }));
+    }
+  },
+
+  loadTypes: async () => {
+    try {
+      const res = await api.get<ChallengeType[]>("/challenges/types/");
+      return res.data;
+    } catch (e) {
+      console.error("loadTypes", e);
+      return [];
     }
   },
 
   fetchActive: async () => {
+    set((s) => ({ loading: { ...s.loading, list: true } }));
     try {
       const res = await api.get("/challenges/active/");
       set({
         activeDaily: res.data.daily || null,
         activeWeekly: res.data.weekly || [],
       });
-    } catch (e: any) {
-      console.error("fetchActive", e.response?.data || e.message || e);
-      set({ activeDaily: null, activeWeekly: [] });
+    } catch (e) {
+      console.error("fetchActive", e);
+    } finally {
+      set((s) => ({ loading: { ...s.loading, list: false } }));
     }
   },
 
-  /* ---------- 🔑 SYNCHRONIZATION ---------- */
+  /* ---------- GAMEPLAY ---------- */
 
-  refreshAll: async () => {
-    await Promise.all([
-      get().loadChallenges(),
-      get().fetchActive(),
-    ]);
-  },
-
-  /* ---------- ACTIONS ---------- */
-
-  randomChallenge: async (
-    type,
-    tagIds = [],
-    difficultyId: number | null = null
-  ) => {
+  fetchRandomChallenge: async (type, tagIds = [], difficultyId = null) => {
     try {
       const params: any = { type };
       if (tagIds.length) params.tags = tagIds.join(",");
@@ -162,58 +186,156 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
       return res.data;
     } catch (e: any) {
       if (e.response?.status === 404) return null;
-      console.warn("randomChallenge", e.response?.data || e.message || e);
+      console.warn("fetchRandomChallenge", e);
       return null;
     }
   },
 
-
   assignChallenge: async (challengeId) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
       const res = await api.post<UserChallenge>("/challenges/assign/", {
         challenge: challengeId,
       });
-
-      await get().refreshAll();
+      await Promise.all([get().loadChallenges(), get().fetchActive()]);
       return res.data;
     } catch (e) {
       console.error("assignChallenge", e);
       return null;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
   discardUserChallenge: async (id) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
       await api.post(`/challenges/user-challenges/${id}/discard/`);
-      await get().refreshAll();
-      return true;
-    } catch (e: any) {
-      console.error("discardUserChallenge", e.response?.data || e.message || e);
-      return false;
+      await Promise.all([get().loadChallenges(), get().fetchActive()]);
+    } catch (e) {
+      console.error("discardUserChallenge", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
   completeUserChallenge: async (id) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
       const res = await api.post<XpResult>(
         `/challenges/user-challenges/${id}/complete/`
       );
-
-      await get().refreshAll();
+      await Promise.all([get().loadChallenges(), get().fetchActive()]);
       return res.data;
-    } catch (e: any) {
-      console.error("completeUserChallenge", e.response?.data || e.message || e);
+    } catch (e) {
+      console.error("completeUserChallenge", e);
+      return null;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  /* ---------- CRUD (ADMIN) ---------- */
+
+  getChallengeById: async (id) => {
+    try {
+      const res = await api.get(`/challenges/${id}/`);
+      return res.data;
+    } catch (e) {
+      console.error("getChallengeById", e);
       return null;
     }
   },
 
-  /* ---------- RESET ---------- */
+  createChallenge: async (payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.post("/challenges/", payload);
+      await get().loadChallenges();
+    } catch (e) {
+      console.error("createChallenge", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
 
-  resetChallenges: () =>
-    set({
-      challenges: [],
-      tags: [],
-      activeDaily: null,
-      activeWeekly: [],
-    }),
+  updateChallenge: async (id, payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.patch(`/challenges/${id}/`, payload);
+      await get().loadChallenges();
+    } catch (e) {
+      console.error("updateChallenge", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  deleteChallenge: async (id) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.delete(`/challenges/${id}/`);
+      await get().loadChallenges();
+    } catch (e) {
+      console.error("deleteChallenge", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  /* ---------- TAGS ---------- */
+
+  getTagById: async (id) => {
+    try {
+      const res = await api.get<ChallengeTag>(`/challenges/tags/${id}/`);
+      return res.data;
+    } catch (e) {
+      console.error("getTagById", e);
+      return null;
+    }
+  },
+
+  createTag: async (payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.post("/challenges/tags/", payload);
+      await get().loadTags();
+    } catch (e) {
+      console.error("createTag", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  updateTag: async (id, payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.patch(`/challenges/tags/${id}/`, payload);
+      await get().loadTags();
+    } catch (e) {
+      console.error("updateTag", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  deleteTag: async (id) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.delete(`/challenges/tags/${id}/`);
+      await get().loadTags();
+    } catch (e) {
+      console.error("deleteTag", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
 }));

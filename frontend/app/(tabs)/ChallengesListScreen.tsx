@@ -11,8 +11,8 @@ const ChallengesListScreen = () => {
   const router = useRouter();
 
   const TYPES = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
+    { label: "Daily", value: "daily" },
+    { label: "Weekly", value: "weekly" },
   ] as const;
 
   const {
@@ -22,7 +22,10 @@ const ChallengesListScreen = () => {
     activeWeekly,
     selectedType,
     setSelectedType,
+    loading,
     loadTags,
+    loadChallenges,
+    fetchActive,
   } = useChallengeStore();
 
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
@@ -30,10 +33,9 @@ const ChallengesListScreen = () => {
 
   /* ---------- INIT ---------- */
   useEffect(() => {
-    (async () => {
-      await loadTags();
-      await useChallengeStore.getState().refreshAll();
-    })();
+    loadTags();
+    loadChallenges();
+    fetchActive();
   }, []);
 
   /* ---------- FILTERS ---------- */
@@ -70,165 +72,173 @@ const ChallengesListScreen = () => {
 
   /* ---------- SECTIONS ---------- */
 
-const sections = useMemo(() => {
-  const result = [];
+  const sections = useMemo(() => {
+    const result: any[] = [];
 
-  if (activeChallenges.length > 0) {
-    result.push({
-      title: "Actual challenge",
-      data: activeChallenges,
-      isUserChallenge: true,
-    });
+    if (activeChallenges.length > 0) {
+      result.push({
+        title: "Actual challenge",
+        data: activeChallenges,
+        isUserChallenge: true,
+      });
 
-    if (filteredChallenges.length > 0) {
+      if (filteredChallenges.length > 0) {
+        result.push({
+          title: "Challenges list",
+          data: showAll ? filteredChallenges : [],
+          isUserChallenge: false,
+        });
+      }
+    } else if (filteredChallenges.length > 0) {
       result.push({
         title: "Challenges list",
-        data: showAll ? filteredChallenges : [],
+        data: filteredChallenges,
         isUserChallenge: false,
       });
     }
-  } else if (filteredChallenges.length > 0) {
-    result.push({
-      title: "Challenges list",
-      data: filteredChallenges,
-      isUserChallenge: false,
-    });
-  }
 
-
-  return result;
-}, [activeChallenges, filteredChallenges, showAll]);
-
-
+    return result;
+  }, [activeChallenges, filteredChallenges, showAll]);
 
   return (
     <View style={{ flex: 1, padding: 10, backgroundColor: colors.background }}>
-    {/* Typy */}
-<View style={{ flexDirection: "row", marginBottom: 10 }}>
-  {TYPES.map(({ label, value }, i) => (
-    <TouchableOpacity
-      key={value}
-      onPress={() => setSelectedType(value)}
-      style={{
-        flex: 1,
-        padding: 15,
-        marginRight: i === 0 ? 5 : 0,
-        marginLeft: i === 1 ? 5 : 0,
-        borderRadius: 10,
-        backgroundColor:
-          selectedType === value ? colors.buttonActive : colors.button,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <AppText style={{ color: colors.text, fontWeight: "bold" }}>
-        {label}
-      </AppText>
-    </TouchableOpacity>
-  ))}
-</View>
-
-{/* Tagi */}
-<ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  style={{ marginBottom: 10, height: 85, flexGrow: 0 }}
-  contentContainerStyle={{ alignItems: "flex-start", paddingLeft: 0, paddingRight: 5, paddingBottom: 20 }}
->
-  {tags.map(tag => (
-    <TouchableOpacity
-      key={tag.id}
-      onPress={() => toggleTag(tag.id)}
-      onLongPress={() => router.push(`/editTag/${tag.id}`)}
-      delayLongPress={300}
-      style={{
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        marginRight: 5,
-        borderRadius: 10,
-        backgroundColor: selectedTags.includes(tag.id) ? colors.buttonActive : colors.button,
-      }}
-    >
-      <AppText style={{ color: colors.text }}>{tag.name}</AppText>
-    </TouchableOpacity>
-  ))}
-
-    <TouchableOpacity
-      onPress={() => router.push("/addTag")}
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: 20,
-        backgroundColor: colors.buttonActive,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <AppText style={{ fontSize: 24, color: "#fff" }}>+</AppText>
-    </TouchableOpacity>
-  </ScrollView>
-
-{/* Lista challenge */}
-{challenges.length === 0 ? (
-  <View
-    style={{
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: 50,
-    }}
-  >
-    <AppText style={{ color: "#777", fontSize: 16 }}>
-      No challenges yet, add some!
-    </AppText>
-  </View>
-) : sections.length === 0 ? (
-  <View
-    style={{
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: 50,
-    }}
-  >
-    <AppText style={{ color: "#777", fontSize: 16 }}>
-      No challenges with those tags
-    </AppText>
-  </View>
-) : (
-  <SectionList
-    sections={sections}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={({ item, section }) => (
-      <ChallengeItem
-        item={item}
-        isUserChallenge={section.isUserChallenge}
-      />
-    )}
-    renderSectionHeader={({ section: { title } }) => {
-      const isExpandable = title === "Challenges list";
-      return (
-        <TouchableOpacity
-          onPress={() => {
-            if (isExpandable) setShowAll((prev) => !prev);
-          }}
-          style={{ marginVertical: 10 }}
-        >
-          <AppText
+      {/* Typy */}
+      <View style={{ flexDirection: "row", marginBottom: 10 }}>
+        {TYPES.map(({ label, value }, i) => (
+          <TouchableOpacity
+            key={value}
+            onPress={() => setSelectedType(value)}
             style={{
-              fontSize: 17,
-              fontWeight: "bold",
-              color: colors.text,
+              flex: 1,
+              padding: 15,
+              marginRight: i === 0 ? 5 : 0,
+              marginLeft: i === 1 ? 5 : 0,
+              borderRadius: 10,
+              backgroundColor:
+                selectedType === value
+                  ? colors.buttonActive
+                  : colors.button,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {title}
-          </AppText>
+            <AppText style={{ color: colors.text, fontWeight: "bold" }}>
+              {label}
+            </AppText>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Tagi */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ marginBottom: 10, height: 85, flexGrow: 0 }}
+        contentContainerStyle={{
+          alignItems: "flex-start",
+          paddingLeft: 0,
+          paddingRight: 5,
+          paddingBottom: 20,
+        }}
+      >
+        {!loading.meta &&
+          tags.map((tag) => (
+            <TouchableOpacity
+              key={tag.id}
+              onPress={() => toggleTag(tag.id)}
+              onLongPress={() => router.push(`/editTag/${tag.id}`)}
+              delayLongPress={300}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                marginRight: 5,
+                borderRadius: 10,
+                backgroundColor: selectedTags.includes(tag.id)
+                  ? colors.buttonActive
+                  : colors.button,
+              }}
+            >
+              <AppText style={{ color: colors.text }}>{tag.name}</AppText>
+            </TouchableOpacity>
+          ))}
+
+        <TouchableOpacity
+          onPress={() => router.push("/addTag")}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 20,
+            backgroundColor: colors.buttonActive,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <AppText style={{ fontSize: 24, color: "#fff" }}>+</AppText>
         </TouchableOpacity>
-      );
-    }}
-    contentContainerStyle={{ paddingBottom: 100 }}
-  />
-)}
+      </ScrollView>
+
+      {/* Lista challenge */}
+      {!loading.list && challenges.length === 0 ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 50,
+          }}
+        >
+          <AppText style={{ color: "#777", fontSize: 16 }}>
+            No challenges yet, add some!
+          </AppText>
+        </View>
+      ) : !loading.list && sections.length === 0 ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 50,
+          }}
+        >
+          <AppText style={{ color: "#777", fontSize: 16 }}>
+            No challenges with those tags
+          </AppText>
+        </View>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item, section }) => (
+            <ChallengeItem
+              item={item}
+              isUserChallenge={section.isUserChallenge}
+            />
+          )}
+          renderSectionHeader={({ section: { title } }) => {
+            const isExpandable = title === "Challenges list";
+            return (
+              <TouchableOpacity
+                onPress={() => {
+                  if (isExpandable) setShowAll((prev) => !prev);
+                }}
+                style={{ marginVertical: 10 }}
+              >
+                <AppText
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "bold",
+                    color: colors.text,
+                  }}
+                >
+                  {title}
+                </AppText>
+              </TouchableOpacity>
+            );
+          }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
+
       <FloatingButton
         onPress={() =>
           router.push({
@@ -242,5 +252,3 @@ const sections = useMemo(() => {
 };
 
 export default ChallengesListScreen;
-
-

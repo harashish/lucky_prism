@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
+/* ---------- TYPES ---------- */
+
 export interface DifficultyType {
   id: number;
   name: string;
@@ -23,186 +25,278 @@ export interface TodoTask {
   created_at: string;
 }
 
+/* ---------- STORE ---------- */
+
 interface TodoStore {
   categories: TodoCategory[];
   tasks: TodoTask[];
-  loading: boolean;
 
   selectedCategoryId: number | null;
+  hasUncompletedTasksInSelectedCategory: boolean | null;
 
+  loading: {
+    categories: boolean;
+    tasks: boolean;
+    saving: boolean;
+    meta: boolean;
+  };
+
+  /* --- load --- */
   loadCategories: () => Promise<void>;
   loadTasks: (categoryId: number) => Promise<void>;
+  loadDifficulties: () => Promise<DifficultyType[]>;
 
-  addCategory: (payload: any) => Promise<TodoCategory | null>;
-  saveCategory: (id: number, payload: any) => Promise<boolean>;
-  deleteCategory: (id: number) => Promise<boolean>;
+  /* --- categories --- */
+  createCategory: (payload: any) => Promise<void>;
+  saveCategory: (id: number, payload: any) => Promise<void>;
+  deleteCategory: (id: number) => Promise<void>;
 
+  /* --- tasks --- */
   quickAddTask: (
     categoryId: number,
     content: string,
     customDifficultyId?: number | null
-  ) => Promise<TodoTask | null>;
+  ) => Promise<void>;
+
+  updateTask: (
+    taskId: number,
+    payload: { content: string; custom_difficulty_id?: number | null }
+  ) => Promise<void>;
 
   completeTask: (
     taskId: number
   ) => Promise<{ xp_gained: number; total_xp: number; current_level: number } | null>;
 
-  deleteTask: (taskId: number) => Promise<boolean>;
+  deleteTask: (taskId: number) => Promise<void>;
 
-  pickRandomTask: (categoryId?: number) => Promise<TodoTask | null>;
+  /* --- random --- */
+  fetchRandomTask: (categoryId?: number) => Promise<TodoTask | null>;
 
-  hasTasksInSelectedCategory: boolean | null;
-  checkCategoryHasTasks: (categoryId: number) => Promise<void>;
+  /* --- helpers --- */
+  checkCategoryHasUncompletedTasks: (categoryId: number) => Promise<void>;
+  getCategoryById: (id: number) => Promise<TodoCategory | null>;
 
+  /* --- ui --- */
   setSelectedCategoryId: (id: number | null) => void;
+
 }
 
-export const useTodoStore = create<TodoStore>((set, get) => ({
+/* ---------- INITIAL STATE ---------- */
+
+const initialState = {
   categories: [],
   tasks: [],
-  loading: false,
   selectedCategoryId: null,
-  hasTasksInSelectedCategory: null,
+  hasUncompletedTasksInSelectedCategory: null,
+  loading: {
+    categories: false,
+    tasks: false,
+    saving: false,
+    meta: false,
+  },
+};
 
-  // -------- categories --------
+/* ---------- IMPLEMENTATION ---------- */
+
+export const useTodoStore = create<TodoStore>((set, get) => ({
+  ...initialState,
+
+  /* ---------- LOAD ---------- */
 
   loadCategories: async () => {
-    set({ loading: true });
+    set((s) => ({ loading: { ...s.loading, categories: true } }));
     try {
       const res = await api.get<TodoCategory[]>("/todos/categories/");
       set({ categories: res.data });
-    } catch (e: any) {
+    } catch (e) {
       console.error("loadCategories", e);
     } finally {
-      set({ loading: false });
+      set((s) => ({ loading: { ...s.loading, categories: false } }));
     }
   },
 
-  addCategory: async (payload) => {
-    try {
-      const res = await api.post("/todos/categories/", payload);
-      await get().loadCategories();
-      return res.data;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  },
-
-  saveCategory: async (id, payload) => {
-    try {
-      await api.patch(`/todos/categories/${id}/`, payload);
-      await get().loadCategories();
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
-    }
-  },
-
-  deleteCategory: async (id) => {
-    await api.delete(`/todos/categories/${id}/`);
-    await get().loadCategories();
-    return true;
-  },
-
-  // -------- tasks --------
-
-  loadTasks: async (categoryId: number) => {
+  loadTasks: async (categoryId) => {
     if (!categoryId) return;
 
-    set({ loading: true });
+    set((s) => ({ loading: { ...s.loading, tasks: true } }));
     try {
       const res = await api.get<TodoTask[]>("/todos/tasks/", {
         params: { category_id: categoryId },
       });
+
+      const hasUncompleted = res.data.some(t => !t.is_completed);
+
       set({
         tasks: res.data,
-        hasTasksInSelectedCategory: res.data.length > 0,
+        hasUncompletedTasksInSelectedCategory: hasUncompleted,
       });
     } catch (e) {
-      console.error(e);
-      set({ hasTasksInSelectedCategory: false });
+      console.error("loadTasks", e);
+      set({ hasUncompletedTasksInSelectedCategory: false });
     } finally {
-      set({ loading: false });
+      set((s) => ({ loading: { ...s.loading, tasks: false } }));
     }
   },
 
-  quickAddTask: async (categoryId, content, customDifficultyId = null) => {
+  loadDifficulties: async () => {
+    set((s) => ({ loading: { ...s.loading, meta: true } }));
     try {
-      const res = await api.post("/todos/tasks/", {
+      const res = await api.get<DifficultyType[]>("/common/difficulties/");
+      return res.data;
+    } catch (e) {
+      console.error("loadDifficulties", e);
+      return [];
+    } finally {
+      set((s) => ({ loading: { ...s.loading, meta: false } }));
+    }
+  },
+
+  /* ---------- CATEGORY CRUD ---------- */
+
+  createCategory: async (payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.post("/todos/categories/", payload);
+      await get().loadCategories();
+    } catch (e) {
+      console.error("createCategory", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  saveCategory: async (id, payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.patch(`/todos/categories/${id}/`, payload);
+      await get().loadCategories();
+    } catch (e) {
+      console.error("saveCategory", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  deleteCategory: async (id) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.delete(`/todos/categories/${id}/`);
+      await get().loadCategories();
+    } catch (e) {
+      console.error("deleteCategory", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  /* ---------- TASKS ---------- */
+
+  quickAddTask: async (categoryId, content, customDifficultyId = null) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.post("/todos/tasks/", {
         category_id: categoryId,
         content,
         custom_difficulty_id: customDifficultyId,
       });
       await get().loadTasks(categoryId);
-      return res.data;
     } catch (e) {
-      console.error(e);
-      return null;
+      console.error("quickAddTask", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+    }
+  },
+
+  updateTask: async (taskId, payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
+    try {
+      await api.patch(`/todos/tasks/${taskId}/`, payload);
+      const task = get().tasks.find((t) => t.id === taskId);
+      if (task) await get().loadTasks(task.category.id);
+    } catch (e) {
+      console.error("updateTask", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
   completeTask: async (taskId) => {
     try {
       const res = await api.post(`/todos/tasks/${taskId}/complete/`);
-      const task = get().tasks.find(t => t.id === taskId);
-      if (task) {
-        await get().loadTasks(task.category.id);
-      }
+      const task = get().tasks.find((t) => t.id === taskId);
+      if (task) await get().loadTasks(task.category.id);
       return res.data;
     } catch (e) {
-      console.error(e);
+      console.error("completeTask", e);
       return null;
     }
   },
 
   deleteTask: async (taskId) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
-      const task = get().tasks.find(t => t.id === taskId);
+      const task = get().tasks.find((t) => t.id === taskId);
       await api.delete(`/todos/tasks/${taskId}/`);
-      if (task) {
-        await get().loadTasks(task.category.id);
-      }
-      return true;
+      if (task) await get().loadTasks(task.category.id);
     } catch (e) {
-      console.error(e);
-      return false;
+      console.error("deleteTask", e);
+      throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
-  // -------- random --------
+  /* ---------- RANDOM ---------- */
 
-  pickRandomTask: async (categoryId) => {
+  fetchRandomTask: async (categoryId) => {
     try {
       const res = await api.get<TodoTask>("/todos/tasks/random/", {
         params: categoryId ? { category_id: categoryId } : {},
       });
-      return res.data || null;
+      return res.data ?? null;
     } catch (e) {
-      console.error("pickRandomTask", e);
+      console.error("fetchRandomTask", e);
       return null;
     }
   },
 
-  checkCategoryHasTasks: async (categoryId) => {
+  /* ---------- HELPERS ---------- */
+
+  checkCategoryHasUncompletedTasks: async (categoryId) => {
     try {
       const res = await api.get<TodoTask[]>("/todos/tasks/", {
         params: { category_id: categoryId },
       });
-      set({ hasTasksInSelectedCategory: res.data.length > 0 });
+      const hasUncompleted = res.data.some(t => !t.is_completed);
+      set({ hasUncompletedTasksInSelectedCategory: hasUncompleted });
     } catch (e) {
-      console.error("checkCategoryHasTasks", e);
-      set({ hasTasksInSelectedCategory: false });
+      console.error("checkCategoryHasUncompletedTasks", e);
+      set({ hasUncompletedTasksInSelectedCategory: false });
     }
   },
 
-  // -------- selection --------
+  getCategoryById: async (id) => {
+    try {
+      const res = await api.get<TodoCategory>(`/todos/categories/${id}/`);
+      return res.data;
+    } catch (e) {
+      console.error("getCategoryById", e);
+      return null;
+    }
+  },
+
+  /* ---------- UI ---------- */
 
   setSelectedCategoryId: (id) =>
     set({
       selectedCategoryId: id,
       tasks: [],
-      hasTasksInSelectedCategory: null,
+      hasUncompletedTasksInSelectedCategory: null,
     }),
+
 }));

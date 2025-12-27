@@ -2,7 +2,6 @@ import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import AppText from "../../components/AppText";
 import { components } from "../../constants/theme";
-import { ItemHeader } from "../../components/ItemHeader";
 import { ItemDetails } from "../../components/ItemDetails";
 
 type GoalItemProps = {
@@ -58,9 +57,9 @@ export default function GoalItem({
           {!isCompleted && (
             <TouchableOpacity
               onPress={onComplete}
-              style={components.addButton}
+              style={components.completeButton}
             >
-              <AppText style={{ color: "#fff", fontSize: 18 }}>+</AppText>
+              <AppText style={{ color: "#fff" }}>complete</AppText>
             </TouchableOpacity>
           )}
         </View>

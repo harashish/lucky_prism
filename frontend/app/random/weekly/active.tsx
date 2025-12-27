@@ -29,20 +29,17 @@ export default function WeeklyActiveScreen() {
     }
   }, [loading, activeWeekly]);
 
-
-  const uc = activeWeekly[0];
-  const ch = uc.challenge;
-  const days = uc.progress_days ?? 1;
-
   const tryAnother = async () => {
-    const ok = await discardUserChallenge(uc.id);
-    if (!ok) return Alert.alert("Error", "Could not discard the challenge");
-
-    router.replace("/random/weekly");
+    try {
+      await discardUserChallenge(activeChallenge.id);
+      router.replace("/random/weekly");
+    } catch {
+      Alert.alert("Error", "Could not discard the challenge");
+    }
   };
 
   const onComplete = async () => {
-    const res = await completeUserChallenge(uc.id);
+    const res = await completeUserChallenge(activeChallenge.id);
     if (!res) return Alert.alert("Error", "Could not complete the challenge");
     
     if (gamificationOn) {
@@ -60,6 +57,10 @@ export default function WeeklyActiveScreen() {
   if (!activeWeekly || activeWeekly.length === 0) {
     return null;
   }
+
+  const activeChallenge = activeWeekly[0];
+  const challenge = activeChallenge.challenge;
+  const days = activeChallenge.progress_days ?? 1;
   
 
   return (
@@ -67,8 +68,8 @@ export default function WeeklyActiveScreen() {
         <AppText style={{ fontWeight: "bold", fontSize: 14, marginBottom: 12, color: colors.light, fontStyle: "italic" }}>
            You have an active weekly challenge!
       </AppText>
-      <AppText style={{ fontSize: 20, fontWeight: "700", marginBottom: 6 , lineHeight: 24, paddingBottom: 2 }}>{ch?.title}</AppText>
-      <AppText style={{ marginBottom: 18, marginTop: 5 }}>{ch?.description}</AppText>
+      <AppText style={{ fontSize: 20, fontWeight: "700", marginBottom: 6 , lineHeight: 24, paddingBottom: 2 }}>{challenge?.title}</AppText>
+      <AppText style={{ marginBottom: 18, marginTop: 5 }}>{challenge?.description}</AppText>
 
       <View
         style={{

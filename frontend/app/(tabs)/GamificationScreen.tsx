@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
-import { colors, spacing, radius } from "../../constants/theme";
+import { colors, spacing } from "../../constants/theme";
 import { api } from "../api/apiClient";
 import { useGamificationStore } from "../stores/useGamificationStore";
 
@@ -47,13 +47,6 @@ export default function GamificationScreen() {
       console.log("fetchLogs error", e);
     }
   };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchUser();
-      fetchLogs();
-    }, [])
-  );
 
   const xpForLevel = (lvl: number) => 50 * lvl * (lvl - 1);
   const currentLevelXpStart = xpForLevel(level);

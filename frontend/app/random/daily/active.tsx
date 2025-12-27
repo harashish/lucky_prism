@@ -30,10 +30,12 @@ export default function DailyActiveScreen() {
   }, [loading, activeDaily]);
 
   const tryAnother = async () => {
-    const ok = await discardUserChallenge(activeDaily!.id);
-    if (!ok) return Alert.alert("Error", "Could not discard the challenge");
-
-    router.replace("/random/daily");
+    try {
+      await discardUserChallenge(activeDaily!.id);
+      router.replace("/random/daily");
+    } catch {
+      Alert.alert("Error", "Could not discard the challenge");
+    }
   };
 
   const onComplete = async () => {
@@ -56,7 +58,7 @@ export default function DailyActiveScreen() {
     return null;
   }
 
-  const ch = activeDaily.challenge;
+  const challenge = activeDaily.challenge;
 
   return (
     <View style={{ flex: 1, padding: 24, backgroundColor: colors.background, justifyContent: "center" }}>
@@ -65,11 +67,11 @@ export default function DailyActiveScreen() {
       </AppText>
       
       <AppText style={{ fontSize: 20, fontWeight: "700", marginBottom: 6, lineHeight: 24, paddingBottom: 2 }}>
-        {ch?.title}
+        {challenge?.title}
       </AppText>
       
       <AppText style={{ marginBottom: 18, marginTop: 5 }}>
-        {ch?.description}
+        {challenge?.description}
       </AppText>
 
       <TouchableOpacity onPress={tryAnother} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10, marginBottom: 10 }}>

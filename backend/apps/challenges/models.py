@@ -120,24 +120,9 @@ class UserChallenge(models.Model):
             source_id=self.id,
         )
 
-        ChallengeHistory.objects.create(
-            user_challenge=self,
-            xp_gained=xp,
-        )
-
         self.is_completed = True
         self.save(update_fields=["is_completed", "updated_at"])
 
         return xp
 
 
-# ---------- HISTORY ----------
-
-class ChallengeHistory(models.Model):
-    user_challenge = models.ForeignKey(
-        UserChallenge,
-        on_delete=models.CASCADE,
-        related_name="history",
-    )
-    completion_date = models.DateTimeField(auto_now_add=True)
-    xp_gained = models.IntegerField(default=0)

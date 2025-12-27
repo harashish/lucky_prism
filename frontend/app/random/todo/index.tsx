@@ -12,9 +12,9 @@ export default function TodoPickScreen() {
   const {
     categories,
     loadCategories,
-    pickRandomTask,
-    hasTasksInSelectedCategory,
-    checkCategoryHasTasks,
+    fetchRandomTask,
+    hasUncompletedTasksInSelectedCategory,
+    checkCategoryHasUncompletedTasks,
   } = useTodoStore();
 
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -37,7 +37,7 @@ export default function TodoPickScreen() {
   // ---- check if selected category has tasks
   useEffect(() => {
     if (selectedCategory !== null) {
-      checkCategoryHasTasks(selectedCategory);
+      checkCategoryHasUncompletedTasks(selectedCategory);
     }
   }, [selectedCategory]);
 
@@ -47,7 +47,7 @@ export default function TodoPickScreen() {
       return;
     }
 
-    if (hasTasksInSelectedCategory === false) {
+    if (hasUncompletedTasksInSelectedCategory === false) {
       Alert.alert("No tasks in this category.");
       return;
     }
@@ -55,7 +55,7 @@ export default function TodoPickScreen() {
     setSpinning(true);
     setSpinItems(["...", "Randomizing", "Searching", "Wait", "OK"]);
 
-    const picked = await pickRandomTask(selectedCategory);
+    const picked = await fetchRandomTask(selectedCategory);
 
     if (!picked) {
       setSpinning(false);
@@ -85,7 +85,7 @@ export default function TodoPickScreen() {
     );
   }
 
-  const randomDisabled = hasTasksInSelectedCategory === false;
+  const randomDisabled = hasUncompletedTasksInSelectedCategory === false;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -120,7 +120,7 @@ export default function TodoPickScreen() {
         </TouchableOpacity>
 
         {/* EMPTY INFO */}
-        {hasTasksInSelectedCategory === false && (
+        {hasUncompletedTasksInSelectedCategory === false && (
           <AppText style={{ marginBottom: 12, color: "#999" }}>
             No tasks in this category
           </AppText>

@@ -9,16 +9,12 @@ import { Manrope_400Regular, Manrope_600SemiBold } from "@expo-google-fonts/manr
 import { ActivityIndicator, View } from "react-native";
 import { colors } from "../constants/theme";
 import XPPopup from "../components/XPPopup";
-import { useGamificationStore } from "./stores/useGamificationStore";
-import { useEffect } from "react";
 import { defaultHeaderOptions } from "../components/NavigationHeader";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 
 
 export default function RootLayout() {
-  const fetchUser = useGamificationStore(s => s.fetchUser);
-
   const [loaded] = useFonts({
     Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold,
     Poppins_400Regular, Poppins_600SemiBold,
@@ -27,17 +23,13 @@ export default function RootLayout() {
   });
 
   const AppTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: colors.background,
-    card: colors.background,
-  },
-};
-
-  useEffect(() => {
-    fetchUser(1);
-  }, []);
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: colors.background,
+      card: colors.background,
+    },
+  };
 
   if (!loaded) {
     return (

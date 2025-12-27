@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TodoCategory, TodoTask, TodoHistory
+from .models import TodoCategory, TodoTask
 from apps.common.serializers import DifficultyTypeSerializer
 from apps.common.models import DifficultyType
 
@@ -49,8 +49,3 @@ class TodoTaskSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-
-class TodoHistorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TodoHistory
-        fields = ["id", "task", "completion_date", "xp_gained"]

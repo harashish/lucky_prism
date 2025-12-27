@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, TouchableOpacity, FlatList, Alert } from "react-native";
+import { View, TouchableOpacity, FlatList, Alert, ActivityIndicator } from "react-native";
 import AppText from "../../components/AppText";
-import { colors, components } from "../../constants/theme";
+import { colors } from "../../constants/theme";
 import { useGoalStore } from "../stores/useGoalStore";
 import { useFocusEffect, useRouter } from "expo-router";
 import dayjs from "dayjs";
@@ -9,13 +9,12 @@ import isoWeek from "dayjs/plugin/isoWeek";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
 import FloatingButton from "../../components/FloatingButton";
-import { ItemHeader } from "../../components/ItemHeader";
-import { ItemDetails } from "../../components/ItemDetails";
 import GoalItem from "../../features/goals/GoalItem";
 
 dayjs.extend(isoWeek);
 
 const periodNames = ["weekly", "monthly", "yearly"] as const;
+type Period = typeof periodNames[number];
 
 export default function GoalsScreen() {
   const router = useRouter();
@@ -25,37 +24,31 @@ export default function GoalsScreen() {
 
   const {
     goals,
-    history,
+    loading,
     loadPeriods,
     loadGoals,
-    loadHistory,
     completeGoal,
   } = useGoalStore();
 
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
-  const [selectedPeriod, setSelectedPeriod] =
-    useState<"weekly" | "monthly" | "yearly">("weekly");
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>("weekly");
 
+  /* ---------- INIT ---------- */
   useEffect(() => {
     loadPeriods();
-    loadHistory();
   }, []);
-
-  useEffect(() => {
-    loadGoals(selectedPeriod);
-  }, [selectedPeriod]);
 
   useFocusEffect(
     useCallback(() => {
       loadGoals(selectedPeriod);
-      loadHistory();
     }, [selectedPeriod])
   );
 
-  const completedGoalIds = new Set(history.map(h => h.goal));
-  const completedCount = goals.filter(g => completedGoalIds.has(g.id)).length;
-  const progress = goals.length === 0 ? 0 : completedCount / goals.length;
+  /* ---------- DERIVED ---------- */
 
+  const completedCount = goals.filter(g => g.is_completed).length;
+  const progress = goals.length === 0 ? 0 : completedCount / goals.length;
+  
   const now = dayjs();
   const timeProgress =
     selectedPeriod === "weekly"
@@ -67,6 +60,8 @@ export default function GoalsScreen() {
       : now.diff(now.startOf("year")) /
         now.endOf("year").diff(now.startOf("year"));
 
+  /* ---------- ACTIONS ---------- */
+
   const onComplete = (goalId: number, title: string) => {
     Alert.alert("Complete goal?", title, [
       { text: "Cancel", style: "cancel" },
@@ -74,15 +69,19 @@ export default function GoalsScreen() {
         text: "Yes",
         onPress: async () => {
           const res = await completeGoal(goalId);
+
           if (res && gamificationOn && res.xp_gained > 0) {
             useGamificationStore.getState().applyXpResult(res);
           }
+
+          // ⬅️ reload zostaje w screenie, bo completeGoal NIE reloaduje listy
           loadGoals(selectedPeriod);
-          loadHistory();
         },
       },
     ]);
   };
+
+  /* ---------- UI ---------- */
 
   return (
     <View style={{ flex: 1, padding: 12, backgroundColor: colors.background }}>
@@ -110,51 +109,87 @@ export default function GoalsScreen() {
       </View>
 
       {/* PROGRESS */}
-      <View style={{ backgroundColor: colors.card, borderRadius: 12, padding: 10, marginBottom: 12 }}>
-        <AppText style={{ fontSize: 12 }}>Goals progress: {Math.round(progress * 100)}%</AppText>
-        <View style={{ height: 6, backgroundColor: colors.background, borderRadius: 4, marginBottom: 8 }}>
-          <View style={{ height: 6, width: `${progress * 100}%`, backgroundColor: colors.buttonActive }} />
+      <View
+        style={{
+          backgroundColor: colors.card,
+          borderRadius: 12,
+          padding: 10,
+          marginBottom: 12,
+        }}
+      >
+        <AppText style={{ fontSize: 12 }}>
+          Goals progress: {Math.round(progress * 100)}%
+        </AppText>
+        <View
+          style={{
+            height: 6,
+            backgroundColor: colors.background,
+            borderRadius: 4,
+            marginBottom: 8,
+          }}
+        >
+          <View
+            style={{
+              height: 6,
+              width: `${progress * 100}%`,
+              backgroundColor: colors.buttonActive,
+            }}
+          />
         </View>
 
         <AppText style={{ fontSize: 12 }}>
           Time ({selectedPeriod}): {Math.round(timeProgress * 100)}%
         </AppText>
-        <View style={{ height: 6, backgroundColor: colors.background, borderRadius: 4 }}>
-          <View style={{ height: 6, width: `${timeProgress * 100}%`, backgroundColor: colors.buttonActive }} />
+        <View
+          style={{
+            height: 6,
+            backgroundColor: colors.background,
+            borderRadius: 4,
+          }}
+        >
+          <View
+            style={{
+              height: 6,
+              width: `${timeProgress * 100}%`,
+              backgroundColor: colors.buttonActive,
+            }}
+          />
         </View>
       </View>
 
-      {/* GOALS */}
-      <FlatList
-        key={selectedPeriod}
-        data={goals}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 140 }}
-        renderItem={({ item }) => {
-          const isCompleted = completedGoalIds.has(item.id);
-          const isExpanded = expandedGoalId === item.id;
-
-          return (
+      {/* GOALS LIST */}
+      {loading.list ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.buttonActive} />
+        </View>
+      ) : goals.length === 0 ? (
+        <View style={{ alignItems: "center", marginTop: 50 }}>
+          <AppText style={{ color: "#777" }}>
+            no goals yet for this period
+          </AppText>
+        </View>
+      ) : (
+ <FlatList
+          key={selectedPeriod}
+          data={goals}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 140 }}
+          renderItem={({ item }) => (
             <GoalItem
               item={item}
-              isCompleted={isCompleted}
-              isExpanded={isExpanded}
+              isCompleted={item.is_completed}
+              isExpanded={expandedGoalId === item.id}
               onToggleExpand={() =>
-                setExpandedGoalId(isExpanded ? null : item.id)
+                setExpandedGoalId(
+                  expandedGoalId === item.id ? null : item.id
+                )
               }
               onEdit={() => router.push(`/editGoal/${item.id}`)}
               onComplete={() => onComplete(item.id, item.title)}
             />
-          );
-        }}
-        ListEmptyComponent={
-          <View style={{ alignItems: "center", marginTop: 50 }}>
-            <AppText style={{ color: "#777" }}>
-              no goals yet for this period
-            </AppText>
-          </View>
-        }
-      />
+          )}
+        />
+      )}
 
       <FloatingButton onPress={() => router.push("/addGoal")} />
     </View>

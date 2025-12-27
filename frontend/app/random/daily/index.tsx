@@ -8,7 +8,7 @@ import RandomSpin from "../spin";
 
 export default function DailyPickScreen() {
   const router = useRouter();
-  const { loadTags, tags, randomChallenge, loadDifficulties, difficulties } = useChallengeStore();
+  const { loadTags, tags, fetchRandomChallenge, loadDifficulties, difficulties } = useChallengeStore();
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [spinning, setSpinning] = useState(false);
   const [spinItems, setSpinItems] = useState<string[]>([]);
@@ -27,7 +27,7 @@ export default function DailyPickScreen() {
         return;
       }
 
-      const test = await randomChallenge(
+      const test = await fetchRandomChallenge(
         "daily",
         selectedTags,
         selectedDifficulty
@@ -55,18 +55,18 @@ export default function DailyPickScreen() {
     const hasDifficulty = selectedDifficulty !== null;
 
     if (hasTags) {
-      picked = await randomChallenge(
+      picked = await fetchRandomChallenge(
         "daily",
         selectedTags,
         selectedDifficulty
       );
 
       if (!picked) {
-        picked = await randomChallenge("daily", selectedTags, null);
+        picked = await fetchRandomChallenge("daily", selectedTags, null);
       }
 
     } else if (hasDifficulty) {
-      picked = await randomChallenge("daily", [], selectedDifficulty);
+      picked = await fetchRandomChallenge("daily", [], selectedDifficulty);
     }
 
     if (!picked) {

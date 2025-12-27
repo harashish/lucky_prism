@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
+/* ---------- TYPES ---------- */
+
+export interface DifficultyType {
+  id: number;
+  name: string;
+}
+
 export interface HabitDay {
   date: string;
   status: number;
@@ -13,7 +20,7 @@ export interface Habit {
   description?: string;
   motivation_reason?: string;
   color?: string;
-  difficulty: { id: number; name: string; xp_value: number };
+  difficulty: DifficultyType;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -25,7 +32,6 @@ interface ToggleDayResponse {
   total_xp: number;
   current_level: number;
   already_completed?: boolean;
-  day?: any;
 }
 
 export interface BestHabitStreak {
@@ -43,107 +49,176 @@ export interface RandomHabitSummary {
   total: number;
 }
 
+/* ---------- STORE ---------- */
 
 interface HabitStore {
   habits: Habit[];
-  loading: boolean;
-  difficulties: { id: number; name: string; xp_value: number }[];
+  currentMonth?: string;
+  difficulties: DifficultyType[];
   biggestStreak: BestHabitStreak | null;
 
-  loadMonth: (month?: string) => Promise<void>;
-  loadDifficulties: () => Promise<void>;
+  loading: {
+    list: boolean;      // loadMonth
+    meta: boolean;      // difficulties
+    saving: boolean;    // create/update/delete
+    streaks: boolean;   // fetchStreaks
+  };
 
+  /* --- load --- */
+  loadMonth: (
+    month?: string,
+    opts?: { silent?: boolean }
+  ) => Promise<void>;
+
+  loadDifficulties: () => Promise<DifficultyType[]>;
+  fetchStreaks: () => Promise<BestHabitStreak | null>;
+
+  /* --- crud --- */
   createHabit: (payload: any) => Promise<void>;
   updateHabit: (id: number, payload: any) => Promise<void>;
   deleteHabit: (id: number) => Promise<void>;
 
+  /* --- actions --- */
   toggleDay: (
     habitId: number,
     date?: string,
     status?: number
   ) => Promise<ToggleDayResponse | null>;
 
-  getRandomHabitSummary: () => RandomHabitSummary | null;
-
-  fetchStreaks: () => Promise<BestHabitStreak | null>;
-
-  resetHabits: () => void;
+  /* --- helpers --- */
+  getHabitById: (id: number) => Promise<Habit | null>;
+  pickRandomHabitSummary: () => Promise<RandomHabitSummary | null>;
 }
-export const useHabitStore = create<HabitStore>((set, get) => ({
 
+/* ---------- INITIAL STATE ---------- */
+
+const initialState = {
   habits: [],
-  loading: false,
+  currentMonth: undefined,
   difficulties: [],
   biggestStreak: null,
+  loading: {
+    list: false,
+    meta: false,
+    saving: false,
+    streaks: false,
+  },
+};
 
-  loadMonth: async (month?: string) => {
-    set({ loading: true });
+/* ---------- IMPLEMENTATION ---------- */
+
+export const useHabitStore = create<HabitStore>((set, get) => ({
+  ...initialState,
+
+  /* ---------- LOAD ---------- */
+
+  loadMonth: async (
+    month?: string,
+    opts?: { silent?: boolean }
+  ) => {
+    const silent = opts?.silent === true;
+
+    if (!silent) {
+      set((s) => ({
+        loading: { ...s.loading, list: true },
+      }));
+    }
+
     try {
       const url = month
         ? `/habits/month/?month=${month}`
         : `/habits/month/`;
 
       const res = await api.get(url);
-      set({ habits: res.data.habits || [] });
-    } catch (e: any) {
-      console.error(
-        "Error loading habits month:",
-        e.response?.data || e.message || e
-      );
+
+      set({
+        habits: res.data.habits || [],
+        currentMonth: month,
+      });
+    } catch (e) {
+      console.error("loadMonth", e);
     } finally {
-      set({ loading: false });
+      if (!silent) {
+        set((s) => ({
+          loading: { ...s.loading, list: false },
+        }));
+      }
     }
   },
+
 
   loadDifficulties: async () => {
+    set((s) => ({ loading: { ...s.loading, meta: true } }));
     try {
-      const res = await api.get("/common/difficulties/");
+      const res = await api.get<DifficultyType[]>("/common/difficulties/");
       set({ difficulties: res.data });
-    } catch (e: any) {
-      console.error(
-        "Error loading difficulties:",
-        e.response?.data || e.message || e
-      );
+      return res.data;
+    } catch (e) {
+      console.error("loadDifficulties", e);
+      return [];
+    } finally {
+      set((s) => ({ loading: { ...s.loading, meta: false } }));
     }
   },
 
-  createHabit: async (payload: any) => {
+  fetchStreaks: async () => {
+    set((s) => ({ loading: { ...s.loading, streaks: true } }));
+    try {
+      const res = await api.get("/habits/streaks/");
+      set({ biggestStreak: res.data });
+      return res.data;
+    } catch (e) {
+      console.error("fetchStreaks", e);
+      return null;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, streaks: false } }));
+    }
+  },
+
+  /* ---------- CRUD ---------- */
+
+  createHabit: async (payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
       await api.post("/habits/", payload);
-    } catch (e: any) {
-      console.error(
-        "Error creating habit:",
-        e.response?.data || e.message || e
-      );
+      await get().loadMonth(get().currentMonth);
+    } catch (e) {
+      console.error("createHabit", e);
       throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
-  updateHabit: async (id: number, payload: any) => {
+  updateHabit: async (id, payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
       await api.patch(`/habits/${id}/`, payload);
-    } catch (e: any) {
-      console.error(
-        "Error updating habit:",
-        e.response?.data || e.message || e
-      );
+      await get().loadMonth(get().currentMonth);
+    } catch (e) {
+      console.error("updateHabit", e);
       throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
-  deleteHabit: async (id: number) => {
+  deleteHabit: async (id) => {
+    set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
       await api.delete(`/habits/${id}/`);
-    } catch (e: any) {
-      console.error(
-        "Error deleting habit:",
-        e.response?.data || e.message || e
-      );
+      await get().loadMonth(get().currentMonth);
+    } catch (e) {
+      console.error("deleteHabit", e);
       throw e;
+    } finally {
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
 
-  toggleDay: async (habitId: number, date?: string, status?: number) => {
+  /* ---------- ACTIONS ---------- */
+
+  toggleDay: async (habitId, date, status) => {
     try {
       const payload: any = {};
       if (date) payload.date = date;
@@ -156,45 +231,31 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
 
       return res.data as ToggleDayResponse;
     } catch (e: any) {
-      console.error(
-        "Error toggling habit day:",
-        e.response?.data || e.message || e
-      );
+      console.error("toggleDay", e.response?.data || e.message || e);
       return null;
     }
   },
 
-  fetchStreaks: async () => {
+  /* ---------- HELPERS ---------- */
+
+  getHabitById: async (id) => {
     try {
-      const res = await api.get("/habits/streaks/");
-      set({ biggestStreak: res.data });
+      const res = await api.get(`/habits/${id}/`);
       return res.data;
     } catch (e) {
-      console.error("Error fetching habit streaks:", e);
+      console.error("getHabitById", e);
       return null;
     }
   },
 
-  getRandomHabitSummary: () => {
-    const habits = get().habits;
-
-    if (!habits || habits.length === 0) return null;
-
-    const h = habits[Math.floor(Math.random() * habits.length)];
-
-    const done =
-      h.days?.filter((d) => d.status === 2).length ?? 0;
-
-    const total = h.days?.length ?? 0;
-
-    return {
-      id: h.id,
-      title: h.title,
-      reason: h.motivation_reason,
-      done,
-      total,
-    };
+  pickRandomHabitSummary: async (): Promise<RandomHabitSummary | null> => {
+    try {
+      const res = await api.get<RandomHabitSummary | null>("/habits/random/");
+      return res.data ?? null;
+    } catch (e) {
+      console.error("pickRandomHabitSummary", e);
+      return null;
+    }
   },
 
-  resetHabits: () => set({ habits: [] }),
 }));

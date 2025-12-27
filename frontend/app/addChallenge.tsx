@@ -6,7 +6,7 @@ import { useChallengeStore } from "./stores/useChallengeStore";
 
 export default function AddChallenge() {
   const navigation = useNavigation();
-  const { type } = useLocalSearchParams<{ type?: "Daily" | "Weekly" }>();
+  const { type } = useLocalSearchParams<{ type?: "daily" | "weekly" }>();
   const { setSelectedType } = useChallengeStore();
 
   useLayoutEffect(() => {

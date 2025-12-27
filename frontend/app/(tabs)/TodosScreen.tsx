@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
@@ -26,6 +27,7 @@ export default function TodosScreen() {
   const {
     categories,
     tasks,
+    loading,
     loadCategories,
     loadTasks,
     quickAddTask,
@@ -33,9 +35,9 @@ export default function TodosScreen() {
     deleteTask,
     selectedCategoryId,
     setSelectedCategoryId,
-    checkCategoryHasTasks,
   } = useTodoStore();
 
+  
   const [quickText, setQuickText] = useState("");
   const [customDifficulty, setCustomDifficulty] = useState<number | null>(null);
   const [showDifficulty, setShowDifficulty] = useState(false);
@@ -45,51 +47,58 @@ export default function TodosScreen() {
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
-  // ---- reload categories on screen focus
+
+  /* ---------- INIT ---------- */
+
   useFocusEffect(
     useCallback(() => {
       loadCategories();
     }, [])
   );
 
-  // ---- ensure selected category exists
+  /* ---------- CATEGORY SYNC ---------- */
+
   useEffect(() => {
     if (!categories.length) {
       setSelectedCategoryId(null);
       return;
     }
 
-    const exists = categories.some(c => c.id === selectedCategoryId);
-    if (!exists) {
+    if (
+      selectedCategoryId === null ||
+      !categories.some((c) => c.id === selectedCategoryId)
+    ) {
       setSelectedCategoryId(categories[0].id);
     }
   }, [categories]);
 
-  // ---- load tasks + sync "has tasks" flag
+  /* ---------- LOAD TASKS ---------- */
+
   useEffect(() => {
     if (selectedCategoryId !== null) {
       loadTasks(selectedCategoryId);
-      checkCategoryHasTasks(selectedCategoryId);
     }
   }, [selectedCategoryId]);
 
+  /* ---------- ACTIONS ---------- */
+
   const onQuickAdd = async () => {
-    if (!quickText.trim()) return;
-    if (!selectedCategoryId) return;
+    if (!quickText.trim() || !selectedCategoryId) return;
 
-    const res = await quickAddTask(
-      selectedCategoryId,
-      quickText.trim(),
-      customDifficulty
-    );
-
-    if (res) {
+    try {
+      await quickAddTask(
+        selectedCategoryId,
+        quickText.trim(),
+        customDifficulty
+      );
       setQuickText("");
       setCustomDifficulty(null);
-    } else {
+    } catch {
       Alert.alert("Error", "Cannot add todo.");
     }
   };
+
+  /* ---------- UI ---------- */
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -112,21 +121,22 @@ export default function TodosScreen() {
           onSaved={async () => {
             setEditingTodo(null);
             await loadTasks(selectedCategoryId!);
-            checkCategoryHasTasks(selectedCategoryId!);
           }}
           onDelete={async (taskId: number) => {
-            const ok = await deleteTask(taskId);
-            if (!ok) {
+            try {
+              await deleteTask(taskId);
+            } catch {
               Alert.alert("Error", "Failed to delete task");
             }
           }}
         />
       )}
 
+
       {/* CATEGORIES */}
       <View style={{ flexDirection: "row", marginBottom: 12, padding: 12 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {categories.map(cat => (
+          {categories.map((cat) => (
             <TouchableOpacity
               key={cat.id}
               onPress={() => setSelectedCategoryId(cat.id)}
@@ -136,11 +146,10 @@ export default function TodosScreen() {
                 marginRight: 8,
                 borderRadius: 10,
                 backgroundColor:
-                  selectedCategoryId === cat.id
-                    ? colors.buttonActive
-                    : cat.color || colors.card,
+                  cat.color || colors.card,
                 minWidth: 80,
                 alignItems: "center",
+
                 borderWidth: selectedCategoryId === cat.id ? 2 : 0,
                 borderColor: colors.light,
               }}
@@ -171,7 +180,7 @@ export default function TodosScreen() {
 
       {/* TOGGLE COMPLETED */}
       <TouchableOpacity
-        onPress={() => setShowCompleted(prev => !prev)}
+        onPress={() => setShowCompleted((prev) => !prev)}
         style={{
           padding: 8,
           marginBottom: 12,
@@ -189,19 +198,23 @@ export default function TodosScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 80}
       >
-        {tasks.filter(t =>
-          showCompleted ? t.is_completed : !t.is_completed
-        ).length === 0 ? (
+        {loading.tasks ? (
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <AppText style={{ color: "#777", fontSize: 16 }}>
+            <ActivityIndicator color={colors.buttonActive} />
+          </View>
+        ) : tasks.filter((t) =>
+            showCompleted ? t.is_completed : !t.is_completed
+          ).length === 0 ? (
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <AppText style={{ color: "#777" }}>
               {showCompleted
                 ? "no completed tasks yet"
-                : "no active tasks in this category yet, add some!"}
+                : "no tasks in this category yet"}
             </AppText>
           </View>
         ) : (
           <FlatList
-            data={tasks.filter(t =>
+            data={tasks.filter((t) =>
               showCompleted ? t.is_completed : !t.is_completed
             )}
             keyExtractor={(item) => item.id.toString()}
@@ -210,7 +223,6 @@ export default function TodosScreen() {
                 item={item}
                 onComplete={async (taskId) => {
                   const res = await completeTask(taskId);
-
                   if (res && gamificationOn && res.xp_gained > 0) {
                     useGamificationStore
                       .getState()
@@ -218,16 +230,16 @@ export default function TodosScreen() {
                   }
                 }}
                 onDelete={async (taskId) => {
-                  const ok = await deleteTask(taskId);
-                  if (!ok) {
-                    Alert.alert("Błąd", "Nie udało się usunąć zadania");
+                  try {
+                    await deleteTask(taskId);
+                  } catch {
+                    Alert.alert("Error", "Cannot delete task");
                   }
                 }}
                 onLongPress={() => setEditingTodo(item)}
               />
             )}
             contentContainerStyle={{ paddingBottom: 120 }}
-            keyboardShouldPersistTaps="handled"
           />
         )}
 

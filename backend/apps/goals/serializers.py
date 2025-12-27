@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Goal, GoalHistory, GoalPeriod
+from .models import Goal, GoalPeriod
 from apps.common.models import DifficultyType
 from apps.common.serializers import DifficultyTypeSerializer
 from apps.gamification.utils import get_user
@@ -39,6 +39,8 @@ class GoalSerializer(serializers.ModelSerializer):
             "period_id",
             "difficulty",
             "difficulty_id",
+            "is_completed",
+            "completed_at",
             "created_at",
             "updated_at",
         ]
@@ -47,8 +49,3 @@ class GoalSerializer(serializers.ModelSerializer):
         validated_data["user"] = get_user()
         return super().create(validated_data)
 
-
-class GoalHistorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GoalHistory
-        fields = ["id", "goal", "completion_date", "xp_gained"]

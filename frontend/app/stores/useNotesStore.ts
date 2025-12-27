@@ -10,7 +10,7 @@ interface NotesStore {
   randomNote: Note | null;
   loading: boolean;
 
-  fetchRandom: () => Promise<void>;
+  fetchRandomNote: () => Promise<void>;
   fetchById: (id: number) => Promise<Note | null>;
 
   createNote: (content: string) => Promise<void>;
@@ -22,7 +22,7 @@ export const useNotesStore = create<NotesStore>((set) => ({
   randomNote: null,
   loading: false,
 
-  fetchRandom: async () => {
+  fetchRandomNote: async () => {
     set({ loading: true });
     try {
       const res = await api.get("/notes/random/");
@@ -45,17 +45,17 @@ export const useNotesStore = create<NotesStore>((set) => ({
 
   createNote: async (content: string) => {
     await api.post("/notes/", { content });
-    await useNotesStore.getState().fetchRandom();
+    await useNotesStore.getState().fetchRandomNote();
   },
 
   updateNote: async (id: number, content: string) => {
     await api.patch(`/notes/${id}/`, { content });
-    await useNotesStore.getState().fetchRandom();
+    await useNotesStore.getState().fetchRandomNote();
   },
 
   deleteNote: async (id: number) => {
     await api.delete(`/notes/${id}/`);
-    await useNotesStore.getState().fetchRandom();
+    await useNotesStore.getState().fetchRandomNote();
   },
 }));
 

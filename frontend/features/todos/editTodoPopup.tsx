@@ -1,43 +1,48 @@
 import React, { useState } from "react";
-import { View, Modal, TouchableOpacity, TextInput, Alert } from "react-native";
+import { View, Modal, TouchableOpacity, TextInput } from "react-native";
 import AppText from "../../components/AppText";
 import { colors } from "../../constants/theme";
-import { api } from "../../app/api/apiClient";
 import CustomDifficultyPicker from "./customDifficultyPicker";
+import { confirmDelete } from "../../components/confirmDelete";
+import { useTodoStore } from "../../app/stores/useTodoStore";
 
-export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any) {
+export default function EditTodoPopup({ item, onClose }: any) {
+  const { updateTask, deleteTask } = useTodoStore();
+
   const [content, setContent] = useState(item.content);
   const [difficulty, setDifficulty] = useState(item.custom_difficulty || null);
   const [showDifficulty, setShowDifficulty] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const save = async () => {
+    if (!content.trim()) return;
+
+    setLoading(true);
     try {
-      await api.patch(`/todos/tasks/${item.id}/`, {
-        content,
+      await updateTask(item.id, {
+        content: content.trim(),
         custom_difficulty_id: difficulty?.id || null,
       });
-      onSaved();
-    } catch {
-      Alert.alert("Error", "Failed to save changes");
+      onClose();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert(
-      "Delete task?",
-      item.content,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await onDelete(item.id);
-            onClose();
-          },
-        },
-      ]
-    );
+  const deleteHandler = () => {
+    confirmDelete({
+      title: "Delete task?",
+      message: item.content,
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          await deleteTask(item.id);
+          onClose();
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   const buttonStyle = {
@@ -45,6 +50,7 @@ export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any)
     borderRadius: 10,
     marginBottom: 12,
     alignItems: "center" as const,
+    opacity: loading ? 0.6 : 1,
   };
 
   return (
@@ -83,6 +89,7 @@ export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any)
           <TextInput
             value={content}
             onChangeText={setContent}
+            editable={!loading}
             placeholder="Task content"
             placeholderTextColor="#777"
             style={{
@@ -95,6 +102,7 @@ export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any)
           />
 
           <TouchableOpacity
+            disabled={loading}
             onPress={() => setShowDifficulty(true)}
             style={{
               ...buttonStyle,
@@ -106,18 +114,19 @@ export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any)
             </AppText>
           </TouchableOpacity>
 
-
           <TouchableOpacity
-            onPress={confirmDelete}
+            disabled={loading}
+            onPress={deleteHandler}
             style={{
               ...buttonStyle,
-              backgroundColor: colors.buttonActive
+              backgroundColor: colors.buttonActive,
             }}
           >
             <AppText style={{ color: "#fff" }}>Delete task</AppText>
           </TouchableOpacity>
 
           <TouchableOpacity
+            disabled={loading}
             onPress={save}
             style={{
               ...buttonStyle,
@@ -128,6 +137,7 @@ export default function EditTodoPopup({ item, onClose, onSaved, onDelete }: any)
           </TouchableOpacity>
 
           <TouchableOpacity
+            disabled={loading}
             onPress={onClose}
             style={{
               ...buttonStyle,

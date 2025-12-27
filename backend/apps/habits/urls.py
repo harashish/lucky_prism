@@ -5,6 +5,7 @@ from .views import (
     HabitDayToggleView,
     HabitMonthView,
     HabitStreakView,
+    RandomHabitSummaryView,
 )
 
 
@@ -14,4 +15,5 @@ urlpatterns = [
     path("<int:habit_id>/toggle-day/", HabitDayToggleView.as_view(), name="habit-toggle-day"),
     path("month/", HabitMonthView.as_view(), name="habit-month"),
     path("streaks/", HabitStreakView.as_view(), name="habit-streaks"),
+    path("random/", RandomHabitSummaryView.as_view(), name="habit-random-summary"),
 ]

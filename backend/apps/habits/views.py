@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db import transaction
 from datetime import datetime, date
 import calendar
+import random
 
 from .models import Habit, HabitDay
 from .serializers import HabitSerializer, HabitDaySerializer
@@ -206,3 +207,27 @@ class HabitStreakView(APIView):
                 )
 
         return Response(best, status=status.HTTP_200_OK)
+
+class RandomHabitSummaryView(APIView):
+    def get(self, request):
+        today = date.today()
+        habits = Habit.objects.filter(user=get_user(), is_active=True)
+        if not habits.exists():
+            return Response(None, status=status.HTTP_200_OK)
+
+        picked = random.choice(list(habits))
+        _, last_day = calendar.monthrange(today.year, today.month)
+        first_date = date(today.year, today.month, 1)
+        last_date = date(today.year, today.month, last_day)
+
+        days_qs = HabitDay.objects.filter(habit=picked, date__range=(first_date, last_date))
+        done = days_qs.filter(status=HabitDay.STATUS_COMPLETED).count()
+
+        summary = {
+            "id": picked.id,
+            "title": picked.title,
+            "reason": picked.motivation_reason,
+            "done": done,
+            "total": last_day,
+        }
+        return Response(summary, status=status.HTTP_200_OK)
