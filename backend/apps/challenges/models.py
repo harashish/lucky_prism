@@ -112,6 +112,7 @@ class UserChallenge(models.Model):
             module="challenges",
             difficulty=self.definition.difficulty.name.lower(),
             period=self.challenge_type.name,
+            user=self.user,
         )
 
         self.user.add_xp(

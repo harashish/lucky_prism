@@ -76,6 +76,7 @@ class CompleteTodoTaskView(APIView):
             calculate_xp(
                 module="todos",
                 difficulty=diff.name.lower(),
+                user=task.user,
             )
             if diff
             else 0

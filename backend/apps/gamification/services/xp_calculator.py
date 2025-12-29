@@ -10,6 +10,7 @@ def calculate_xp(
     module: str,
     difficulty: str,
     period: str | None = None,
+    user=None,
 ) -> int:
     """
     JEDYNE miejsce liczenia XP w systemie
@@ -27,5 +28,8 @@ def calculate_xp(
         if not period:
             raise ValueError("Goal requires period")
         xp *= GOAL_PERIOD_MULTIPLIER[period]
+
+    if user is not None:
+        xp *= user.xp_multiplier 
 
     return int(xp)

@@ -8,6 +8,7 @@ class User(models.Model):
     current_level = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    xp_multiplier = models.FloatField(default=1.0)
 
     def add_xp(self, *, xp: int, source: str, source_id: int | None = None):
 

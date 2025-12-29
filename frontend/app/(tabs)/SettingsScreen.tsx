@@ -1,9 +1,18 @@
-import { View, Switch, StyleSheet } from "react-native";
+import { View, Switch, StyleSheet, TouchableOpacity } from "react-native";
 import AppText from "../../components/AppText";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { colors, spacing } from "../../constants/theme";
 import { ScrollView } from "react-native-gesture-handler";
 import { useEffect } from "react";
+import { useGamificationStore } from "../stores/useGamificationStore";
+import {
+  BASE_XP,
+  MODULE_MULTIPLIER,
+  CHALLENGE_PERIOD_MULTIPLIER,
+  GOAL_PERIOD_MULTIPLIER,
+} from "../../constants/xpPreview";
+import { calcXpPreview } from "../../utils/calcXpPreview";
+
 
 export default function SettingsScreen() {
 const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleToggles, fetchModules } =
@@ -15,6 +24,46 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
 
   const capitalize = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);
+
+  const { xpMultiplier, setXpMultiplier } = useGamificationStore();
+
+  const XP_TABLE_CONFIG: XpTableRow[] = [
+    { label: "Habits", module: "habits" },
+    { label: "Todos", module: "todos" },
+
+    {
+      label: "Challenges (daily)",
+      module: "challenges",
+      periodMultiplier: CHALLENGE_PERIOD_MULTIPLIER.daily,
+    },
+    {
+      label: "Challenges (weekly)",
+      module: "challenges",
+      periodMultiplier: CHALLENGE_PERIOD_MULTIPLIER.weekly,
+    },
+
+    {
+      label: "Goals (weekly)",
+      module: "goals",
+      periodMultiplier: GOAL_PERIOD_MULTIPLIER.weekly,
+    },
+    {
+      label: "Goals (monthly)",
+      module: "goals",
+      periodMultiplier: GOAL_PERIOD_MULTIPLIER.monthly,
+    },
+    {
+      label: "Goals (yearly)",
+      module: "goals",
+      periodMultiplier: GOAL_PERIOD_MULTIPLIER.yearly,
+    },
+  ];
+
+  type XpTableRow = {
+    label: string;
+    module: "habits" | "todos" | "challenges" | "goals";
+    periodMultiplier?: number;
+  };
 
   return (
     <ScrollView style={{ flex: 1, padding: spacing.l, backgroundColor: colors.background  }} contentContainerStyle={{
@@ -58,6 +107,73 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
             />
           </View>
       ))}
+
+        {/* XP MULTIPLIER */}  
+
+        <AppText style={{ fontWeight: "700", marginVertical: 10 }}>XP multiplier</AppText>
+
+        <View style={{ flexDirection: "row", gap: 10 }}>
+        {[0.5, 1, 1.5, 2].map((v) => (
+          <TouchableOpacity
+            key={v}
+            onPress={() => setXpMultiplier(v)}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+              borderRadius: 8,
+              backgroundColor:
+                xpMultiplier === v ? colors.buttonActive : colors.card,
+            }}
+          >
+            <AppText style={{ color: colors.text }}>x{v}</AppText>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <AppText style={{ fontWeight: "700", marginTop: spacing.l }}>
+        XP breakdown
+      </AppText>
+
+      <View style={styles.table}>
+        {/* HEADER */}
+        <View style={styles.headerRow}>
+          <View style={styles.cellModule}>
+            <AppText style={{ fontWeight: "600" }}>Module</AppText>
+          </View>
+          <View style={styles.cellXp}>
+            <AppText style={{ fontWeight: "600" }}>Easy</AppText>
+          </View>
+          <View style={styles.cellXp}>
+            <AppText style={{ fontWeight: "600" }}>Medium</AppText>
+          </View>
+          <View style={styles.cellXp}>
+            <AppText style={{ fontWeight: "600" }}>Hard</AppText>
+          </View>
+        </View>
+
+        {/* ROWS */}
+      {XP_TABLE_CONFIG.map((tableRow) => (
+        <View key={tableRow.label} style={styles.tableRow}>
+          <View style={styles.cellModule}>
+            <AppText>{tableRow.label}</AppText>
+          </View>
+
+          {(["easy", "medium", "hard"] as const).map((diff) => (
+            <View key={diff} style={styles.cellXp}>
+              <AppText>
+                {calcXpPreview({
+                  baseXp: BASE_XP[diff],
+                  moduleMultiplier: MODULE_MULTIPLIER[tableRow.module],
+                  periodMultiplier: tableRow.periodMultiplier ?? 1,
+                  xpMultiplier,
+                })}
+              </AppText>
+            </View>
+          ))}
+        </View>
+      ))}
+
+      </View>
     </ScrollView>
   );
 }
@@ -73,4 +189,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.m,
   },
+  table: {
+    borderWidth: 1,
+    borderColor: colors.card,
+    borderRadius: 8,
+    overflow: "hidden",
+    marginTop: spacing.s,
+  },
+
+  headerRow: {
+    flexDirection: "row",
+    backgroundColor: colors.card,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.card,
+  },
+
+  cellModule: { flex: 2 },
+  cellXp: { flex: 1, alignItems: "flex-end" },
+
 });

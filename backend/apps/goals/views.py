@@ -62,6 +62,7 @@ class CompleteGoalView(APIView):
             module="goals",
             difficulty=goal.difficulty.name.lower(),
             period=goal.period.name.lower(),
+            user=goal.user,
         )
 
         goal.user.add_xp(

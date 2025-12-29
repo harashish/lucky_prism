@@ -80,6 +80,7 @@ class HabitDayToggleView(APIView):
                 xp_amount = calculate_xp(
                     module="habits",
                     difficulty=habit.difficulty.name.lower(),
+                    user=habit.user,
                 )
 
                 habit.user.add_xp(

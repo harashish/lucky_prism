@@ -18,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
             "current_level",
             "created_at",
             "updated_at",
+            "xp_multiplier",
             "logs",
         ]
 
