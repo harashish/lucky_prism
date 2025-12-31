@@ -13,11 +13,11 @@ type RandomHabit = {
 
 type Props = {
   habit: RandomHabit | null;
-  onOpenHabits: () => void;
+  onRefresh: () => void;
   onEdit: (id: number) => void;
 };
 
-export function RandomHabitTile({ habit, onOpenHabits, onEdit }: Props) {
+export function RandomHabitTile({ habit, onRefresh, onEdit }: Props) {
   if (!habit) return null;
 
   return (
@@ -27,7 +27,7 @@ export function RandomHabitTile({ habit, onOpenHabits, onEdit }: Props) {
       </AppText>
 
       <TouchableOpacity
-        onPress={onOpenHabits}
+        onPress={onRefresh}
         onLongPress={() => onEdit(habit.id)}
         style={{
           backgroundColor: colors.card,

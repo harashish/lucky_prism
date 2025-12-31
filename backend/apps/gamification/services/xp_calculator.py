@@ -12,10 +12,7 @@ def calculate_xp(
     period: str | None = None,
     user=None,
 ) -> int:
-    """
-    JEDYNE miejsce liczenia XP w systemie
-    """
-
+    
     base_xp = BASE_XP[difficulty]
     xp = base_xp * MODULE_MULTIPLIER[module]
 

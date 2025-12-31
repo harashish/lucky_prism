@@ -2,8 +2,6 @@ from django.db import models
 from apps.gamification.services.level_calculator import calculate_level
 
 class User(models.Model):
-    # jedyny użytkownik aplikacji
-
     total_xp = models.BigIntegerField(default=0)
     current_level = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -6,10 +6,11 @@ import { colors } from "../../constants/theme";
 type Props = {
   label: string;
   goal: any;
-  onPress: () => void;
+  onRefresh: () => void;
+  onEditGoal?: (goalId: number) => void;
 };
 
-export function RandomGoalTile({ label, goal, onPress }: Props) {
+export function RandomGoalTile({ label, goal, onRefresh, onEditGoal }: Props) {
   if (!goal) return null;
 
   return (
@@ -19,7 +20,9 @@ export function RandomGoalTile({ label, goal, onPress }: Props) {
       </AppText>
 
       <TouchableOpacity
-        onPress={onPress}
+        onPress={onRefresh}
+        onLongPress={() => goal?.id && onEditGoal?.(goal.id)}
+        delayLongPress={300}
         style={{
           backgroundColor: colors.card,
           padding: 12,

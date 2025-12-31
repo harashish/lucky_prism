@@ -23,6 +23,7 @@ import { WeeklyChallengeTile } from "../../components/dashboard/WeeklyChallengeT
 import { RandomTodoTile } from "../../components/dashboard/RandomTodoTile";
 import { RandomNoteTile } from "../../components/dashboard/RandomNoteTile";
 import { RandomHabitTile } from "../../components/dashboard/RandomHabitTile";
+import EditTodoPopup from "../../features/todos/editTodoPopup";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -59,27 +60,31 @@ export default function DashboardScreen() {
   const [goalYear, setGoalYear] = useState<any | null>(null);
   const [randomTodo, setRandomTodo] = useState<any | null>(null);
   const [randomHabit, setRandomHabit] = useState<RandomHabitSummary | null>(null);
-
+  const [editingTodo, setEditingTodo] = useState<any | null>(null);
 
   const GOAL_CONFIG: {
     key: DashboardTileKey;
     label: string;
     goal: any | null;
+    period: "weekly" | "monthly" | "yearly";
   }[] = [
     {
       key: "goal_week",
       label: "Random week goal",
       goal: goalWeek,
+      period: "weekly",
     },
     {
       key: "goal_month",
       label: "Random month goal",
       goal: goalMonth,
+      period: "monthly",
     },
     {
       key: "goal_year",
       label: "Random year goal",
       goal: goalYear,
+      period: "yearly",
     },
   ];
 
@@ -165,6 +170,19 @@ export default function DashboardScreen() {
       paddingBottom: 30,
     }}>
 
+      {editingTodo && (
+        <EditTodoPopup
+          item={editingTodo}
+          onClose={async () => {
+            setEditingTodo(null);
+
+            const refreshed = await fetchRandomTask?.();
+            setRandomTodo(refreshed ?? null);
+          }}
+        />
+      )}
+
+
       {canRenderTile("level_gamification") && (
         <LevelTile
           level={level}
@@ -187,16 +205,24 @@ export default function DashboardScreen() {
         />
       )}
 
-      {GOAL_CONFIG.map(({ key, label, goal }) =>
+      {GOAL_CONFIG.map(({ key, label, goal, period }) =>
           canRenderTile(key) ? (
             <RandomGoalTile
               key={key}
               label={label}
               goal={goal}
-              onPress={() =>
+              onRefresh={async () => {
+                const next = await pickRandomGoal?.(period);
+                if (!next) return;
+
+                if (period === "weekly") setGoalWeek(next);
+                if (period === "monthly") setGoalMonth(next);
+                if (period === "yearly") setGoalYear(next);
+              }}
+              onEditGoal={(id) =>
                 router.push({
                   pathname: "/editGoal/[id]",
-                  params: { id: String(goal.id) },
+                  params: { id: String(id) },
                 })
               }
             />
@@ -238,14 +264,10 @@ export default function DashboardScreen() {
               const todo = await fetchRandomTask?.();
               setRandomTodo(todo ?? null);
             }}
-            onEdit={(id) =>
-              router.push({
-                pathname: "/editTodo/[id]",
-                params: { id: String(id) },
-              })
-            }
+            onEdit={(todo) => setEditingTodo(todo)}
           />
         )}
+
 
         {canRenderTile("random_note") && (
           <RandomNoteTile
@@ -264,7 +286,12 @@ export default function DashboardScreen() {
         {canRenderTile("random_habit") && (
           <RandomHabitTile
             habit={randomHabit}
-            onOpenHabits={() => router.push("/HabitsScreen")}
+            onRefresh={async () => {
+              const rh = await useHabitStore
+                .getState()
+                .pickRandomHabitSummary();
+              setRandomHabit(rh ?? null);
+            }}
             onEdit={(id) =>
               router.push({
                 pathname: "/editHabit/[id]",

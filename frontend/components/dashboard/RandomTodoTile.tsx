@@ -20,7 +20,8 @@ export function RandomTodoTile({ todo, onRefresh, onEdit }: Props) {
 
       <TouchableOpacity
         onPress={onRefresh}
-        onLongPress={() => onEdit(todo.id)}
+        onLongPress={() => onEdit(todo)}
+        delayLongPress={300}
         style={{
           backgroundColor: colors.card,
           padding: 12,

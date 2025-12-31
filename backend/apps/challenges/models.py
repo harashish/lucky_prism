@@ -55,12 +55,6 @@ class ChallengeDefinition(models.Model):
 # ---------- USER CHALLENGE (SINGLETON-READY) ----------
 
 class UserChallenge(models.Model):
-    """
-    Instancja challenga przypisana do użytkownika.
-    Singleton = aplikacja zakłada jednego usera,
-    ale model dalej jest poprawny architektonicznie.
-    """
-
     user = models.ForeignKey(
         "gamification.User",
         on_delete=models.CASCADE,
