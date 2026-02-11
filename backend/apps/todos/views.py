@@ -82,14 +82,12 @@ class CompleteTodoTaskView(APIView):
             else 0
         )
 
-        # --- XP LOG (JEDYNA HISTORIA) ---
         task.user.add_xp(
             xp=xp,
             source="todo",
             source_id=task.id,
         )
 
-        # --- STATE ---
         task.is_completed = True
         task.completed_at = timezone.now()
         task.save(update_fields=["is_completed", "completed_at", "updated_at"])

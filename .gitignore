@@ -1,7 +1,7 @@
 inzynierka_s28087.code-workspace
 
 backend/.venv
-backend/*.sqlite3          # Pokrywa db.sqlite3
+backend/*.sqlite3
 backend/staticfiles/
 backend/local_settings.py
 *.pyc
@@ -10,16 +10,16 @@ __pycache__/
 backend/**/migrations/*.pyc
 backend/**/migrations/__pycache__/
 
-frontend/node_modules/     # Pokrywa globalne node_modules
-frontend/.expo/            # Pokrywa globalne .expo/
+frontend/node_modules/
+frontend/.expo/
 frontend/.cache/
-frontend/web-build/        # Pokrywa globalne web-build/
-frontend/dist/             # Pokrywa globalne dist/
+frontend/web-build/
+frontend/dist/
 expo-env.d.ts
-app-example                # Zostawiamy, jeśli to jest folder testowy
+app-example
 
-frontend/ios/              # Dokładniejszy niż globalne /ios
-frontend/android/          # Dokładniejszy niż globalne /android
+frontend/ios/
+frontend/android/
 .kotlin/
 *.orig.*
 *.jks
@@ -38,12 +38,8 @@ yarn-error.*
 *.tsbuildinfo
 
 .vscode/
-.env* # Pokrywa .env i .env*.local
-.DS_Store                  # macOS
-Thumbs.db                  # 
+.env*
+.DS_Store
+Thumbs.db
 
-docs/run.txt
-
-generate_structure_and_content.py
-project_structure_and_content*
 

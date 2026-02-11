@@ -41,7 +41,6 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // ---- init
   useEffect(() => {
     loadPeriods();
 
@@ -53,7 +52,6 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
     loadMeta();
   }, []);
 
-  // ---- load goal for edit
   useEffect(() => {
     if (!editingId) return;
 
@@ -78,17 +76,13 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
     load();
   }, [editingId]);
 
-  // ---- sync selected period
   useEffect(() => {
-    if (period) {
-      const p = periods.find((x: any) => x.id === period);
-      setSelectedPeriodObj(p || null);
-    } else {
-      setSelectedPeriodObj(null);
+    if (!period && editingId && periods.length > 0) {
+      const g = periods.find((x) => x.id === selectedPeriodObj?.id);
+      if (g) setPeriod(g.id);
     }
-  }, [period, periods]);
+  }, [periods]);
 
-  // ---- save
   const save = async () => {
     if (!title.trim()) {
       setErrorMessage("Please enter goal name");
@@ -100,6 +94,10 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
     }
     if (!why.trim()) {
       setErrorMessage("Please enter Why it's important");
+      return;
+    }
+    if (!period) {
+      setErrorMessage("Please select a period");
       return;
     }
 
@@ -130,7 +128,6 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
     }
   };
 
-  // ---- delete
   const deleteGoalHandler = async () => {
     if (!editingId) return;
 

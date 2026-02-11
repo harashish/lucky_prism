@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import transaction
 from datetime import datetime, date
+from django.utils import timezone
 import calendar
 import random
 
@@ -43,7 +44,7 @@ class HabitDayToggleView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         else:
-            d = date.today()
+            d = timezone.now().date()
 
         try:
             habit = Habit.objects.get(pk=habit_id, user=get_user())
@@ -108,7 +109,7 @@ class HabitDayToggleView(APIView):
 class HabitMonthView(APIView):
     def get(self, request):
         month_q = request.query_params.get("month")
-        today = date.today()
+        today = timezone.now().date()
 
         if not month_q:
             month_q = f"{today.year}-{today.month:02d}"
@@ -211,7 +212,7 @@ class HabitStreakView(APIView):
 
 class RandomHabitSummaryView(APIView):
     def get(self, request):
-        today = date.today()
+        today = timezone.now().date()
         habits = Habit.objects.filter(user=get_user(), is_active=True)
         if not habits.exists():
             return Response(None, status=status.HTTP_200_OK)

@@ -11,5 +11,6 @@ urlpatterns = [
     path("api/todos/", include("apps.todos.urls")),
     path("api/common/", include("apps.common.urls")),
     path("api/settings/", include("apps.settings.urls")),
+    path("api/mood/", include("apps.mood.urls")),
 ]
 

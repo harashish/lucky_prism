@@ -39,7 +39,6 @@ class TodoTaskSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "content",
-            "is_default",
             "custom_difficulty",
             "custom_difficulty_id",
             "category",

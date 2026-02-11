@@ -1,5 +1,4 @@
 from django.db import models
-from apps.gamification.services.xp_calculator import calculate_xp
 
 
 class GoalPeriod(models.Model):
@@ -16,10 +15,8 @@ class GoalPeriod(models.Model):
 
 class Goal(models.Model):
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
-    title = models.CharField(max_length=30)
+    title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-
-    # motivation_reason obowiązkowe
     motivation_reason = models.TextField()
     period = models.ForeignKey(GoalPeriod, on_delete=models.PROTECT)
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)

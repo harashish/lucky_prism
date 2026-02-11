@@ -11,8 +11,6 @@ class TodoCategory(models.Model):
 class TodoTask(models.Model):
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
     content = models.TextField()
-    is_default = models.BooleanField(default=False)
-
     custom_difficulty = models.ForeignKey(
         "common.DifficultyType",
         on_delete=models.PROTECT,

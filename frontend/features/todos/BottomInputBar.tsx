@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import AppText from "../../components/AppText";
-import { colors } from "../../constants/theme";
+import { colors, radius } from "../../constants/theme";
 
 export default function BottomInputBar({
   quickText,
@@ -27,7 +27,7 @@ export default function BottomInputBar({
           onPress={onOpenDifficulty}
           style={{
             padding: 12,
-            borderRadius: 10,
+            borderRadius: radius.md,
             backgroundColor: colors.card,
             marginRight: 8,
           }}
@@ -43,7 +43,7 @@ export default function BottomInputBar({
           style={{
             flex: 1,
             padding: 12,
-            borderRadius: 10,
+            borderRadius: radius.md,
             backgroundColor: colors.card,
             marginRight: 8,
             color: colors.text

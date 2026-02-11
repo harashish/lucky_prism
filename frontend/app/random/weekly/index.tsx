@@ -149,9 +149,7 @@ export default function WeeklyPickScreen() {
           </AppText>
         )}
 
-        {/* TAGS */}
         <AppText style={{ marginBottom: 8 }}>Filter by tags:</AppText>
-
         <View
           style={{
             flexDirection: "row",
@@ -178,9 +176,7 @@ export default function WeeklyPickScreen() {
           ))}
         </View>
 
-        {/* DIFFICULTY */}
         <AppText style={{ marginBottom: 8 }}>Filter by difficulty:</AppText>
-
         <View
           style={{
             flexDirection: "row",

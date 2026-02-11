@@ -33,7 +33,6 @@ export default function GoalsScreen() {
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("weekly");
 
-  /* ---------- INIT ---------- */
   useEffect(() => {
     loadPeriods();
   }, []);
@@ -43,8 +42,6 @@ export default function GoalsScreen() {
       loadGoals(selectedPeriod);
     }, [selectedPeriod])
   );
-
-  /* ---------- DERIVED ---------- */
 
   const completedCount = goals.filter(g => g.is_completed).length;
   const progress = goals.length === 0 ? 0 : completedCount / goals.length;
@@ -60,8 +57,6 @@ export default function GoalsScreen() {
       : now.diff(now.startOf("year")) /
         now.endOf("year").diff(now.startOf("year"));
 
-  /* ---------- ACTIONS ---------- */
-
   const onComplete = (goalId: number, title: string) => {
     Alert.alert("Complete goal?", title, [
       { text: "Cancel", style: "cancel" },
@@ -74,18 +69,16 @@ export default function GoalsScreen() {
             useGamificationStore.getState().applyXpResult(res);
           }
 
-          // ⬅️ reload zostaje w screenie, bo completeGoal NIE reloaduje listy
           loadGoals(selectedPeriod);
         },
       },
     ]);
   };
 
-  /* ---------- UI ---------- */
 
   return (
     <View style={{ flex: 1, padding: 12, backgroundColor: colors.background }}>
-      {/* PERIOD SELECTOR */}
+
       <View style={{ flexDirection: "row", marginBottom: 12 }}>
         {periodNames.map(p => (
           <TouchableOpacity
@@ -108,7 +101,6 @@ export default function GoalsScreen() {
         ))}
       </View>
 
-      {/* PROGRESS */}
       <View
         style={{
           backgroundColor: colors.card,
@@ -157,7 +149,6 @@ export default function GoalsScreen() {
         </View>
       </View>
 
-      {/* GOALS LIST */}
       {loading.list ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color={colors.buttonActive} />

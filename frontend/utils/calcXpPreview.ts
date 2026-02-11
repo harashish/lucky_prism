@@ -1,5 +1,3 @@
-type Difficulty = "easy" | "medium" | "hard";
-
 export function calcXpPreview({
   baseXp,
   moduleMultiplier,

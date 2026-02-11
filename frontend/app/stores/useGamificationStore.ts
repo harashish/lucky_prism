@@ -25,14 +25,12 @@ type GamificationState = {
   clearXpPopup: () => void;
 };
 
-
 export const useGamificationStore = create<GamificationState>((set, get) => ({
   totalXp: 0,
   currentLevel: 1,
   xpMultiplier: 1.0,
   xpPopup: null,
   loading: false,
-
 
   fetchUser: async () => {
     set({ loading: true });

@@ -31,7 +31,6 @@ export default function TagsFormScreen({ editingId }: TagsFormScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // ---- load tag for edit
   useEffect(() => {
     if (!editingId) return;
 
@@ -51,7 +50,6 @@ export default function TagsFormScreen({ editingId }: TagsFormScreenProps) {
     load();
   }, [editingId]);
 
-  // ---- save
   const save = async () => {
     if (!name.trim()) {
       setErrorMessage("Please enter tag name");
@@ -78,7 +76,6 @@ export default function TagsFormScreen({ editingId }: TagsFormScreenProps) {
     }
   };
 
-  // ---- delete
   const deleteHandler = async () => {
     if (!editingId) return;
 

@@ -61,7 +61,6 @@ export default function GamificationScreen() {
 
   return (
     <View style={styles.container}>
-      {/* LEVEL CIRCLE */}
       <View style={{ marginBottom: spacing.l }}>
         <Svg width={SIZE} height={SIZE}>
           <Circle
@@ -96,7 +95,6 @@ export default function GamificationScreen() {
         Left to the next level: {xpNeededForNext - xpIntoLevel} XP
       </Text>
 
-      {/* XP LOGS */}
       <FlatList
         style={{ marginTop: spacing.l, width: "100%" }}
         data={xpLogs.slice(0, 20)}

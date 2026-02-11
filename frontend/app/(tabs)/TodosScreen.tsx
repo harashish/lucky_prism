@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AppText from "../../components/AppText";
-import { colors } from "../../constants/theme";
+import { colors, radius } from "../../constants/theme";
 import { useTodoStore } from "../stores/useTodoStore";
 import { useRouter } from "expo-router";
 import TodoItem from "../../features/todos/TodoItem";
@@ -47,16 +47,11 @@ export default function TodosScreen() {
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
-
-  /* ---------- INIT ---------- */
-
   useFocusEffect(
     useCallback(() => {
       loadCategories();
     }, [])
   );
-
-  /* ---------- CATEGORY SYNC ---------- */
 
   useEffect(() => {
     if (!categories.length) {
@@ -72,15 +67,11 @@ export default function TodosScreen() {
     }
   }, [categories]);
 
-  /* ---------- LOAD TASKS ---------- */
-
   useEffect(() => {
     if (selectedCategoryId !== null) {
       loadTasks(selectedCategoryId);
     }
   }, [selectedCategoryId]);
-
-  /* ---------- ACTIONS ---------- */
 
   const onQuickAdd = async () => {
     if (!quickText.trim() || !selectedCategoryId) return;
@@ -98,11 +89,9 @@ export default function TodosScreen() {
     }
   };
 
-  /* ---------- UI ---------- */
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Difficulty Popup */}
+
       {showDifficulty && (
         <CustomDifficultyPicker
           onSelect={(d: any) => {
@@ -113,7 +102,7 @@ export default function TodosScreen() {
         />
       )}
 
-      {/* Edit Todo Popup */}
+
       {editingTodo && (
         <EditTodoPopup
           item={editingTodo}
@@ -132,8 +121,6 @@ export default function TodosScreen() {
         />
       )}
 
-
-      {/* CATEGORIES */}
       <View style={{ flexDirection: "row", marginBottom: 12, padding: 12 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {categories.map((cat) => (
@@ -144,14 +131,14 @@ export default function TodosScreen() {
               style={{
                 padding: 12,
                 marginRight: 8,
-                borderRadius: 10,
-                backgroundColor:
-                  cat.color || colors.card,
+                borderRadius: radius.md,
+                backgroundColor: cat.color || colors.card,
                 minWidth: 80,
                 alignItems: "center",
-
-                borderWidth: selectedCategoryId === cat.id ? 2 : 0,
-                borderColor: colors.light,
+                borderWidth: 2,
+                borderColor: selectedCategoryId === cat.id
+                  ? colors.light
+                  : "transparent",
               }}
             >
               <AppText>{cat.name}</AppText>
@@ -167,7 +154,7 @@ export default function TodosScreen() {
             onPress={() => router.push("/addCategory")}
             style={{
               padding: 12,
-              borderRadius: 10,
+              borderRadius: radius.md,
               backgroundColor: colors.buttonActive,
               justifyContent: "center",
               alignItems: "center",
@@ -178,7 +165,6 @@ export default function TodosScreen() {
         </ScrollView>
       </View>
 
-      {/* TOGGLE COMPLETED */}
       <TouchableOpacity
         onPress={() => setShowCompleted((prev) => !prev)}
         style={{

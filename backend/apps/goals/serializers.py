@@ -49,3 +49,4 @@ class GoalSerializer(serializers.ModelSerializer):
         validated_data["user"] = get_user()
         return super().create(validated_data)
 
+

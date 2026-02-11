@@ -12,6 +12,10 @@ import {
   GOAL_PERIOD_MULTIPLIER,
 } from "../../constants/xpPreview";
 import { calcXpPreview } from "../../utils/calcXpPreview";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
+import { api } from "../api/apiClient";
 
 
 export default function SettingsScreen() {
@@ -26,6 +30,44 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
   s.charAt(0).toUpperCase() + s.slice(1);
 
   const { xpMultiplier, setXpMultiplier } = useGamificationStore();
+
+const handleExport = async () => {
+  try {
+    const res = await api.get("/settings/export/");
+    const data = res.data;
+
+    const fileUri = FileSystem.documentDirectory + "backup.json";
+
+    await FileSystem.writeAsStringAsync(
+      fileUri,
+      JSON.stringify(data)
+    );
+
+    await Sharing.shareAsync(fileUri);
+  } catch (e) {
+    console.log("Export error:", e);
+  }
+};
+
+const handleImport = async () => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/json",
+    });
+
+    if (result.canceled) return;
+
+    const fileContent = await FileSystem.readAsStringAsync(
+      result.assets[0].uri
+    );
+
+    await api.post("/settings/import/", JSON.parse(fileContent));
+
+    alert("Import finished. Restart app.");
+  } catch (e) {
+    console.log("Import error:", e);
+  }
+};
 
   const XP_TABLE_CONFIG: XpTableRow[] = [
     { label: "Habits", module: "habits" },
@@ -70,7 +112,6 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
     paddingBottom: 30,
   }} >
       
-      {/* MODULES */}
       <AppText style={{ fontWeight: "700", marginBottom: 10 }}>Modules</AppText>
       {raw.map((m) => (
         <View key={m.id} style={styles.row}>
@@ -82,13 +123,12 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
                 false: colors.card, 
                 true: colors.buttonActive 
               }}
-            disabled={pendingModuleToggles.includes(m.id)} // <- blokada podczas requestu
+            disabled={pendingModuleToggles.includes(m.id)}
             thumbColor={colors.light}
           />
         </View>
       ))}
 
-      {/* DASHBOARD TILES */}
       <AppText style={{ fontWeight: "700", marginVertical: 10 }}>Dashboard tiles</AppText>
       {dashboardTiles
         .filter(tile => !tile.module_dependency || modules?.[tile.module_dependency])
@@ -108,10 +148,7 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
           </View>
       ))}
 
-        {/* XP MULTIPLIER */}  
-
         <AppText style={{ fontWeight: "700", marginVertical: 10 }}>XP multiplier</AppText>
-
         <View style={{ flexDirection: "row", gap: 10 }}>
         {[0.5, 1, 1.5, 2].map((v) => (
           <TouchableOpacity
@@ -135,7 +172,6 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
       </AppText>
 
       <View style={styles.table}>
-        {/* HEADER */}
         <View style={styles.headerRow}>
           <View style={styles.cellModule}>
             <AppText style={{ fontWeight: "600" }}>Module</AppText>
@@ -151,7 +187,6 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
           </View>
         </View>
 
-        {/* ROWS */}
       {XP_TABLE_CONFIG.map((tableRow) => (
         <View key={tableRow.label} style={styles.tableRow}>
           <View style={styles.cellModule}>
@@ -174,6 +209,39 @@ const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleTog
       ))}
 
       </View>
+
+<AppText style={{ fontWeight: "700", marginTop: spacing.l }}>
+  Backup
+</AppText>
+
+<View style={{ flexDirection: "row", gap: 12, marginTop: spacing.s }}>
+  <TouchableOpacity
+    onPress={handleExport}
+    style={{
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 8,
+      backgroundColor: colors.card,
+      alignItems: "center",
+    }}
+  >
+    <AppText>Export data</AppText>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    onPress={handleImport}
+    style={{
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 8,
+      backgroundColor: colors.card,
+      alignItems: "center",
+    }}
+  >
+    <AppText>Import data</AppText>
+  </TouchableOpacity>
+</View>
+
     </ScrollView>
   );
 }

@@ -1,0 +1,91 @@
+WYMAGANIA ŚRODOWISKOWE:
+Do uruchomienia aplikacji wymagane są:
+- system operacyjny Windows, Linux lub macOS
+- Python w wersji 3.10 lub nowszej
+- Node.js w wersji LTS
+- npm (instalowany razem z Node.js)
+- dostęp do sieci lokalnej (dla uruchomienia aplikacji mobilnej przez Expo)
+- zainstalowana aplikacja Expo Go na urządzeniu mobilnym (Android / iOS) 
+
+URUCHOMIENIE APLIKACJI:
+Aplikacja składa się z dwóch niezależnych części:
+1. backend (serwer API)
+2. frontend (aplikacja mobilna uruchamiana przez Expo)
+Obie części należy uruchomić w osobnych terminalach.
+
+a) Terminal 1 - BACKEND
+    1. Przejść do katalogu backend
+
+		cd backend
+	
+    2. (Opcjonalnie) utworzyć i aktywować wirtualne środowisko
+
+		python -m venv venv
+		
+		venv\Scripts\activate
+    
+    3. Zainstalować zależności
+
+		pip install -r requirements.txt
+
+    4. Utworzyć bazę danych oraz zainicjalizować ją danymi systemowymi i przykładowymi
+	(Krok jest wymagany, ponieważ skrypt inicjalizacyjny, oprócz danych przykładowych, tworzy również podstawowe obiekty konfiguracyjne niezbędne do poprawnego działania aplikacji, takie jak domyślny użytkownik techniczny, typy trudności, okresy celów, moduły oraz elementy dashboardu)
+	
+		python manage.py migrate
+		
+		python manage.py shell -c "exec(open('scripts/seed_dev_data.py').read())"
+
+    5. uruchomić serwer developerski
+
+		python manage.py runserver 0.0.0.0:8000
+
+Po poprawnym uruchomieniu backend jest dostępny pod adresem:
+
+		http://127.0.0.1:8000/
+
+
+KONFIGURACJA ADRESU BACKENDU DLA FRONTENDU
+Przed uruchomieniem aplikacji frontendowej należy sprawdzić adres IP komputera, na którym działa backend.
+	1. W systemie Windows w konsoli (cmd lub PowerShell) wpisać:
+	
+		ipconfig
+		
+	2. Skopiować lokalny adres IPv4 (np. 192.168.x.x).
+	3. Otworzyć plik:
+	
+		frontend/app/api/apiClient.ts
+		
+	4. W polu baseURL ustawić adres w postaci:
+		
+		baseURL: "http://adres_ip:8000/api"
+
+Adres IP musi odpowiadać komputerowi, na którym uruchomiony jest backend.
+
+b) Terminal 2 - FRONTEND
+    1. Przejść do katalogu frontend
+
+		cd frontend
+
+    2. Zainstalować zależności
+
+		npm install
+
+    3. Uruchomić aplikację
+
+		npx expo start
+
+
+c) URUCHOMIENIE APLIKACJI NA URZĄDZENIU MOBILNYM (EXPO)
+	1. Na urządzeniu mobilnym zainstalować aplikację Expo Go
+	2. Upewnić się, że urządzenie mobilne oraz komputer znajdują się w tej samej sieci lokalnej (tej samej podsieci)
+	3. Zeskanować kod QR wyświetlony w terminalu lub przeglądarce
+	4. Aplikacja zostanie automatycznie skompilowana i uruchomiona na urządzeniu
+
+
+UWAGI
+- Backend i frontend muszą być uruchomione jednocześnie
+- Aplikacja nie wymaga uprawnień administratora
+- Instrukcja dotyczy uruchomienia w trybie developerskim
+
+
+Aplikacja była testowana w środowisku Windows 11 oraz na urządzeniu mobilnym z systemem Android. Z uwagi na wykorzystanie technologii wieloplatformowych (Django, React Native, Expo), aplikacja powinna działać również w innych systemach operacyjnych, jednak nie były one objęte testami w ramach niniejszej pracy. Projekt był rozwijany i uruchamiany w środowisku Visual Studio Code. Korzystanie z tego edytora jest zalecane ze względu na wygodną obsługę środowisk wirtualnych, terminala oraz integrację z narzędziami JavaScript i Python, jednak nie jest ono wymagane do uruchomienia aplikacji.

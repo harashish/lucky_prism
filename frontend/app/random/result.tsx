@@ -104,7 +104,7 @@ export default function RandomResultScreen(){
       {source === "todo" && (
         <>
           {todoCard}
-          <TouchableOpacity onPress={() => router.replace("/random/todo")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
+          <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomHomeScreen")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
             <AppText style={{ textAlign: "center" }}>OK</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={onReroll} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>

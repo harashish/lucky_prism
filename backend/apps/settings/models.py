@@ -42,7 +42,6 @@ class DashboardTile(models.Model):
     key = models.CharField(
     max_length=50,
 
-    # aby można było wybierać tylko z tile_keys
     choices=TILE_KEYS
     )
     name = models.CharField(max_length=120)
@@ -50,7 +49,6 @@ class DashboardTile(models.Model):
     module_dependency = models.CharField(
     max_length=30,
 
-    # aby nie dało się wpisać nieistniejacego modułu
     choices=ModuleDefinition.MODULE_CHOICES,
     blank=True,
     null=True

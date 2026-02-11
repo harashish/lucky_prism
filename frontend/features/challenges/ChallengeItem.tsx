@@ -26,13 +26,12 @@ export default function ChallengeItem({ item, isUserChallenge }: Props) {
     fetchActive,
   } = useChallengeStore();
 
-  /* ---------- ACTIONS ---------- */
-
   const onAssign = async () => {
     const res = await assignChallenge(item.id);
     if (!res) {
       Alert.alert("Error", "Cannot assign challenge.");
     }
+    await fetchActive();
   };
 
   const onComplete = async () => {
@@ -50,101 +49,82 @@ export default function ChallengeItem({ item, isUserChallenge }: Props) {
     await fetchActive();
   };
 
-  /* ---------- WEEKLY PROGRESS ---------- */
+  const isWeekly =
+    isUserChallenge &&
+    item.challenge_type === "weekly";
 
-  const days =
-    isUserChallenge && item.challenge_type?.name === "weekly"
-      ? item.progress_days ?? 1
-      : null;
+  const days = isWeekly ? (item.progress_days || 1) : 0;
 
-  /* ---------- RENDER ---------- */
 
-  return (
-    <TouchableOpacity
-      onPress={() => setExpanded((prev) => !prev)}
-      onLongPress={() => router.push(`/editChallenge/${item.id}`)}
-      delayLongPress={300}
-    >
-      <View style={components.container}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <ItemHeader
-            title={isUserChallenge ? item.challenge.title : item.title}
-            difficulty={
-              isUserChallenge
-                ? item.challenge.difficulty?.name
-                : item.difficulty?.name
-            }
-          />
+return (
+  <TouchableOpacity
+    onPress={() => setExpanded(prev => !prev)}
+    onLongPress={() => router.push(`/editChallenge/${item.challenge.id}`)}
+    delayLongPress={300}
+  >
+    <View style={components.container}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <ItemHeader
+          title={isUserChallenge ? item.challenge.title : item.title}
+          difficulty={
+            isUserChallenge
+              ? item.challenge.difficulty?.name
+              : item.difficulty?.name
+          }
+        />
 
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {!isUserChallenge && (
+            <TouchableOpacity onPress={onAssign} style={components.addButton}>
+              <AppText style={{ color: "#fff", fontSize: 18 }}>+</AppText>
+            </TouchableOpacity>
+          )}
+
+        {isUserChallenge && (
+          <TouchableOpacity onPress={onComplete} style={components.completeButton}>
+            <AppText style={{ color: "#fff", fontSize: 14 }}>
+              Complete
+            </AppText>
+          </TouchableOpacity>
+        )}
+
+        </View>
+      </View>
+
+      {isWeekly && (
+        <>
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginLeft: 8,
-              flexShrink: 0,
-              gap: 8,
+              height: 8,
+              backgroundColor: colors.light,
+              borderRadius: 4,
+              marginVertical: 8,
             }}
           >
-            {!isUserChallenge && (
-              <TouchableOpacity onPress={onAssign} style={components.addButton}>
-                <AppText style={{ color: "#fff", fontSize: 18 }}>+</AppText>
-              </TouchableOpacity>
-            )}
-
-            {isUserChallenge && (
-              <TouchableOpacity
-                onPress={onComplete}
-                style={components.completeButton}
-              >
-                <AppText style={{ color: "#fff", fontSize: 14 }}>
-                  Complete
-                </AppText>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Weekly progress bar */}
-        {isUserChallenge && days != null && (
-          <>
             <View
               style={{
+                width: `${(days / 7) * 100}%`,
                 height: 8,
-                backgroundColor: colors.light,
-                borderRadius: 4,
-                marginVertical: 8,
+                backgroundColor: colors.buttonActive,
               }}
-            >
-              <View
-                style={{
-                  width: `${(days / 7) * 100}%`,
-                  height: "100%",
-                  backgroundColor: colors.buttonActive,
-                }}
-              />
-            </View>
-            <AppText style={{ fontSize: 12, marginTop: 2 }}>
-              {days}/7 dni
-            </AppText>
-          </>
-        )}
+            />
+          </View>
+          <AppText style={{ fontSize: 12, marginTop: 2 }}>
+            {days}/7 dni
+          </AppText>
+        </>
+      )}
 
-        {expanded && (
-          <ItemDetails
-            description={
-              isUserChallenge
-                ? item.challenge.description
-                : item.description
-            }
-          />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+      {expanded && (
+        <ItemDetails
+          description={
+            isUserChallenge
+              ? item.challenge.description
+              : item.description
+          }
+        />
+      )}
+    </View>
+  </TouchableOpacity>
+);
 }

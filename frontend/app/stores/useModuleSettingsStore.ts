@@ -54,8 +54,6 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
   dashboardTiles: [],
   pendingModuleToggles: [],
 
-  /* ---------- LOAD ---------- */
-
   fetchModules: async () => {
     if (get().modules) return;
 
@@ -77,7 +75,6 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
 
     set({ modules, raw: res.data });
 
-    // dashboard tiles
     try {
       const tRes = await api.get("/settings/dashboard-tiles/");
       set({ dashboardTiles: tRes.data });
@@ -86,15 +83,12 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
     }
   },
 
-  /* ---------- MODULE TOGGLE ---------- */
-
   toggleModule: async (id, value) => {
     const prevRaw = get().raw;
     const prevModules = get().modules;
 
     const changed = prevRaw.find((m) => m.id === id);
 
-    // optimistic update
     const rawOptimistic = prevRaw.map((m) =>
       m.id === id ? { ...m, is_enabled: value } : m
     );
@@ -120,7 +114,7 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
         ),
       });
     } catch (e) {
-      // rollback
+
       set({
         raw: prevRaw,
         modules: prevModules,
@@ -132,8 +126,6 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
       console.error("toggleModule failed", e);
     }
   },
-
-  /* ---------- TILE TOGGLE ---------- */
 
   toggleTile: async (id: DashboardTileKey, value: boolean) => {
     const tile = get().dashboardTiles.find(

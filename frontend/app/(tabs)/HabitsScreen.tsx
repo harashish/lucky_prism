@@ -31,8 +31,6 @@ export default function HabitsScreen() {
 
   const [month, setMonth] = useState<string | undefined>(undefined);
 
-  /* ---------- INIT ---------- */
-
   useEffect(() => {
     loadDifficulties();
   }, []);
@@ -40,8 +38,6 @@ export default function HabitsScreen() {
   useEffect(() => {
     loadMonth(month);
   }, [month]);
-
-  /* ---------- ACTIONS ---------- */
 
   const onToggleToday = async (habitId: number) => {
     const today = new Date().toISOString().slice(0, 10);
@@ -60,7 +56,6 @@ export default function HabitsScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    // ⬅️ reload miesiąca po akcji
     await loadMonth(month, { silent: true });
   };
 
@@ -83,7 +78,6 @@ export default function HabitsScreen() {
     await loadMonth(month, { silent: true });
   };
 
-  /* ---------- UI ---------- */
 
   return (
     <View
@@ -93,7 +87,7 @@ export default function HabitsScreen() {
         backgroundColor: colors.background,
       }}
     >
-      {/* HEADER MONTH NAV */}
+
       <View
         style={{
           flexDirection: "row",
@@ -140,7 +134,6 @@ export default function HabitsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* LIST */}
       {loading.list ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color={colors.buttonActive} />

@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-/* ---------- TYPES ---------- */
-
 export interface DifficultyType {
   id: number;
   name: string;
@@ -24,8 +22,6 @@ export interface Goal {
   completed_at?: string | null;
 }
 
-/* ---------- STORE ---------- */
-
 interface GoalStore {
   goals: Goal[];
   periods: GoalPeriod[];
@@ -33,37 +29,30 @@ interface GoalStore {
   currentPeriod?: string;
 
   loading: {
-    list: boolean;      // goals
+    list: boolean;
     periods: boolean;
-    meta: boolean;      // difficulties
-    saving: boolean;    // create/update/delete
+    meta: boolean;
+    saving: boolean;
   };
 
-  /* --- load --- */
   loadPeriods: () => Promise<void>;
   loadGoals: (period?: string) => Promise<void>;
   loadDifficulties: () => Promise<DifficultyType[]>;
 
-  /* --- crud --- */
   createGoal: (payload: any) => Promise<boolean>;
   saveGoal: (id: number, payload: any) => Promise<boolean>;
   deleteGoal: (id: number) => Promise<boolean>;
 
-
-  /* --- actions --- */
   completeGoal: (id: number) => Promise<{
     xp_gained: number;
     total_xp: number;
     current_level: number;
   } | null>;
 
-  /* --- helpers --- */
   pickRandomGoal: (period?: string) => Promise<Goal | null>;
   getGoalById: (id: number) => Promise<Goal | null>;
 
 }
-
-/* ---------- INITIAL STATE ---------- */
 
 const initialState = {
   goals: [],
@@ -77,12 +66,8 @@ const initialState = {
   },
 };
 
-/* ---------- IMPLEMENTATION ---------- */
-
 export const useGoalStore = create<GoalStore>((set, get) => ({
   ...initialState,
-
-  /* ---------- LOAD ---------- */
 
   loadPeriods: async () => {
     set((s) => ({ loading: { ...s.loading, periods: true } }));
@@ -126,8 +111,6 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       set((s) => ({ loading: { ...s.loading, meta: false } }));
     }
   },
-
-  /* ---------- CRUD ---------- */
 
   createGoal: async (payload) => {
     set((s) => ({ loading: { ...s.loading, saving: true } }));
@@ -173,9 +156,6 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     }
   },
 
-
-  /* ---------- ACTIONS ---------- */
-
   completeGoal: async (id) => {
     try {
       const res = await api.post(`/goals/${id}/complete/`);
@@ -185,8 +165,6 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       return null;
     }
   },
-
-  /* ---------- HELPERS ---------- */
 
   getGoalById: async (id) => {
     try {
@@ -202,7 +180,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     try {
       const url = period ? `/goals/random/?period=${period}` : "/goals/random/";
       const res = await api.get<Goal | null>(url);
-      return res.data; // backend zwraca null lub serialized Goal
+      return res.data;
     } catch (e) {
       console.error("pickRandomGoal", e);
       return null;

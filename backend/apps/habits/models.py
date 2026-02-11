@@ -1,13 +1,9 @@
 from django.db import models
 
 class Habit(models.Model):
-
-    # POMYŚLEĆ CZY ZOSTAWIĆ
     user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
     title = models.CharField(max_length=70)
     description = models.TextField(blank=True)
-
-    # motivation_reason obowiązkowe
     motivation_reason = models.TextField()
     color = models.CharField(max_length=20, default="#908bab")
     difficulty = models.ForeignKey("common.DifficultyType", on_delete=models.PROTECT)
@@ -37,7 +33,6 @@ class HabitDay(models.Model):
     date = models.DateField()
     status = models.IntegerField(choices=STATUS_CHOICES, default=STATUS_EMPTY)
 
-    # w przypadku przyznania już xp
     xp_awarded = models.BooleanField(default=False)  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

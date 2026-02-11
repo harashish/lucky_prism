@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-/* ---------- TYPES ---------- */
-
 export interface DifficultyType {
   id: number;
   name: string;
@@ -49,8 +47,6 @@ export interface RandomHabitSummary {
   total: number;
 }
 
-/* ---------- STORE ---------- */
-
 interface HabitStore {
   habits: Habit[];
   currentMonth?: string;
@@ -58,13 +54,12 @@ interface HabitStore {
   biggestStreak: BestHabitStreak | null;
 
   loading: {
-    list: boolean;      // loadMonth
-    meta: boolean;      // difficulties
-    saving: boolean;    // create/update/delete
-    streaks: boolean;   // fetchStreaks
+    list: boolean;
+    meta: boolean;
+    saving: boolean;
+    streaks: boolean;
   };
 
-  /* --- load --- */
   loadMonth: (
     month?: string,
     opts?: { silent?: boolean }
@@ -73,24 +68,19 @@ interface HabitStore {
   loadDifficulties: () => Promise<DifficultyType[]>;
   fetchStreaks: () => Promise<BestHabitStreak | null>;
 
-  /* --- crud --- */
   createHabit: (payload: any) => Promise<void>;
   updateHabit: (id: number, payload: any) => Promise<void>;
   deleteHabit: (id: number) => Promise<void>;
 
-  /* --- actions --- */
   toggleDay: (
     habitId: number,
     date?: string,
     status?: number
   ) => Promise<ToggleDayResponse | null>;
 
-  /* --- helpers --- */
   getHabitById: (id: number) => Promise<Habit | null>;
   pickRandomHabitSummary: () => Promise<RandomHabitSummary | null>;
 }
-
-/* ---------- INITIAL STATE ---------- */
 
 const initialState = {
   habits: [],
@@ -105,12 +95,8 @@ const initialState = {
   },
 };
 
-/* ---------- IMPLEMENTATION ---------- */
-
 export const useHabitStore = create<HabitStore>((set, get) => ({
   ...initialState,
-
-  /* ---------- LOAD ---------- */
 
   loadMonth: async (
     month?: string,
@@ -175,8 +161,6 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     }
   },
 
-  /* ---------- CRUD ---------- */
-
   createHabit: async (payload) => {
     set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
@@ -216,8 +200,6 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     }
   },
 
-  /* ---------- ACTIONS ---------- */
-
   toggleDay: async (habitId, date, status) => {
     try {
       const payload: any = {};
@@ -235,8 +217,6 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       return null;
     }
   },
-
-  /* ---------- HELPERS ---------- */
 
   getHabitById: async (id) => {
     try {

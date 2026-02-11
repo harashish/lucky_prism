@@ -30,7 +30,6 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // ---- load note for edit
   useEffect(() => {
     if (!editingId) return;
 
@@ -48,7 +47,6 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
     load();
   }, [editingId, fetchById]);
 
-  // ---- save
   const save = async () => {
     if (!content.trim()) {
       setErrorMessage("Note cannot be empty");
@@ -72,7 +70,6 @@ export default function NoteFormScreen({ editingId }: NoteFormScreenProps) {
     }
   };
 
-  // ---- delete
   const deleteNoteHandler = async () => {
     if (!editingId) return;
 

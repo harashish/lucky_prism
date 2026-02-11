@@ -41,7 +41,6 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     "#A0B4EF",
   ];
 
-  // ---- load meta
   useEffect(() => {
     const loadMeta = async () => {
       const diffs = await loadDifficulties();
@@ -50,7 +49,6 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     loadMeta();
   }, []);
 
-  // ---- load category for edit
   useEffect(() => {
     if (!editingId) return;
 
@@ -72,7 +70,6 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     load();
   }, [editingId]);
 
-  // ---- save
   const save = async () => {
     if (!name.trim()) {
       setErrorMessage("Please enter category name");
@@ -108,7 +105,6 @@ export default function CategoryFormScreen({ editingId }: CategoryFormScreenProp
     }
   };
 
-  // ---- delete
   const deleteHandler = async () => {
     if (!editingId) return;
 

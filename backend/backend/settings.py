@@ -25,11 +25,8 @@ SECRET_KEY = 'django-insecure-6kyakyhk^0y)jd85+)8@emd+dyxg!bl#n&!&)0w30@w@l*ck*q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = ["10.180.177.57", "localhost", "127.0.0.1"]
 ALLOWED_HOSTS = ['*']
-
-
 
 # Application definition
 
@@ -45,13 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # pakiety zewnętrzne
     'rest_framework',
     'corsheaders',
     'django_filters',
     'drf_spectacular',
 
-    # apps
     'apps.challenges',
     'apps.habits',
     'apps.todos',
@@ -60,6 +55,7 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.gamification',
     'apps.settings',
+    'apps.mood',
 ]
 
 MIDDLEWARE = [

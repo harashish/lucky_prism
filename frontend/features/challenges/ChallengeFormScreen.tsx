@@ -38,7 +38,6 @@ export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenPr
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // ---- init
   useEffect(() => {
     loadTags();
     loadDifficulties();
@@ -51,7 +50,6 @@ export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenPr
     loadMeta();
   }, []);
 
-  // ---- load challenge for edit
   useEffect(() => {
     if (!editingId) return;
 
@@ -81,7 +79,6 @@ export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenPr
     );
   };
 
-  // ---- save
   const save = async () => {
     if (!title.trim()) {
       setErrorMessage("Please enter challenge name");
@@ -128,7 +125,6 @@ export default function ChallengeFormScreen({ editingId }: ChallengeFormScreenPr
     }
   };
 
-  // ---- delete
   const deleteHandler = async () => {
     if (!editingId) return;
 

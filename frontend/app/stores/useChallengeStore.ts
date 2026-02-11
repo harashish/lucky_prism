@@ -2,8 +2,6 @@ import { create } from "zustand";
 import { api } from "../api/apiClient";
 import type { XpResult } from "./useGamificationStore";
 
-/* ---------- TYPES ---------- */
-
 export interface ChallengeTag {
   id: number;
   name: string;
@@ -26,7 +24,6 @@ export interface Challenge {
   type: ChallengeType;
   difficulty: DifficultyType;
   tags: ChallengeTag[];
-  is_default: boolean;
 }
 
 export interface UserChallenge {
@@ -39,8 +36,6 @@ export interface UserChallenge {
   is_completed: boolean;
 }
 
-/* ---------- STORE ---------- */
-
 interface ChallengeStore {
   challenges: Challenge[];
   tags: ChallengeTag[];
@@ -50,22 +45,20 @@ interface ChallengeStore {
   activeWeekly: UserChallenge[];
 
   loading: {
-    list: boolean;      // challenges / active
-    meta: boolean;      // tags / difficulties / types
-    saving: boolean;    // create / update / delete / assign
+    list: boolean;
+    meta: boolean;
+    saving: boolean;
   };
 
   selectedType: "daily" | "weekly";
   setSelectedType: (t: "daily" | "weekly") => void;
 
-  /* --- load --- */
   loadChallenges: () => Promise<void>;
   loadTags: () => Promise<void>;
   loadDifficulties: () => Promise<DifficultyType[]>;
   loadTypes: () => Promise<ChallengeType[]>;
   fetchActive: () => Promise<void>;
 
-  /* --- gameplay --- */
   fetchRandomChallenge: (
     type: "daily" | "weekly",
     tagIds?: number[],
@@ -76,20 +69,17 @@ interface ChallengeStore {
   discardUserChallenge: (id: number) => Promise<void>;
   completeUserChallenge: (id: number) => Promise<XpResult | null>;
 
-  /* --- crud (admin) --- */
   getChallengeById: (id: number) => Promise<Challenge | null>;
   createChallenge: (payload: any) => Promise<void>;
   updateChallenge: (id: number, payload: any) => Promise<void>;
   deleteChallenge: (id: number) => Promise<void>;
 
-  /* --- tags --- */
   getTagById: (id: number) => Promise<ChallengeTag | null>;
   createTag: (payload: { name: string }) => Promise<void>;
   updateTag: (id: number, payload: { name: string }) => Promise<void>;
   deleteTag: (id: number) => Promise<void>;
 }
 
-/* ---------- IMPLEMENTATION ---------- */
 
 export const useChallengeStore = create<ChallengeStore>((set, get) => ({
   challenges: [],
@@ -105,11 +95,7 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
     saving: false,
   },
 
-  /* ---------- UI ---------- */
-
   setSelectedType: (t) => set({ selectedType: t }),
-
-  /* ---------- LOAD ---------- */
 
   loadChallenges: async () => {
     set((s) => ({ loading: { ...s.loading, list: true } }));
@@ -174,7 +160,6 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
     }
   },
 
-  /* ---------- GAMEPLAY ---------- */
 
   fetchRandomChallenge: async (type, tagIds = [], difficultyId = null) => {
     try {
@@ -236,8 +221,6 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
     }
   },
 
-  /* ---------- CRUD (ADMIN) ---------- */
-
   getChallengeById: async (id) => {
     try {
       const res = await api.get(`/challenges/${id}/`);
@@ -286,9 +269,6 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
       set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
-
-  /* ---------- TAGS ---------- */
-
   getTagById: async (id) => {
     try {
       const res = await api.get<ChallengeTag>(`/challenges/tags/${id}/`);

@@ -32,7 +32,7 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
           padding: 16
         }}>
           <AppText style={{ marginBottom: 12, fontWeight: "bold", fontSize: 18 }}>
-            Wybierz trudność
+            Choose difficulty
           </AppText>
 
           <ScrollView>
@@ -63,7 +63,7 @@ export default function CustomDifficultyPicker({ onSelect, onClose }) {
               alignItems: "center",
             }}
           >
-            <AppText style={{ color: "#fff" }}>Zamknij</AppText>
+            <AppText style={{ color: "#fff" }}>Close</AppText>
           </TouchableOpacity>
         </View>
       </View>

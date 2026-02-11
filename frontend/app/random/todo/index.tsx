@@ -21,12 +21,10 @@ export default function TodoPickScreen() {
   const [spinning, setSpinning] = useState(false);
   const [spinItems, setSpinItems] = useState<string[]>([]);
 
-  // ---- load categories on mount
   useEffect(() => {
     loadCategories();
   }, []);
 
-  // ---- auto-select first category
   useEffect(() => {
     if (!categories.length) return;
     if (selectedCategory === null) {
@@ -34,7 +32,6 @@ export default function TodoPickScreen() {
     }
   }, [categories]);
 
-  // ---- check if selected category has tasks
   useEffect(() => {
     if (selectedCategory !== null) {
       checkCategoryHasUncompletedTasks(selectedCategory);
@@ -98,7 +95,6 @@ export default function TodoPickScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* RANDOM BUTTON */}
         <TouchableOpacity
           disabled={randomDisabled}
           onPress={onLosuj}
@@ -119,7 +115,6 @@ export default function TodoPickScreen() {
           </AppText>
         </TouchableOpacity>
 
-        {/* EMPTY INFO */}
         {hasUncompletedTasksInSelectedCategory === false && (
           <AppText style={{ marginBottom: 12, color: "#999" }}>
             No tasks in this category
@@ -128,7 +123,6 @@ export default function TodoPickScreen() {
 
         <AppText style={{ marginBottom: 8 }}>Choose a category:</AppText>
 
-        {/* CATEGORY PICKER */}
         <View
           style={{
             flexDirection: "row",

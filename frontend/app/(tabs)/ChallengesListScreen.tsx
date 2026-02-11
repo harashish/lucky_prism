@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, TouchableOpacity, SectionList, ScrollView } from "react-native";
 import { useChallengeStore } from "../stores/useChallengeStore";
 import ChallengeItem from "../../features/challenges/ChallengeItem";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import AppText from "../../components/AppText";
-import { colors } from "../../constants/theme";
+import { colors, radius } from "../../constants/theme";
 import FloatingButton from "../../components/FloatingButton";
 
 const ChallengesListScreen = () => {
@@ -31,14 +31,17 @@ const ChallengesListScreen = () => {
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [showAll, setShowAll] = useState(false);
 
-  /* ---------- INIT ---------- */
-  useEffect(() => {
+    useEffect(() => {
     loadTags();
     loadChallenges();
-    fetchActive();
   }, []);
 
-  /* ---------- FILTERS ---------- */
+
+  useFocusEffect(
+  useCallback(() => {
+    fetchActive();
+  }, [])
+);
 
   const toggleTag = (id: number) => {
     setSelectedTags((prev) =>
@@ -70,39 +73,33 @@ const ChallengesListScreen = () => {
     });
   }, [challenges, selectedType, selectedTags, activeDefinitionIds]);
 
-  /* ---------- SECTIONS ---------- */
+  let sections: any[] = [];
 
-  const sections = useMemo(() => {
-    const result: any[] = [];
+  if (activeChallenges.length > 0) {
+    sections.push({
+      title: "Actual challenge",
+      data: activeChallenges,
+      isUserChallenge: true,
+    });
 
-    if (activeChallenges.length > 0) {
-      result.push({
-        title: "Actual challenge",
-        data: activeChallenges,
-        isUserChallenge: true,
-      });
-
-      if (filteredChallenges.length > 0) {
-        result.push({
-          title: "Challenges list",
-          data: showAll ? filteredChallenges : [],
-          isUserChallenge: false,
-        });
-      }
-    } else if (filteredChallenges.length > 0) {
-      result.push({
+    if (filteredChallenges.length > 0) {
+      sections.push({
         title: "Challenges list",
-        data: filteredChallenges,
+        data: showAll ? filteredChallenges : [],
         isUserChallenge: false,
       });
     }
+  } else if (filteredChallenges.length > 0) {
+    sections.push({
+      title: "Challenges list",
+      data: filteredChallenges,
+      isUserChallenge: false,
+    });
+  }
 
-    return result;
-  }, [activeChallenges, filteredChallenges, showAll]);
 
   return (
     <View style={{ flex: 1, padding: 10, backgroundColor: colors.background }}>
-      {/* Typy */}
       <View style={{ flexDirection: "row", marginBottom: 10 }}>
         {TYPES.map(({ label, value }, i) => (
           <TouchableOpacity
@@ -113,7 +110,7 @@ const ChallengesListScreen = () => {
               padding: 15,
               marginRight: i === 0 ? 5 : 0,
               marginLeft: i === 1 ? 5 : 0,
-              borderRadius: 10,
+              borderRadius: radius.md,
               backgroundColor:
                 selectedType === value
                   ? colors.buttonActive
@@ -128,8 +125,6 @@ const ChallengesListScreen = () => {
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Tagi */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -152,7 +147,7 @@ const ChallengesListScreen = () => {
                 paddingVertical: 8,
                 paddingHorizontal: 12,
                 marginRight: 5,
-                borderRadius: 10,
+                borderRadius: radius.md,
                 backgroundColor: selectedTags.includes(tag.id)
                   ? colors.buttonActive
                   : colors.button,
@@ -176,8 +171,6 @@ const ChallengesListScreen = () => {
           <AppText style={{ fontSize: 24, color: "#fff" }}>+</AppText>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Lista challenge */}
       {!loading.list && challenges.length === 0 ? (
         <View
           style={{

@@ -1,11 +1,4 @@
-# scripts/seed_dev_data.py
-
 print("\n=== SEED DEV DATA START ===\n")
-
-# =====================
-# IMPORTY MODELI
-# =====================
-
 from apps.gamification.models import User
 from apps.challenges.models import ChallengeType, ChallengeDefinition, ChallengeTag
 from apps.common.models import DifficultyType
@@ -13,10 +6,7 @@ from apps.goals.models import GoalPeriod, Goal
 from apps.todos.models import TodoCategory, TodoTask
 from apps.habits.models import Habit
 
-# =====================
 # USER
-# =====================
-
 user = User.objects.first()
 if not user:
     user = User.objects.create()
@@ -24,10 +14,7 @@ if not user:
 else:
     print(f"[USER] Exists (id={user.id})")
 
-# =====================
 # DIFFICULTY TYPES
-# =====================
-
 difficulties = [
     ("Trivial", 1),
     ("Easy", 2),
@@ -47,27 +34,19 @@ for name, order in difficulties:
     print(f"[DIFFICULTY] {name} ({order}) {'created' if created else 'exists'}")
 
 
-# =====================
 # CHALLENGE TYPES
-# =====================
-
 daily_type, _ = ChallengeType.objects.get_or_create(name="daily")
 weekly_type, _ = ChallengeType.objects.get_or_create(name="weekly")
 
 
 print("[CHALLENGE TYPE] Daily / Weekly ready")
 
-# =====================
-# CHALLENGE TAG
-# =====================
 
+# CHALLENGE TAG
 tag, created = ChallengeTag.objects.get_or_create(name="General")
 print(f"[TAG] 'General' {'created' if created else 'exists'}")
 
-# =====================
 # GOAL PERIODS
-# =====================
-
 periods = ["weekly", "monthly", "yearly"]
 
 period_map = {}
@@ -78,9 +57,7 @@ for name in periods:
     print(f"[GOAL PERIOD] {name} {'created' if created else 'exists'}")
 
 
-# =====================
 # DEFAULT TODO CATEGORY
-# =====================
 
 from apps.todos.models import TodoCategory
 
@@ -97,10 +74,7 @@ else:
     print("[TODO CATEGORY] 'General' already exists")
 
 
-
-# =====================
-# MODULE DEFINITIONS (USER TOGGLES)
-# =====================
+# MODULE DEFINITIONS
 
 from apps.settings.models import ModuleDefinition
 
@@ -123,9 +97,7 @@ for module in default_modules:
     print(f"[MODULE DEF] {module} {'created' if created else 'exists'}")
 
 
-# =====================
 # DASHBOARD TILES
-# =====================
 
 from apps.settings.models import DashboardTile
 
@@ -159,10 +131,7 @@ for key, name, module_dep in dashboard_defaults:
         print(f"[DASHBOARD TILE] {key} exists")
 
 
-
-# =====================
 # DEFAULT GOALS
-# =====================
 
 GOALS_DATA = {
     "weekly": [
@@ -258,13 +227,11 @@ for period_name, goals in GOALS_DATA.items():
             period=period,
             difficulty=difficulty_map[g["difficulty"]],
             motivation_reason=g["motivation_reason"],
+            description="",
         )
         print(f"[GOALS] Created {period_name}: {g['title']}")
 
-
-# =====================
 # DEFAULT TODOS
-# =====================
 
 TODOS_DATA = [
     {
@@ -302,10 +269,7 @@ if existing == 0:
 else:
     print("[TODO] Already exist, skipping")
 
-
-# =====================
-# DEFAULT CHALLENGES (CURATED)
-# =====================
+# DEFAULT CHALLENGES
 
 if not ChallengeDefinition.objects.exists():
 
@@ -381,7 +345,7 @@ if not ChallengeDefinition.objects.exists():
     weekly_challenges = [
         (
             "Digital Detox Block",
-            "Avoid computers and electronics for the next 2–3 hours at least once this week.",
+            "Avoid computers and electronics for the next 2-3 hours at least once this week.",
             "Medium",
         ),
         (
@@ -433,9 +397,7 @@ else:
     print("[CHALLENGE] Already exist, skipping")
 
 
-# =====================
 # HABITS
-# =====================
 
 HABITS_DATA = [
     {

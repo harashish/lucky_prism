@@ -28,7 +28,6 @@ import EditTodoPopup from "../../features/todos/editTodoPopup";
 export default function DashboardScreen() {
   const router = useRouter();
 
-  /* ===== STORES ===== */
   const { dashboardTiles, modules, fetchModules } = useModuleSettingsStore();
 
   const {
@@ -52,8 +51,6 @@ export default function DashboardScreen() {
   const { pickRandomGoal } = useGoalStore();
   const { fetchRandomTask } = useTodoStore();
   const { randomNote, fetchRandomNote } = useNotesStore();
-
-  /* ===== LOCAL UI STATE ===== */
   const [loading, setLoading] = useState(true);
   const [goalWeek, setGoalWeek] = useState<any | null>(null);
   const [goalMonth, setGoalMonth] = useState<any | null>(null);
@@ -88,8 +85,6 @@ export default function DashboardScreen() {
     },
   ];
 
-
-  /* ===== FETCH ORCHESTRATION ===== */
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -149,7 +144,6 @@ export default function DashboardScreen() {
     return true;
   };
 
-  /* ===== LOADING ===== */
   if (loading) {
     return (
       <View

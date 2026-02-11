@@ -8,25 +8,15 @@ from .models import (
 from apps.common.models import DifficultyType
 from apps.common.serializers import DifficultyTypeSerializer
 
-
-# -------- TAG --------
-
 class ChallengeTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeTag
         fields = ["id", "name"]
 
-
-# -------- TYPE (ENUM) --------
-
 class ChallengeTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeType
-        fields = ["id", "name"]  # name = "daily" / "weekly"
-
-
-# -------- DEFINITION --------
-
+        fields = ["id", "name"]
 class ChallengeDefinitionSerializer(serializers.ModelSerializer):
     type = ChallengeTypeSerializer(read_only=True)
     difficulty = DifficultyTypeSerializer(read_only=True)
@@ -59,7 +49,6 @@ class ChallengeDefinitionSerializer(serializers.ModelSerializer):
             "difficulty",
             "type",
             "tags",
-            "is_default",
             "type_id",
             "difficulty_id",
             "tags_ids",
@@ -72,14 +61,9 @@ class ChallengeDefinitionSerializer(serializers.ModelSerializer):
             instance.tags.set(tags)
         return instance
 
-
-# -------- USER CHALLENGE (SINGLETON) --------
-
 class UserChallengeSerializer(serializers.ModelSerializer):
     challenge = serializers.SerializerMethodField()
     progress_days = serializers.SerializerMethodField()
-
-    # frontend dostaje string: "daily" / "weekly"
     challenge_type = serializers.CharField(
         source="challenge_type.name",
         read_only=True,

@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-/* ---------- TYPES ---------- */
-
 export interface DifficultyType {
   id: number;
   name: string;
@@ -18,14 +16,11 @@ export interface TodoCategory {
 export interface TodoTask {
   id: number;
   content: string;
-  is_default: boolean;
   custom_difficulty?: DifficultyType | null;
   category: TodoCategory;
   is_completed: boolean;
   created_at: string;
 }
-
-/* ---------- STORE ---------- */
 
 interface TodoStore {
   categories: TodoCategory[];
@@ -41,17 +36,14 @@ interface TodoStore {
     meta: boolean;
   };
 
-  /* --- load --- */
   loadCategories: () => Promise<void>;
   loadTasks: (categoryId: number) => Promise<void>;
   loadDifficulties: () => Promise<DifficultyType[]>;
 
-  /* --- categories --- */
   createCategory: (payload: any) => Promise<void>;
   saveCategory: (id: number, payload: any) => Promise<void>;
   deleteCategory: (id: number) => Promise<void>;
 
-  /* --- tasks --- */
   quickAddTask: (
     categoryId: number,
     content: string,
@@ -69,19 +61,12 @@ interface TodoStore {
 
   deleteTask: (taskId: number) => Promise<void>;
 
-  /* --- random --- */
   fetchRandomTask: (categoryId?: number) => Promise<TodoTask | null>;
-
-  /* --- helpers --- */
   checkCategoryHasUncompletedTasks: (categoryId: number) => Promise<void>;
   getCategoryById: (id: number) => Promise<TodoCategory | null>;
-
-  /* --- ui --- */
   setSelectedCategoryId: (id: number | null) => void;
 
 }
-
-/* ---------- INITIAL STATE ---------- */
 
 const initialState = {
   categories: [],
@@ -96,12 +81,8 @@ const initialState = {
   },
 };
 
-/* ---------- IMPLEMENTATION ---------- */
-
 export const useTodoStore = create<TodoStore>((set, get) => ({
   ...initialState,
-
-  /* ---------- LOAD ---------- */
 
   loadCategories: async () => {
     set((s) => ({ loading: { ...s.loading, categories: true } }));
@@ -151,8 +132,6 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
 
-  /* ---------- CATEGORY CRUD ---------- */
-
   createCategory: async (payload) => {
     set((s) => ({ loading: { ...s.loading, saving: true } }));
     try {
@@ -191,8 +170,6 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       set((s) => ({ loading: { ...s.loading, saving: false } }));
     }
   },
-
-  /* ---------- TASKS ---------- */
 
   quickAddTask: async (categoryId, content, customDifficultyId = null) => {
     set((s) => ({ loading: { ...s.loading, saving: true } }));
@@ -251,8 +228,6 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
 
-  /* ---------- RANDOM ---------- */
-
   fetchRandomTask: async (categoryId) => {
     try {
       const res = await api.get<TodoTask>("/todos/tasks/random/", {
@@ -264,8 +239,6 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       return null;
     }
   },
-
-  /* ---------- HELPERS ---------- */
 
   checkCategoryHasUncompletedTasks: async (categoryId) => {
     try {
@@ -289,8 +262,6 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       return null;
     }
   },
-
-  /* ---------- UI ---------- */
 
   setSelectedCategoryId: (id) =>
     set({

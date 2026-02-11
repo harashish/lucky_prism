@@ -3,9 +3,6 @@ from django.utils import timezone
 from datetime import timedelta
 from apps.gamification.services.xp_calculator import calculate_xp
 
-
-# ---------- ENUM: DAILY / WEEKLY ----------
-
 class ChallengeType(models.Model):
     name = models.CharField(
         max_length=10,
@@ -20,16 +17,11 @@ class ChallengeType(models.Model):
         return self.name
 
 
-# ---------- TAG ----------
-
 class ChallengeTag(models.Model):
     name = models.CharField(max_length=30, unique=True)
 
     def __str__(self):
         return self.name
-
-
-# ---------- DEFINITION (SZABLON) ----------
 
 class ChallengeDefinition(models.Model):
     title = models.CharField(max_length=70, unique=True)
@@ -43,16 +35,11 @@ class ChallengeDefinition(models.Model):
         on_delete=models.PROTECT,
     )
     tags = models.ManyToManyField(ChallengeTag, blank=True)
-    is_default = models.BooleanField(default=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
-
-
-# ---------- USER CHALLENGE (SINGLETON-READY) ----------
 
 class UserChallenge(models.Model):
     user = models.ForeignKey(
@@ -77,14 +64,10 @@ class UserChallenge(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # --- weekly init ---
-
     def start_weekly_if_needed(self):
         if self.challenge_type.name == "weekly" and not self.weekly_deadline:
             self.weekly_deadline = self.start_date + timedelta(days=7)
             self.save(update_fields=["weekly_deadline"])
-
-    # --- weekly progress ---
 
     @property
     def weekly_progress_days(self):
@@ -95,8 +78,6 @@ class UserChallenge(models.Model):
         days_passed = (today - self.start_date).days + 1
 
         return max(1, min(7, days_passed))
-
-    # --- completion + XP ---
 
     def complete(self):
         if self.is_completed:
