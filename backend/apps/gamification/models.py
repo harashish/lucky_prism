@@ -10,6 +10,14 @@ class User(models.Model):
 
     def add_xp(self, *, xp: int, source: str, source_id: int | None = None):
 
+        # nic nie rób jeśli xp=0 (ważne)
+        if xp <= 0:
+            return {
+                "xp_gained": 0,
+                "total_xp": self.total_xp,
+                "current_level": self.current_level,
+            }
+
         self.total_xp += xp
         self.current_level = calculate_level(self.total_xp)
         self.save(update_fields=["total_xp", "current_level", "updated_at"])
@@ -20,6 +28,10 @@ class User(models.Model):
             source_id=source_id,
             xp=xp,
         )
+
+        # 🔥 achievement hook — lokalny import żeby uniknąć circular import
+        from apps.achievements.services.achievement_engine import check_user_achievements
+        check_user_achievements(self)
 
         return {
             "xp_gained": xp,

@@ -15,11 +15,32 @@ export interface Goal {
   id: number;
   title: string;
   description: string;
-  motivation_reason?: string;
+  motivation_reason: string;
+
+  floor_goal?: string;
+  target_goal?: string;
+  ceiling_goal?: string;
+
   period: GoalPeriod;
   difficulty: DifficultyType;
+
   is_completed: boolean;
   completed_at?: string | null;
+
+  is_archived: boolean;
+  archived_at?: string | null;
+
+  created_at: string;
+  updated_at: string;
+
+  steps: GoalStep[];
+}
+export interface GoalStep {
+  id: number;
+  title: string;
+  is_completed: boolean;
+  order: number;
+  created_at: string;
 }
 
 interface GoalStore {
@@ -27,6 +48,7 @@ interface GoalStore {
   periods: GoalPeriod[];
 
   currentPeriod?: string;
+  showArchived: boolean;
 
   loading: {
     list: boolean;
@@ -36,7 +58,7 @@ interface GoalStore {
   };
 
   loadPeriods: () => Promise<void>;
-  loadGoals: (period?: string) => Promise<void>;
+  loadGoals: (period?: string, archived?: boolean) => Promise<void>;
   loadDifficulties: () => Promise<DifficultyType[]>;
 
   createGoal: (payload: any) => Promise<boolean>;
@@ -49,15 +71,24 @@ interface GoalStore {
     current_level: number;
   } | null>;
 
+  toggleArchive: (id: number) => Promise<boolean>;
+
+  addStep: (goalId: number, title: string) => Promise<GoalStep | null>;
+  toggleStep: (goalId: number, stepId: number) => Promise<boolean>;
+  updateStep: (stepId: number, title: string) => Promise<boolean>;
+  deleteStep: (stepId: number) => Promise<boolean>;
+
   pickRandomGoal: (period?: string) => Promise<Goal | null>;
   getGoalById: (id: number) => Promise<Goal | null>;
 
+  setShowArchived: (value: boolean) => void;
 }
 
 const initialState = {
   goals: [],
   periods: [],
   currentPeriod: undefined,
+  showArchived: false,
   loading: {
     list: false,
     periods: false,
@@ -81,22 +112,31 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     }
   },
 
-  loadGoals: async (period) => {
-    set((s) => ({ loading: { ...s.loading, list: true } }));
-    try {
-      const url = period ? `/goals/?period=${period}` : "/goals/";
-      const res = await api.get<Goal[]>(url);
+loadGoals: async (period, archived = false) => {
+  set((s) => ({ loading: { ...s.loading, list: true } }));
 
-      set({
-        goals: res.data,
-        currentPeriod: period,
-      });
-    } catch (e) {
-      console.error("loadGoals", e);
-    } finally {
-      set((s) => ({ loading: { ...s.loading, list: false } }));
+  try {
+    let url = "/goals/?";
+
+    if (period) {
+      url += `period=${period}&`;
     }
-  },
+
+    url += `archived=${archived ? "true" : "false"}`;
+
+    const res = await api.get<Goal[]>(url);
+
+    set({
+      goals: res.data,
+      currentPeriod: period,
+      showArchived: archived,
+    });
+  } catch (e) {
+    console.error("loadGoals", e);
+  } finally {
+    set((s) => ({ loading: { ...s.loading, list: false } }));
+  }
+},
 
 
   loadDifficulties: async () => {
@@ -156,9 +196,10 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     }
   },
 
-  completeGoal: async (id) => {
+completeGoal: async (id) => {
     try {
       const res = await api.post(`/goals/${id}/complete/`);
+      await get().loadGoals(get().currentPeriod, get().showArchived);
       return res.data;
     } catch (e) {
       console.error("completeGoal", e);
@@ -186,5 +227,59 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       return null;
     }
   },
+
+  setShowArchived: (value) => set({ showArchived: value }),
+
+  toggleArchive: async (id) => {
+  try {
+    await api.post(`/goals/${id}/archive/`);
+    await get().loadGoals(get().currentPeriod, get().showArchived);
+    return true;
+  } catch (e) {
+    console.error("toggleArchive", e);
+    return false;
+  }
+},
+
+toggleStep: async (goalId, stepId) => {
+  try {
+    await api.post(`/goals/steps/${stepId}/toggle/`);
+    await get().loadGoals(get().currentPeriod, get().showArchived);
+    return true;
+  } catch (e) {
+    console.error("toggleStep", e);
+    return false;
+  }
+},
+
+updateStep: async (stepId, title) => {
+  try {
+    await api.patch(`/goals/steps/${stepId}/`, { title });
+    return true;
+  } catch (e) {
+    console.error("updateStep", e);
+    return false;
+  }
+},
+
+deleteStep: async (stepId) => {
+  try {
+    await api.delete(`/goals/steps/${stepId}/`);
+    return true;
+  } catch (e) {
+    console.error("deleteStep", e);
+    return false;
+  }
+},
+
+addStep: async (goalId, title) => {
+  try {
+    const res = await api.post(`/goals/${goalId}/steps/`, { title });
+    return res.data; // 👈 zwracamy step
+  } catch (e) {
+    console.error("addStep", e);
+    return null;
+  }
+},
 
 }));

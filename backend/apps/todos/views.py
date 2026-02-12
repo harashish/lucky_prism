@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 import random
 
+
 from .models import TodoCategory, TodoTask
 from .serializers import (
     TodoCategorySerializer,
@@ -38,7 +39,7 @@ class TodoTaskListCreate(generics.ListCreateAPIView):
     serializer_class = TodoTaskSerializer
 
     def get_queryset(self):
-        qs = TodoTask.objects.filter(user=get_user()).order_by("-created_at")
+        qs = TodoTask.objects.filter(user=get_user())
         category_id = self.request.query_params.get("category_id")
         if category_id:
             qs = qs.filter(category_id=category_id)
@@ -129,3 +130,21 @@ class CategoryHasUncompletedTasksView(APIView):
         ).exists()
 
         return Response({"has_tasks": exists})
+
+class TodoReorderView(APIView):
+    def post(self, request):
+        user = get_user()
+        category_id = request.data.get("category_id")
+        items = request.data.get("items", [])
+
+        if not category_id:
+            return Response({"detail": "category_id required"}, status=400)
+
+        for item in items:
+            TodoTask.objects.filter(
+                id=item["id"],
+                user=user,
+                category_id=category_id
+            ).update(order=item["order"])
+
+        return Response({"detail": "reordered"})    

@@ -28,6 +28,9 @@ export default function GoalsScreen() {
     loadPeriods,
     loadGoals,
     completeGoal,
+    toggleStep,
+    showArchived,
+    setShowArchived,
   } = useGoalStore();
 
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
@@ -39,8 +42,8 @@ export default function GoalsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadGoals(selectedPeriod);
-    }, [selectedPeriod])
+      loadGoals(selectedPeriod, showArchived);
+    }, [selectedPeriod, showArchived])
   );
 
   const completedCount = goals.filter(g => g.is_completed).length;
@@ -75,9 +78,71 @@ export default function GoalsScreen() {
     ]);
   };
 
+  const groupedGoals = React.useMemo(() => {
+    const groups: Record<string, typeof goals> = {};
+
+    goals.forEach(goal => {
+      const date = dayjs(goal.created_at);
+
+      let label = "";
+
+      if (selectedPeriod === "weekly") {
+        const start = date.startOf("isoWeek").format("DD MMM");
+        const end = date.endOf("isoWeek").format("DD MMM");
+        label = `${start} - ${end}`;
+      }
+
+      if (selectedPeriod === "monthly") {
+        label = date.format("MMMM YYYY");
+      }
+
+      if (selectedPeriod === "yearly") {
+        label = date.format("YYYY");
+      }
+
+      if (!groups[label]) {
+        groups[label] = [];
+      }
+
+      groups[label].push(goal);
+    });
+
+    return Object.entries(groups).map(([label, items]) => ({
+      label,
+      items,
+    }));
+  }, [goals, selectedPeriod]);
+
 
   return (
     <View style={{ flex: 1, padding: 12, backgroundColor: colors.background }}>
+
+
+<View
+  style={{
+    alignItems: "center",
+    marginBottom: 8,
+  }}
+>
+  <TouchableOpacity
+    onPress={() => setShowArchived(!showArchived)}
+    style={{
+      paddingVertical: 2,
+      paddingHorizontal: 10,
+    }}
+  >
+    <AppText
+      style={{
+        fontSize: 11,
+        letterSpacing: 1,
+        color: "#777",
+        textTransform: "uppercase",
+      }}
+    >
+      {showArchived ? "archived" : "active"}
+    </AppText>
+  </TouchableOpacity>
+</View>
 
       <View style={{ flexDirection: "row", marginBottom: 12 }}>
         {periodNames.map(p => (
@@ -101,6 +166,7 @@ export default function GoalsScreen() {
         ))}
       </View>
 
+      {!showArchived && (
       <View
         style={{
           backgroundColor: colors.card,
@@ -128,6 +194,7 @@ export default function GoalsScreen() {
             }}
           />
         </View>
+        
 
         <AppText style={{ fontSize: 12 }}>
           Time ({selectedPeriod}): {Math.round(timeProgress * 100)}%
@@ -148,6 +215,7 @@ export default function GoalsScreen() {
           />
         </View>
       </View>
+      )}
 
       {loading.list ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -159,30 +227,73 @@ export default function GoalsScreen() {
             no goals yet for this period
           </AppText>
         </View>
-      ) : (
- <FlatList
-          key={selectedPeriod}
-          data={goals}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 140 }}
-          renderItem={({ item }) => (
-            <GoalItem
-              item={item}
-              isCompleted={item.is_completed}
-              isExpanded={expandedGoalId === item.id}
-              onToggleExpand={() =>
-                setExpandedGoalId(
-                  expandedGoalId === item.id ? null : item.id
-                )
-              }
-              onEdit={() => router.push(`/editGoal/${item.id}`)}
-              onComplete={() => onComplete(item.id, item.title)}
-            />
-          )}
-        />
-      )}
+) : (
+  <FlatList
+    key={selectedPeriod + String(showArchived)}
+    data={groupedGoals}
+    keyExtractor={(item) => item.label}
+    contentContainerStyle={{ paddingBottom: 140 }}
+    renderItem={({ item }) => (
+      <View style={{ marginBottom: 16 }}>
+        {/* HEADER */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
+          <View
+            style={{
+              flex: 1,
+              height: 1,
+              backgroundColor: "#333",
+            }}
+          />
 
-      <FloatingButton onPress={() => router.push("/addGoal")} />
-    </View>
-  );
+          <AppText
+            style={{
+              marginHorizontal: 8,
+              fontSize: 12,
+              color: "#777",
+            }}
+          >
+            {item.label}
+          </AppText>
+
+          <View
+            style={{
+              flex: 1,
+              height: 1,
+              backgroundColor: "#333",
+            }}
+          />
+        </View>
+
+        {/* GOALS */}
+        {item.items.map(goal => (
+          <GoalItem
+            key={goal.id}
+            item={goal}
+            isCompleted={goal.is_completed}
+            isExpanded={expandedGoalId === goal.id}
+            onToggleExpand={() =>
+              setExpandedGoalId(
+                expandedGoalId === goal.id ? null : goal.id
+              )
+            }
+            onEdit={() => router.push(`/editGoal/${goal.id}`)}
+            onComplete={() => onComplete(goal.id, goal.title)}
+            toggleStep={toggleStep}
+          />
+        ))}
+      </View>
+    )}
+  />
+)}
+
+<FloatingButton onPress={() => router.push("/addGoal")} />
+
+</View>
+);
 }

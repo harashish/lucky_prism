@@ -20,6 +20,7 @@ export interface TodoTask {
   category: TodoCategory;
   is_completed: boolean;
   created_at: string;
+  order: number;
 }
 
 interface TodoStore {
@@ -65,6 +66,8 @@ interface TodoStore {
   checkCategoryHasUncompletedTasks: (categoryId: number) => Promise<void>;
   getCategoryById: (id: number) => Promise<TodoCategory | null>;
   setSelectedCategoryId: (id: number | null) => void;
+  reorderTasks: (categoryId: number, tasks: TodoTask[]) => Promise<void>;
+
 
 }
 
@@ -269,5 +272,21 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       tasks: [],
       hasUncompletedTasksInSelectedCategory: null,
     }),
+
+  reorderTasks: async (categoryId: number, newTasks: TodoTask[]) => {
+    set({ tasks: newTasks });
+
+    try {
+      await api.post("/todos/reorder/", {
+        category_id: categoryId,
+        items: newTasks.map((t, index) => ({
+          id: t.id,
+          order: index,
+        })),
+      });
+    } catch (e) {
+      console.error("reorderTasks", e);
+    }
+  },    
 
 }));

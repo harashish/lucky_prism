@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import TodoCategory, TodoTask
 from apps.common.serializers import DifficultyTypeSerializer
 from apps.common.models import DifficultyType
+from django.db.models import Max
+from apps.gamification.utils import get_user
 
 
 class TodoCategorySerializer(serializers.ModelSerializer):
@@ -44,7 +46,24 @@ class TodoTaskSerializer(serializers.ModelSerializer):
             "category",
             "category_id",
             "is_completed",
+            "order",
             "created_at",
             "updated_at",
         ]
 
+    def create(self, validated_data):
+        user = get_user()
+        category = validated_data["category"]
+
+        max_order = (
+            TodoTask.objects
+            .filter(user=user, category=category)
+            .aggregate(Max("order"))["order__max"]
+        )
+
+        next_order = 0 if max_order is None else max_order + 1
+
+        validated_data["order"] = next_order
+        validated_data["user"] = user
+
+        return super().create(validated_data)

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     TodoCategoryListCreate, TodoCategoryDetail,
     TodoTaskListCreate, TodoTaskDetail,
-    CompleteTodoTaskView, RandomTodoTaskView, CategoryHasUncompletedTasksView
+    CompleteTodoTaskView, RandomTodoTaskView, CategoryHasUncompletedTasksView, TodoReorderView
 )
 
 urlpatterns = [
@@ -15,5 +15,6 @@ urlpatterns = [
     path(
     "categories/<int:category_id>/has-uncompleted/",
     CategoryHasUncompletedTasksView.as_view(),
-    )
+    ),
+    path("reorder/", TodoReorderView.as_view()),
 ]

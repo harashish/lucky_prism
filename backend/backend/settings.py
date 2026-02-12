@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'apps.gamification',
     'apps.settings',
     'apps.mood',
+    'apps.sobriety',
+    'apps.achievements',
 ]
 
 MIDDLEWARE = [

@@ -5,7 +5,18 @@ import AppText from "../../components/AppText";
 import { components, spacing, colors } from "../../constants/theme";
 import { useModuleSettingsStore } from "../../app/stores/useModuleSettingsStore";
 
-export default function TodoItem({ item, onComplete, onDelete, onLongPress }: any) {
+export default function TodoItem({
+  item,
+  onComplete,
+  onDelete,
+  onLongPress,
+}: {
+  item: any;
+  onComplete: (id: number) => void;
+  onDelete: (id: number) => void;
+  onLongPress?: () => void;
+  isDragging?: boolean;
+}) {
   const swipeRef = useRef<Swipeable>(null);
   const isCompleted = item.is_completed;
 
@@ -68,9 +79,13 @@ export default function TodoItem({ item, onComplete, onDelete, onLongPress }: an
     >
       <Pressable
         onLongPress={onLongPress}
+        delayLongPress={150}
         style={({ pressed }) => [
           styles.container,
-          { opacity: pressed ? 0.9 : 1 },
+          {
+            opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 1.02 : 1 }],
+          },
         ]}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>

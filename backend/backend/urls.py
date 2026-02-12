@@ -12,5 +12,7 @@ urlpatterns = [
     path("api/common/", include("apps.common.urls")),
     path("api/settings/", include("apps.settings.urls")),
     path("api/mood/", include("apps.mood.urls")),
+    path("api/sobriety/", include("apps.sobriety.urls")),
+    path("api/achievements/", include("apps.achievements.urls")),
 ]
 

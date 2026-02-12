@@ -20,6 +20,7 @@ import EditTodoPopup from "../../features/todos/editTodoPopup";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
 import { useFocusEffect } from "@react-navigation/native";
+// import DraggableFlatList from "react-native-draggable-flatlist";
 
 export default function TodosScreen() {
   const router = useRouter();
@@ -198,35 +199,35 @@ export default function TodosScreen() {
                 : "no tasks in this category yet"}
             </AppText>
           </View>
-        ) : (
-          <FlatList
-            data={tasks.filter((t) =>
-              showCompleted ? t.is_completed : !t.is_completed
-            )}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <TodoItem
-                item={item}
-                onComplete={async (taskId) => {
-                  const res = await completeTask(taskId);
-                  if (res && gamificationOn && res.xp_gained > 0) {
-                    useGamificationStore
-                      .getState()
-                      .applyXpResult(res);
-                  }
-                }}
-                onDelete={async (taskId) => {
-                  try {
-                    await deleteTask(taskId);
-                  } catch {
-                    Alert.alert("Error", "Cannot delete task");
-                  }
-                }}
-                onLongPress={() => setEditingTodo(item)}
-              />
-            )}
-            contentContainerStyle={{ paddingBottom: 120 }}
-          />
+) : (
+  <FlatList
+    data={tasks.filter((t) =>
+      showCompleted ? t.is_completed : !t.is_completed
+    )}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={({ item }) => (
+      <TodoItem
+        item={item}
+        onComplete={async (taskId) => {
+          const res = await completeTask(taskId);
+          if (res && gamificationOn && res.xp_gained > 0) {
+            useGamificationStore
+              .getState()
+              .applyXpResult(res);
+          }
+        }}
+        onDelete={async (taskId) => {
+          try {
+            await deleteTask(taskId);
+          } catch {
+            Alert.alert("Error", "Cannot delete task");
+          }
+        }}
+        onLongPress={() => setEditingTodo(item)}
+      />
+    )}
+    contentContainerStyle={{ paddingBottom: 120 }}
+  />
         )}
 
         <BottomInputBar

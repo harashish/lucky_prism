@@ -28,11 +28,17 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
     createGoal,
     saveGoal,
     deleteGoal,
+    addStep,
+    deleteStep,
+    updateStep
   } = useGoalStore();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [why, setWhy] = useState("");
+  const [floorGoal, setFloorGoal] = useState("");
+  const [targetGoal, setTargetGoal] = useState("");
+  const [ceilingGoal, setCeilingGoal] = useState("");
   const [period, setPeriod] = useState<number | null>(null);
   const [difficultyId, setDifficultyId] = useState<number | null>(null);
   const [availableDifficulties, setAvailableDifficulties] = useState<any[]>([]);
@@ -40,6 +46,11 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [steps, setSteps] = useState<any[]>([]);
+  const [newStepTitle, setNewStepTitle] = useState("");
+
+  const [showHelpers, setShowHelpers] = useState(false);
 
   useEffect(() => {
     loadPeriods();
@@ -65,9 +76,13 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
         setTitle(g.title);
         setDescription(g.description);
         setWhy(g.motivation_reason || "");
+        setFloorGoal(g.floor_goal || "");
+        setTargetGoal(g.target_goal || "");
+        setCeilingGoal(g.ceiling_goal || "");
         setPeriod(g.period?.id || null);
         setSelectedPeriodObj(g.period || null);
         setDifficultyId(g.difficulty?.id || null);
+        setSteps(g.steps || []);
       }
 
       setLoading(false);
@@ -109,6 +124,9 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
       motivation_reason: why,
       period_id: period,
       difficulty_id: difficultyId,
+      floor_goal: floorGoal,
+      target_goal: targetGoal,
+      ceiling_goal: ceilingGoal,
     };
 
     try {
@@ -200,6 +218,105 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
           }}
         />
 
+        {/* HELPER QUESTIONS TOGGLE */}
+        <TouchableOpacity
+          onPress={() => setShowHelpers(prev => !prev)}
+          style={{ marginBottom: 6 }}
+        >
+          <AppText
+            style={{
+              fontSize: 12,
+              color: "#777",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            helper questions
+          </AppText>
+        </TouchableOpacity>
+
+        {showHelpers && (
+          <View
+            style={{
+              backgroundColor: colors.card,
+              borderRadius: radius.md,
+              padding: 10,
+              marginBottom: spacing.m,
+            }}
+          >
+            {[
+              "How will this help me grow?",
+              "What will I strengthen in myself ( )? ", 
+              "What skills will I develop?",
+              "In which area of my life will this support me?",
+              "What will happen if I don't do this?",
+              "How do I feel when I avoid doing this?",
+              "Why is this goal so important to me?",
+              "What will I gain by achieving this goal?",
+              "Why didn't I achieve this goal already? what's stopping me?",
+            ].map((q, i) => (
+              <AppText
+                key={i}
+                style={{
+                  fontSize: 12,
+                  color: "#888",
+                  marginBottom: 6,
+                }}
+              >
+                - {q}
+              </AppText>
+            ))}
+          </View>
+        )}
+
+        <AppText style={{ marginBottom: 6 }}>Floor:</AppText>
+          <TextInput
+            value={floorGoal}
+            onChangeText={setFloorGoal}
+            placeholder="Optional"
+            placeholderTextColor="#7a7891"
+            style={{
+              borderWidth: 1,
+              borderColor: colors.inputBorder,
+              color: colors.text,
+              padding: spacing.s,
+              borderRadius: radius.md,
+              marginBottom: spacing.m,
+            }}
+          />
+
+          <AppText style={{ marginBottom: 6 }}>Target:</AppText>
+          <TextInput
+            value={targetGoal}
+            onChangeText={setTargetGoal}
+            placeholder="Optional"
+            placeholderTextColor="#7a7891"
+            style={{
+              borderWidth: 1,
+              borderColor: colors.inputBorder,
+              color: colors.text,
+              padding: spacing.s,
+              borderRadius: radius.md,
+              marginBottom: spacing.m,
+            }}
+          />
+
+          <AppText style={{ marginBottom: 6 }}>Ceiling:</AppText>
+          <TextInput
+            value={ceilingGoal}
+            onChangeText={setCeilingGoal}
+            placeholder="Optional"
+            placeholderTextColor="#7a7891"
+            style={{
+              borderWidth: 1,
+              borderColor: colors.inputBorder,
+              color: colors.text,
+              padding: spacing.s,
+              borderRadius: radius.md,
+              marginBottom: spacing.m,
+            }}
+          />
+
         <AppText style={{ marginBottom: 6 }}>Period:</AppText>
         <View style={{ flexDirection: "row", marginBottom: spacing.m }}>
           {periods.map((p: any) => (
@@ -240,6 +357,104 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
             </TouchableOpacity>
           ))}
         </View>
+
+{editingId && (
+  <>
+    <AppText style={{ marginBottom: 6 }}>Steps:</AppText>
+
+    {steps.map((step, index) => (
+      <View
+        key={step.id}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 8,
+        }}
+      >
+        <TextInput
+          value={step.title}
+          onChangeText={(text) => {
+            const updated = [...steps];
+            updated[index].title = text;
+            setSteps(updated);
+          }}
+          onBlur={async () => {
+            await updateStep(step.id, step.title);
+          }}
+          placeholderTextColor="#7a7891"
+          style={{
+            flex: 1,
+            borderWidth: 1,
+            borderColor: colors.inputBorder,
+            padding: 6,
+            borderRadius: radius.md,
+            color: colors.text,
+            fontSize: 13,   // 🔤 mniejsza czcionka
+          }}
+        />
+
+        <TouchableOpacity
+          onPress={async () => {
+            await deleteStep(step.id);
+            setSteps(prev => prev.filter(s => s.id !== step.id));
+          }}
+          style={{
+            marginLeft: 6,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            borderRadius: radius.md,
+            backgroundColor: colors.deleteButton,
+          }}
+        >
+          <AppText style={{ color: "#fff", fontSize: 12 }}>×</AppText>
+        </TouchableOpacity>
+      </View>
+    ))}
+
+    {/* ADD STEP */}
+    <View style={{ flexDirection: "row", marginTop: 8, marginBottom: 16 }}>
+      <TextInput
+        value={newStepTitle}
+        onChangeText={setNewStepTitle}
+        placeholder="Add step..."
+        placeholderTextColor="#7a7891"
+        style={{
+          flex: 1,
+          borderWidth: 1,
+          borderColor: colors.inputBorder,
+          padding: 6,
+          borderRadius: radius.md,
+          color: colors.text,
+          fontSize: 13,
+        }}
+      />
+
+      <TouchableOpacity
+        onPress={async () => {
+          if (!newStepTitle.trim()) return;
+
+          const created = await addStep(editingId, newStepTitle.trim());
+
+          if (created) {
+            setSteps(prev => [...prev, created]);
+          }
+
+          setNewStepTitle("");
+        }}
+        style={{
+          marginLeft: 6,
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          backgroundColor: colors.buttonActive,
+          justifyContent: "center",
+          borderRadius: radius.md,
+        }}
+      >
+        <AppText style={{ color: "#fff", fontSize: 12 }}>+</AppText>
+      </TouchableOpacity>
+    </View>
+  </>
+)}
 
         <TouchableOpacity
           onPress={save}
