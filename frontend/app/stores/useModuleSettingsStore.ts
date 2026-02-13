@@ -8,7 +8,9 @@ export type ModuleKey =
   | "goals"
   | "random"
   | "gamification"
-  | "notes";
+  | "notes"
+  | "mood"       // ← dodaj
+  | "sobriety";   // ← dodaj
 
 export type DashboardTileKey =
   | "level_gamification"
@@ -67,6 +69,8 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
       random: false,
       gamification: false,
       notes: false,
+      mood: false,
+      sobriety: false,
     };
 
     res.data.forEach((m: ModuleSetting) => {

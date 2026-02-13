@@ -31,7 +31,7 @@ export default function SobrietyItem({
   onToggleExpand,
   onEdit,
 }: Props) {
-  const { relapse, updateSobriety } = useSobrietyStore();
+  const { relapse, restart, updateSobriety } = useSobrietyStore();
 
   const [now, setNow] = useState(dayjs());
 
@@ -154,7 +154,8 @@ const progressPercent = useMemo(() => {
             {/* BUTTONS */}
             <View style={{ flexDirection: "row", marginTop: 12, gap: 8 }}>
 
-              {/* RELAPSE */}
+            {/* RELAPSE / RESET */}
+            {item.is_active ? (
               <TouchableOpacity
                 onPress={() => relapse(item.id)}
                 style={{
@@ -168,6 +169,21 @@ const progressPercent = useMemo(() => {
                   relapse
                 </AppText>
               </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => restart(item.id)}
+                style={{
+                  backgroundColor: colors.buttonActive,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 6,
+                }}
+              >
+                <AppText style={{ color: "#fff", fontSize: 12 }}>
+                  restart
+                </AppText>
+              </TouchableOpacity>
+            )}
 
               {/* +1H TEST */}
               <TouchableOpacity

@@ -11,6 +11,9 @@ class ModuleDefinition(models.Model):
         ("random", "Random"),
         ("gamification", "Gamification"),
         ("notes", "Notes"),
+
+        ("mood", "Mood"),          # ← ADD
+        ("sobriety", "Sobriety"),  # ← ADD
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -39,6 +39,10 @@ export interface UserAchievement {
   updated_at: string;
 }
 
+export type AchievementPopup = {
+  name: string;
+  id: number;
+};
 
 /*
 ========================
@@ -49,6 +53,10 @@ STORE
 interface AchievementStore {
   userAchievements: UserAchievement[];
   allAchievements: Achievement[];
+
+  achievementPopup: AchievementPopup | null;
+  showAchievementPopup: (a: AchievementPopup) => void;
+  clearAchievementPopup: () => void;
 
   loading: boolean;
 
@@ -67,6 +75,16 @@ interface AchievementStore {
 export const useAchievementStore = create<AchievementStore>((set, get) => ({
   userAchievements: [],
   allAchievements: [],
+  achievementPopup: null,
+
+  showAchievementPopup: (a) => {
+    set({ achievementPopup: a });
+  },
+
+  clearAchievementPopup: () => {
+    set({ achievementPopup: null });
+  },
+
   loading: false,
 
   /*
@@ -79,8 +97,28 @@ export const useAchievementStore = create<AchievementStore>((set, get) => ({
     if (!silent) set({ loading: true });
 
     try {
+      const prev = get().userAchievements;
       const res = await api.get<UserAchievement[]>("/achievements/user/");
-      set({ userAchievements: res.data });
+      const next = res.data;
+
+      // detect new unlocks
+      const newlyUnlocked =
+        prev.length === 0
+          ? []
+          : next.filter(n => {
+              const old = prev.find(p => p.id === n.id);
+              return n.is_completed && !old?.is_completed;
+            });
+
+      set({ userAchievements: next });
+
+      if (newlyUnlocked.length > 0) {
+        get().showAchievementPopup({
+          id: newlyUnlocked[0].achievement.id,
+          name: newlyUnlocked[0].achievement.name,
+        });
+      }
+
     } catch (e) {
       console.error("loadUserAchievements", e);
     } finally {
@@ -173,8 +211,18 @@ export const useAchievementStore = create<AchievementStore>((set, get) => ({
 
   unlockManualAchievement: async (id) => {
     try {
+      const a = get().allAchievements.find(x => x.id === id);
+
       await api.post(`/achievements/${id}/unlock/`);
       await get().loadUserAchievements(true);
+
+      if (a) {
+        get().showAchievementPopup({
+          id: a.id,
+          name: a.name,
+        });
+      }
+
       return true;
     } catch (e) {
       console.error("unlockManualAchievement", e);

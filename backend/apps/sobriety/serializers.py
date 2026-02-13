@@ -11,7 +11,7 @@ class SobrietyRelapseSerializer(serializers.ModelSerializer):
             "occurred_at",
             "note",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "sobriety", "occurred_at"]
 
 
 class SobrietySerializer(serializers.ModelSerializer):

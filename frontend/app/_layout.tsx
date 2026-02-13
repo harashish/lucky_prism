@@ -12,6 +12,7 @@ import XPPopup from "../components/XPPopup";
 import { defaultHeaderOptions } from "../components/NavigationHeader";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, DarkTheme } from "@react-navigation/native";
+import AchievementPopup from "../components/AchievementPopup";
 
 
 export default function RootLayout() {
@@ -72,6 +73,7 @@ export default function RootLayout() {
       </Stack>
 
       <XPPopup />
+      <AchievementPopup />
     </ThemeProvider>
     </GestureHandlerRootView>
   );

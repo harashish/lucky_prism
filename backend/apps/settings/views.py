@@ -57,6 +57,8 @@ from apps.common.models import DifficultyType
 from apps.settings.models import ModuleDefinition, DashboardTile
 from apps.gamification.utils import get_user
 from apps.mood.models import MoodEntry
+from apps.sobriety.models import Sobriety, SobrietyRelapse
+from apps.achievements.models import Achievement, UserAchievement
 
 class ExportDataView(APIView):
     def get(self, request):
@@ -133,6 +135,25 @@ class ExportDataView(APIView):
                 "json",
                 MoodEntry.objects.filter(user=user),
             ),
+            "sobriety": django_serializers.serialize(
+                "json",
+                Sobriety.objects.filter(user=user),
+            ),
+
+            "sobriety_relapses": django_serializers.serialize(
+                "json",
+                SobrietyRelapse.objects.filter(sobriety__user=user),
+            ),
+
+            "achievements": django_serializers.serialize(
+                "json",
+                Achievement.objects.all(),   # global templates
+            ),
+
+            "user_achievements": django_serializers.serialize(
+                "json",
+                UserAchievement.objects.filter(user=user),
+),
         }
 
         return Response(data, status=status.HTTP_200_OK)
@@ -156,6 +177,9 @@ class ImportDataView(APIView):
                 RandomNote.objects.filter(user=user).delete()
                 ModuleDefinition.objects.filter(user=user).delete()
                 DashboardTile.objects.filter(user=user).delete()
+                SobrietyRelapse.objects.filter(sobriety__user=user).delete()
+                Sobriety.objects.filter(user=user).delete()
+                UserAchievement.objects.filter(user=user).delete()
 
                 # reset XP
                 user.total_xp = 0
@@ -206,6 +230,18 @@ class ImportDataView(APIView):
                         
                 if payload.get("mood_entries"):
                     for obj in django_serializers.deserialize("json", payload["mood_entries"]):
+                        obj.save()        
+
+                if payload.get("sobriety"):
+                    for obj in django_serializers.deserialize("json", payload["sobriety"]):
+                        obj.save()
+
+                if payload.get("sobriety_relapses"):
+                    for obj in django_serializers.deserialize("json", payload["sobriety_relapses"]):
+                        obj.save()
+
+                if payload.get("user_achievements"):
+                    for obj in django_serializers.deserialize("json", payload["user_achievements"]):
                         obj.save()        
 
         except Exception as e:

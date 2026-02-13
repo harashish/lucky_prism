@@ -86,6 +86,8 @@ default_modules = [
     "random",
     "gamification",
     "notes",
+    "mood",
+    "sobriety",
 ]
 
 for module in default_modules:

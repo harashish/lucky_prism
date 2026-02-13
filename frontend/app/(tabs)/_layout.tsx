@@ -8,7 +8,7 @@ import { useEffect } from "react";
 export default function TabsLayout() {
   const { modules, fetchModules } = useModuleSettingsStore();
 
-  const TAB_MODULE_MAP: Record<string, ModuleKey | null> = {
+const TAB_MODULE_MAP: Record<string, ModuleKey | null> = {
   index: null,
   HabitsScreen: "habits",
   TodosScreen: "todos",
@@ -16,8 +16,12 @@ export default function TabsLayout() {
   GoalsScreen: "goals",
   RandomHomeScreen: "random",
   GamificationScreen: "gamification",
+
+  MoodScreen: "mood",
+  SobrietyScreen: "sobriety",
+
   SettingsScreen: null,
-  };
+};
 
 
   const isTabEnabled = (routeName: string) => {
@@ -68,6 +72,16 @@ export default function TabsLayout() {
       label: "Level",
       icon: "game-controller",
       iconOutline: "game-controller-outline",
+    },
+    MoodScreen: {
+      label: "Mood",
+      icon: "happy",
+      iconOutline: "happy-outline",
+    },
+    SobrietyScreen: {
+      label: "Sobriety",
+      icon: "link",
+      iconOutline: "link-outline",
     },
     SettingsScreen: {
       label: "Settings",
@@ -193,6 +207,20 @@ export default function TabsLayout() {
       name="GamificationScreen"
       options={{
         href: isTabEnabled("GamificationScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="MoodScreen"
+      options={{
+        href: isTabEnabled("MoodScreen") ? undefined : null,
+      }}
+    />
+
+    <Tabs.Screen
+      name="SobrietyScreen"
+      options={{
+        href: isTabEnabled("SobrietyScreen") ? undefined : null,
       }}
     />
 
