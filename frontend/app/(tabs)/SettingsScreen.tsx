@@ -16,9 +16,11 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import { api } from "../api/apiClient";
-
+import { useRouter } from "expo-router";
 
 export default function SettingsScreen() {
+const router = useRouter();
+
 const { raw, modules, dashboardTiles, toggleModule, toggleTile, pendingModuleToggles, fetchModules } =
   useModuleSettingsStore();
 
@@ -209,6 +211,22 @@ const handleImport = async () => {
       ))}
 
       </View>
+
+
+<AppText style={{ fontWeight: "700", marginTop: spacing.l }}>
+  Progress
+</AppText>
+
+<TouchableOpacity
+  onPress={() => router.push("/achievements")}
+  style={{
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: colors.card,
+  }}
+>
+  <AppText>Achievements</AppText>
+</TouchableOpacity>      
 
 <AppText style={{ fontWeight: "700", marginTop: spacing.l }}>
   Backup

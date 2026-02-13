@@ -1,3 +1,4 @@
+from apps.achievements.services.achievement_engine import update_user_achievement
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -25,8 +26,16 @@ class AchievementListCreate(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        serializer.save(user=get_user())
+        user = get_user()
+        achievement = serializer.save(user=user)
 
+        # auto create user state
+        from apps.achievements.services.achievement_engine import (
+            get_or_create_user_achievement,
+        )
+        from apps.achievements.services.achievement_engine import update_user_achievement
+
+        update_user_achievement(user, achievement)
 
 class AchievementDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AchievementSerializer
@@ -35,7 +44,37 @@ class AchievementDetail(generics.RetrieveUpdateDestroyAPIView):
         user = get_user()
         return Achievement.objects.filter(
             models.Q(user__isnull=True) | models.Q(user=user)
-        )        
+        )
+
+    def perform_update(self, serializer):
+        achievement = serializer.save()
+        user = get_user()
+
+        from apps.achievements.services.achievement_engine import (
+            update_user_achievement,
+            get_or_create_user_achievement,
+        )
+        from apps.achievements.services.condition_evaluator import get_target_value
+
+        ua = get_or_create_user_achievement(user, achievement)
+
+        # 🔴 kluczowa rzecz
+        ua.target_value = get_target_value(achievement)
+        ua.is_completed = False
+        ua.completed_at = None
+        ua.save(update_fields=["target_value", "is_completed", "completed_at"])
+
+        update_user_achievement(user, achievement)
+
+    def perform_destroy(self, instance):
+        user = get_user()
+
+        UserAchievement.objects.filter(
+            user=user,
+            achievement=instance
+        ).delete()
+
+        instance.delete()    
     
 class UserAchievementList(generics.ListAPIView):
     serializer_class = UserAchievementSerializer

@@ -80,6 +80,8 @@ interface HabitStore {
 
   getHabitById: (id: number) => Promise<Habit | null>;
   pickRandomHabitSummary: () => Promise<RandomHabitSummary | null>;
+
+  loadHabits: () => Promise<Habit[]>;
 }
 
 const initialState = {
@@ -237,5 +239,16 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       return null;
     }
   },
+
+  loadHabits: async () => {
+  try {
+    const res = await api.get<Habit[]>("/habits/");
+    set({ habits: res.data });
+    return res.data;
+  } catch (e) {
+    console.error("loadHabits", e);
+    return [];
+  }
+},
 
 }));

@@ -7,6 +7,8 @@ from django.utils import timezone
 from .models import Sobriety, SobrietyRelapse
 from .serializers import SobrietySerializer, SobrietyRelapseSerializer
 from apps.gamification.utils import get_user
+from apps.achievements.services.achievement_engine import check_user_achievements
+
 
 
 # LIST + CREATE
@@ -20,6 +22,7 @@ class SobrietyListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         user = get_user()
         serializer.save(user=user)
+        check_user_achievements(user)
 
 
 # RETRIEVE + UPDATE + DELETE
@@ -45,6 +48,8 @@ class SobrietyRelapseCreateView(APIView):
             sobriety.ended_at = timezone.now()
             sobriety.save(update_fields=["is_active", "ended_at"])
 
+            check_user_achievements(sobriety.user)
+
             return Response(serializer.data, status=201)
 
         return Response(serializer.errors, status=400)
@@ -62,5 +67,7 @@ class SobrietyRestartView(APIView):
         sobriety.ended_at = None
         sobriety.is_active = True
         sobriety.save(update_fields=["started_at", "ended_at", "is_active"])
+
+        check_user_achievements(sobriety.user)
 
         return Response({"detail": "Restarted"}, status=200)

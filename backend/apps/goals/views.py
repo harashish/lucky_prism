@@ -1,5 +1,6 @@
 from django.utils import timezone
 from apps.gamification.services.xp_calculator import calculate_xp
+from apps.achievements.services.achievement_engine import check_user_achievements
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -89,6 +90,10 @@ class CompleteGoalView(APIView):
         goal.is_completed = True
         goal.completed_at = timezone.now()
         goal.save(update_fields=["is_completed", "completed_at", "updated_at"])
+
+        from apps.achievements.services.achievement_engine import check_user_achievements
+
+        check_user_achievements(goal.user)
 
         return Response(
             {
