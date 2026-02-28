@@ -20,6 +20,8 @@ import { useRouter } from "expo-router";
 import { useUserPreferencesStore } from "../stores/useUserPreferenceStore";
 import { useTodoStore } from "../stores/useTodoStore";
 import React from "react";
+import { notificationEngine } from "../services/notificationEngine";
+
 
 const MODULE_ROUTE_MAP: Record<string, string> = {
   habits: "/HabitsScreen",
@@ -163,6 +165,38 @@ const handleImport = async () => {
     <ScrollView style={{ flex: 1, padding: spacing.l, backgroundColor: colors.background  }} contentContainerStyle={{
     paddingBottom: 30,
   }} >
+
+    <AppText style={{ fontWeight: "700", marginTop: 20 }}>
+  Notification Tests
+</AppText>
+
+<TouchableOpacity
+  onPress={() => notificationEngine.scheduleDailyHabitsCheck(undefined, undefined, 5)}
+  style={styles.testButton}
+>
+  <AppText>Test Habits</AppText>
+</TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() => notificationEngine.scheduleMoodReminder(undefined, undefined, 5)}
+  style={styles.testButton}
+>
+  <AppText>Test Mood</AppText>
+</TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() => notificationEngine.scheduleDailyChallengeReminder(undefined, undefined, 5)}
+  style={styles.testButton}
+>
+  <AppText>Test Challenge</AppText>
+</TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() => notificationEngine.scheduleRandomNote(undefined, 5)}
+  style={styles.testButton}
+>
+  <AppText>Test Random Note</AppText>
+</TouchableOpacity>
 
 
     <AppText style={{ fontWeight: "700", marginTop: spacing.l }}>
@@ -483,4 +517,9 @@ const styles = StyleSheet.create({
   cellModule: { flex: 2 },
   cellXp: { flex: 1, alignItems: "flex-end" },
 
+  testButton: {
+  paddingVertical: 12,
+  borderBottomWidth: 1,
+  borderColor: "#2a2a2a",
+}
 });

@@ -1,9 +1,12 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
+import { notificationEngine } from "../services/notificationEngine";
 
 export interface Note {
   id: number;
   content: string;
+  reminder_hour?: number | null;
+  reminder_minute?: number | null;
 }
 
 interface NotesStore {
@@ -15,7 +18,11 @@ interface NotesStore {
   fetchRandomNote: () => Promise<void>;
   fetchById: (id: number) => Promise<Note | null>;
 
-  createNote: (content: string) => Promise<void>;
+  createNote: (
+  content: string,
+  reminderHour?: number | null,
+  reminderMinute?: number
+) => Promise<void>;
   updateNote: (id: number, content: string) => Promise<void>;
   deleteNote: (id: number) => Promise<void>;
 }
@@ -62,12 +69,32 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   },
 
   // CREATE
-  createNote: async (content: string) => {
-    await api.post("/notes/", { content });
+createNote: async (
+  content: string,
+  reminderHour?: number | null,
+  reminderMinute = 0
+) => {
+  const res = await api.post("/notes/", {
+    content,
+    reminder_hour: reminderHour,
+    reminder_minute: reminderHour ? reminderMinute : null,
+  });
 
-    await get().fetchNotes();
-    await get().fetchRandomNote();
-  },
+  const note = res.data;
+
+  await get().fetchNotes();
+  await get().fetchRandomNote();
+
+  // schedule reminder jeśli istnieje
+  if (note.reminder_hour !== null && note.reminder_hour !== undefined) {
+    await notificationEngine.scheduleNoteReminder(
+      note.id,
+      note.content,
+      note.reminder_hour,
+      note.reminder_minute ?? 0
+    );
+  }
+},
 
   // UPDATE
   updateNote: async (id: number, content: string) => {
@@ -80,6 +107,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   // DELETE
   deleteNote: async (id: number) => {
     await api.delete(`/notes/${id}/`);
+
+    await notificationEngine.cancel(`note-${id}`);
 
     await get().fetchNotes();
     await get().fetchRandomNote();

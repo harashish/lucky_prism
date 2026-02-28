@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
+import { notificationEngine } from "../services/notificationEngine";
 
 /*
 ========================
@@ -31,9 +32,10 @@ STATE
 
 type MoodState = {
   entries: MoodEntry[];
-
-  // dostępne typy moodów z backendu
   moodTypes: MoodOption[];
+
+  moodReminderHour: number | null;
+  moodReminderMinute: number | null;
 
   fetchYear: (year: number) => Promise<void>;
   loadMoodTypes: () => Promise<void>;
@@ -41,8 +43,9 @@ type MoodState = {
   addMood: (data: Partial<MoodEntry>) => Promise<void>;
   updateMood: (id: number, data: Partial<MoodEntry>) => Promise<void>;
   deleteMood: (id: number) => Promise<void>;
-};
 
+  setMoodReminder: (hour: number | null, minute?: number) => Promise<void>;
+};
 /*
 ========================
 STORE
@@ -52,6 +55,8 @@ STORE
 export const useMoodStore = create<MoodState>((set, get) => ({
   entries: [],
   moodTypes: [],
+  moodReminderHour: null,
+  moodReminderMinute: null,
 
   /*
   ========================
@@ -141,5 +146,21 @@ export const useMoodStore = create<MoodState>((set, get) => ({
       throw e;
     }
   },
+
+  setMoodReminder: async (hour, minute = 0) => {
+  set({
+    moodReminderHour: hour,
+    moodReminderMinute: hour === null ? null : minute,
+  });
+
+  // wyłączenie
+  if (hour === null) {
+    await notificationEngine.cancel("mood_reminder");
+    return;
+  }
+
+  // włączenie
+  await notificationEngine.scheduleMoodReminder(hour, minute);
+},
 }));
 

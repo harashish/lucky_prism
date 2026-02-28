@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
+import { notificationEngine } from "../services/notificationEngine";
 
 export interface DifficultyType {
   id: number;
@@ -95,6 +96,7 @@ const initialState = {
     saving: false,
     streaks: false,
   },
+  
 };
 
 export const useHabitStore = create<HabitStore>((set, get) => ({
@@ -178,12 +180,30 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
 
   updateHabit: async (id, payload) => {
     set((s) => ({ loading: { ...s.loading, saving: true } }));
+
     try {
       await api.patch(`/habits/${id}/`, payload);
+
       await get().loadMonth(get().currentMonth);
-    } catch (e) {
-      console.error("updateHabit", e);
-      throw e;
+
+      // 👇 TU DODAJ
+      if (payload.reminder_hour !== undefined) {
+        if (payload.reminder_hour === null) {
+          await notificationEngine.cancel(`habit-${id}`);
+        } else {
+          const title = payload.title ?? get().habits.find(h => h.id === id)?.title;
+
+          if (payload.reminder_hour !== null && payload.reminder_hour !== undefined) {
+            notificationEngine.scheduleHabitReminder(
+              id,
+              title ?? "Habit",
+              payload.reminder_hour,
+              payload.reminder_minute ?? 0
+            );
+          }
+        }
+      }
+
     } finally {
       set((s) => ({ loading: { ...s.loading, saving: false } }));
     }

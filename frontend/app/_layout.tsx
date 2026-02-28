@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
 import {
   Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold
@@ -13,7 +13,36 @@ import { defaultHeaderOptions } from "../components/NavigationHeader";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 import AchievementPopup from "../components/AchievementPopup";
+import { useEffect } from "react";
 
+import { notificationEngine } from "./services/notificationEngine";
+import { bootstrapNotifications } from "./services/notificationBootstrap";
+import { useHabitStore } from "./stores/useHabitStore";
+import { useNotesStore } from "./stores/useNotesStore";
+import { useChallengeStore } from "./stores/useChallengeStore";
+
+
+const router = useRouter();
+
+useEffect(() => {
+  const init = async () => {
+    await notificationEngine.init();
+
+    // 🔹 Najpierw dane
+    await useHabitStore.getState().loadMonth();
+    await useNotesStore.getState().fetchNotes();
+    await useChallengeStore.getState().loadChallenges?.();
+
+    // 🔹 Bootstrap notyfikacji
+    await bootstrapNotifications();
+  };
+
+  init();
+
+  // 🔹 Deep linking
+  notificationEngine.registerNavigationHandler(router);
+
+}, []);
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -22,6 +51,7 @@ export default function RootLayout() {
     Nunito_400Regular, Nunito_700Bold,
     Manrope_400Regular, Manrope_600SemiBold,
   });
+
 
   const AppTheme = {
     ...DarkTheme,

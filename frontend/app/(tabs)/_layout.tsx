@@ -6,6 +6,7 @@ import { View, ActivityIndicator } from "react-native";
 import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserPreferencesStore } from "../stores/useUserPreferenceStore";
+import * as Notifications from "expo-notifications";
 
 const TAB_MODULE_MAP: Record<string, ModuleKey | null> = {
   index: null,
@@ -47,6 +48,20 @@ export default function TabsLayout() {
     fetchModules();
     fetchPreferences();
   }, []);
+
+  useEffect(() => {
+  Notifications.requestPermissionsAsync();
+
+  Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+}, []);
 
   if (!modules) {
     return (
