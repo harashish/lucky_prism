@@ -246,7 +246,7 @@ export default function GoalFormScreen({ editingId }: GoalFormScreenProps) {
           >
             {[
               "How will this help me grow?",
-              "What will I strengthen in myself ( )? ", 
+              "What will I strengthen in myself? ", 
               "What skills will I develop?",
               "In which area of my life will this support me?",
               "What will happen if I don't do this?",

@@ -45,6 +45,9 @@ type ModuleStore = {
 
   pendingModuleToggles: number[];
 
+  hideQuickAddDifficulty: boolean;
+  toggleHideQuickAddDifficulty: (value: boolean) => void;
+
   fetchModules: () => Promise<void>;
   toggleModule: (id: number, value: boolean) => Promise<void>;
   toggleTile: (id: DashboardTileKey, value: boolean) => void;
@@ -55,6 +58,7 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
   raw: [],
   dashboardTiles: [],
   pendingModuleToggles: [],
+  hideQuickAddDifficulty: false,
 
   fetchModules: async () => {
     if (get().modules) return;
@@ -152,4 +156,7 @@ export const useModuleSettingsStore = create<ModuleStore>((set, get) => ({
       console.error("toggleTile error", e);
     }
   },
+
+  toggleHideQuickAddDifficulty: (value) =>
+  set({ hideQuickAddDifficulty: value }),
 }));

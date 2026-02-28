@@ -1,15 +1,17 @@
 import { create } from "zustand";
 import { api } from "../api/apiClient";
 
-interface Note {
+export interface Note {
   id: number;
   content: string;
 }
 
 interface NotesStore {
+  notes: Note[];
   randomNote: Note | null;
   loading: boolean;
 
+  fetchNotes: () => Promise<void>;
   fetchRandomNote: () => Promise<void>;
   fetchById: (id: number) => Promise<Note | null>;
 
@@ -18,10 +20,25 @@ interface NotesStore {
   deleteNote: (id: number) => Promise<void>;
 }
 
-export const useNotesStore = create<NotesStore>((set) => ({
+export const useNotesStore = create<NotesStore>((set, get) => ({
+  notes: [],
   randomNote: null,
   loading: false,
 
+  // LIST ALL NOTES
+  fetchNotes: async () => {
+    set({ loading: true });
+    try {
+      const res = await api.get("/notes/");
+      set({ notes: res.data });
+    } catch {
+      set({ notes: [] });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // RANDOM NOTE
   fetchRandomNote: async () => {
     set({ loading: true });
     try {
@@ -34,6 +51,7 @@ export const useNotesStore = create<NotesStore>((set) => ({
     }
   },
 
+  // GET BY ID
   fetchById: async (id: number) => {
     try {
       const res = await api.get(`/notes/${id}/`);
@@ -43,19 +61,27 @@ export const useNotesStore = create<NotesStore>((set) => ({
     }
   },
 
+  // CREATE
   createNote: async (content: string) => {
     await api.post("/notes/", { content });
-    await useNotesStore.getState().fetchRandomNote();
+
+    await get().fetchNotes();
+    await get().fetchRandomNote();
   },
 
+  // UPDATE
   updateNote: async (id: number, content: string) => {
     await api.patch(`/notes/${id}/`, { content });
-    await useNotesStore.getState().fetchRandomNote();
+
+    await get().fetchNotes();
+    await get().fetchRandomNote();
   },
 
+  // DELETE
   deleteNote: async (id: number) => {
     await api.delete(`/notes/${id}/`);
-    await useNotesStore.getState().fetchRandomNote();
+
+    await get().fetchNotes();
+    await get().fetchRandomNote();
   },
 }));
-

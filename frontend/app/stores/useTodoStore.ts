@@ -53,7 +53,11 @@ interface TodoStore {
 
   updateTask: (
     taskId: number,
-    payload: { content: string; custom_difficulty_id?: number | null }
+    payload: {
+      content: string;
+      custom_difficulty_id?: number | null;
+      category_id?: number | null;
+    }
   ) => Promise<void>;
 
   completeTask: (
@@ -266,12 +270,18 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
 
-  setSelectedCategoryId: (id) =>
-    set({
-      selectedCategoryId: id,
-      tasks: [],
-      hasUncompletedTasksInSelectedCategory: null,
-    }),
+setSelectedCategoryId: (id) => {
+  const current = get().selectedCategoryId;
+
+  // jeśli ta sama kategoria → nic nie rób
+  if (current === id) return;
+
+  set({
+    selectedCategoryId: id,
+    tasks: [],
+    hasUncompletedTasksInSelectedCategory: null,
+  });
+},
 
   reorderTasks: async (categoryId: number, newTasks: TodoTask[]) => {
     set({ tasks: newTasks });

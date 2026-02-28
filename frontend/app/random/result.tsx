@@ -35,7 +35,7 @@ export default function RandomResultScreen(){
 
   useEffect(() => {
     if (!currentItem) {
-      router.replace("/(tabs)/RandomHomeScreen");
+      router.replace("/(tabs)/RandomScreen");
     }
   }, [currentItem]);
 
@@ -71,7 +71,7 @@ export default function RandomResultScreen(){
 
 
   const goToActive = () => {
-    if (!currentItem) return router.replace("/(tabs)/RandomHomeScreen");
+    if (!currentItem) return router.replace("/(tabs)/RandomScreen");
     const dest = currentItem.type?.name === "daily" ? "/random/daily/active" : "/random/weekly/active";
     router.replace(dest);
   };
@@ -104,7 +104,7 @@ export default function RandomResultScreen(){
       {source === "todo" && (
         <>
           {todoCard}
-          <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomHomeScreen")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
+          <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomScreen")} style={{ backgroundColor: colors.card, padding:14, borderRadius:10, marginBottom:12 }}>
             <AppText style={{ textAlign: "center" }}>OK</AppText>
           </TouchableOpacity>
           <TouchableOpacity onPress={onReroll} style={{ backgroundColor: colors.buttonActive, padding:14, borderRadius:10, marginBottom:12 }}>

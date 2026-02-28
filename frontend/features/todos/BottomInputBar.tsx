@@ -2,6 +2,7 @@ import React from "react";
 import { View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import AppText from "../../components/AppText";
 import { colors, radius } from "../../constants/theme";
+import { useUserPreferencesStore } from "../../app/stores/useUserPreferenceStore";
 
 export default function BottomInputBar({
   quickText,
@@ -9,12 +10,11 @@ export default function BottomInputBar({
   onOpenDifficulty,
   onQuickAdd
 }: any) {
+  const { hideQuickAddDifficulty } = useUserPreferencesStore();
+
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      style={{ width: "100%" }}
-    >
+    <View style={{ width: "100%" }}>
       <View
         style={{
           flexDirection: "row",
@@ -23,17 +23,19 @@ export default function BottomInputBar({
           backgroundColor: colors.background
         }}
       >
-        <TouchableOpacity
-          onPress={onOpenDifficulty}
-          style={{
-            padding: 12,
-            borderRadius: radius.md,
-            backgroundColor: colors.card,
-            marginRight: 8,
-          }}
-        >
-          <AppText>D</AppText>
-        </TouchableOpacity>
+        {!hideQuickAddDifficulty && (
+          <TouchableOpacity
+            onPress={onOpenDifficulty}
+            style={{
+              padding: 12,
+              borderRadius: radius.md,
+              backgroundColor: colors.card,
+              marginRight: 8,
+            }}
+          >
+            <AppText>D</AppText>
+          </TouchableOpacity>
+        )}
 
         <TextInput
           value={quickText}
@@ -61,6 +63,6 @@ export default function BottomInputBar({
           <AppText style={{ color: "#fff" }}>+</AppText>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

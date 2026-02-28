@@ -70,6 +70,11 @@ export default function RootLayout() {
 
         <Stack.Screen name="random" options={{ headerShown: false }} />
 
+        <Stack.Screen
+          name="notes"
+          options={defaultHeaderOptions}
+        />
+
       </Stack>
 
       <XPPopup />

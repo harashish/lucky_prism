@@ -112,6 +112,7 @@ export default function AchievementFormScreen({ editingId }: Props) {
   const {
     createAchievement,
     updateAchievement,
+    deleteAchievement,
     loadAllAchievements,
   } = useAchievementStore();
 
@@ -356,6 +357,21 @@ useEffect(() => {
       setLoading(false);
     }
   };
+
+  const remove = async () => {
+  if (!editingId) return;
+
+  setLoading(true);
+
+  try {
+    await deleteAchievement(editingId);
+    router.back();
+  } catch {
+    setErrorMessage("Failed to delete achievement");
+  } finally {
+    setLoading(false);
+  }
+};
 
   /*
   ========================
@@ -602,6 +618,24 @@ useEffect(() => {
             </AppText>
           )}
         </TouchableOpacity>
+
+                {/* DELETE (only editing) */}
+{editingId && (
+  <TouchableOpacity
+    onPress={remove}
+    style={{
+      backgroundColor: colors.deleteButton,
+      padding: spacing.m,
+      borderRadius: radius.md,
+      alignItems: "center",
+      marginTop: spacing.s,
+    }}
+  >
+    <AppText style={{ color: "#fff", fontWeight: "bold" }}>
+      Delete
+    </AppText>
+  </TouchableOpacity>
+)}
       </ScrollView>
 
       <FormErrorModal
@@ -610,8 +644,13 @@ useEffect(() => {
         onClose={() => setErrorMessage(null)}
       />
     </>
+    
   );
+
+
 }
+
+
 
 /*
 ========================

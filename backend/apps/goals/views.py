@@ -128,9 +128,26 @@ class ToggleArchiveGoalView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        goal.is_archived = not goal.is_archived
-        goal.archived_at = timezone.now() if goal.is_archived else None
-        goal.save(update_fields=["is_archived", "archived_at", "updated_at"])
+        # ARCHIVE
+        if not goal.is_archived:
+            goal.is_archived = True
+            goal.archived_at = timezone.now()
+            goal.save(update_fields=["is_archived", "archived_at", "updated_at"])
+
+        # UNARCHIVE → reset okresu
+        else:
+            goal.is_archived = False
+            goal.archived_at = None
+
+            # 🔥 reset anchor okresu
+            goal.created_at = timezone.now()
+
+            goal.save(update_fields=[
+                "is_archived",
+                "archived_at",
+                "created_at",
+                "updated_at"
+            ])
 
         return Response(
             {
@@ -138,7 +155,7 @@ class ToggleArchiveGoalView(APIView):
                 "is_archived": goal.is_archived,
             },
             status=status.HTTP_200_OK,
-        )    
+        )
     
 class AddGoalStepView(APIView):
     def post(self, request, pk):

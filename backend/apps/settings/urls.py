@@ -3,7 +3,9 @@ from .views import (
     ModuleDefinitionList,
     ModuleDefinitionUpdate,
     DashboardTileList, 
-    DashboardTileUpdate
+    DashboardTileUpdate,
+    UserPreferenceList,
+    UserPreferenceUpdate
 )
 from .views import ExportDataView, ImportDataView
 
@@ -14,5 +16,8 @@ urlpatterns = [
     path("modules/<int:pk>/", ModuleDefinitionUpdate.as_view(), name="modules-update"),
     path("export/", ExportDataView.as_view(), name="export-data"),
     path("import/", ImportDataView.as_view(), name="import-data"),
+
+    path("preferences/", UserPreferenceList.as_view()),
+    path("preferences/<int:pk>/", UserPreferenceUpdate.as_view()),
 ]
 

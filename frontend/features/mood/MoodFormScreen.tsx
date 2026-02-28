@@ -5,6 +5,7 @@ import { useMoodStore, MoodType } from "../../app/stores/useMoodStore";
 import { colors, spacing } from "../../constants/theme";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Alert } from "react-native";
 
 type Props = {
     editingId?: number;
@@ -19,7 +20,7 @@ const moods: MoodType[] = [
 ];
 
 export default function MoodFormScreen({ editingId, initialDate }: Props) {
-    const { entries, addMood, updateMood } = useMoodStore();
+    const { entries, addMood, updateMood, deleteMood } = useMoodStore();
     const router = useRouter();
 
     const existing = entries.find((e) => e.id === editingId);
@@ -74,6 +75,26 @@ const handleSubmit = async () => {
     }
 
     router.back();
+};
+
+const handleDelete = async () => {
+  if (!editingId) return;
+
+  Alert.alert(
+    "Delete mood?",
+    "This cannot be undone.",
+    [
+      { text: "Cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await deleteMood(editingId);
+          router.back();
+        },
+      },
+    ]
+  );
 };
 
 return (
@@ -211,6 +232,22 @@ return (
     >
       <AppText>Save</AppText>
     </TouchableOpacity>
+
+
+    {editingId && (
+  <TouchableOpacity
+    onPress={handleDelete}
+    style={{
+      marginTop: 12,
+      paddingVertical: 14,
+      backgroundColor: colors.deleteButton,
+      borderRadius: 10,
+      alignItems: "center",
+    }}
+  >
+    <AppText style={{ color: "#fff" }}>Delete</AppText>
+  </TouchableOpacity>
+)}
   </ScrollView>
 );
 }

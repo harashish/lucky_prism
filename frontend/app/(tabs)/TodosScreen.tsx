@@ -16,10 +16,10 @@ import { useRouter } from "expo-router";
 import TodoItem from "../../features/todos/TodoItem";
 import BottomInputBar from "../../features/todos/BottomInputBar";
 import CustomDifficultyPicker from "../../features/todos/customDifficultyPicker";
-import EditTodoPopup from "../../features/todos/editTodoPopup";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 import { useGamificationStore } from "../stores/useGamificationStore";
 import { useFocusEffect } from "@react-navigation/native";
+import { useUserPreferencesStore } from "../stores/useUserPreferenceStore";
 // import DraggableFlatList from "react-native-draggable-flatlist";
 
 export default function TodosScreen() {
@@ -42,37 +42,49 @@ export default function TodosScreen() {
   const [quickText, setQuickText] = useState("");
   const [customDifficulty, setCustomDifficulty] = useState<number | null>(null);
   const [showDifficulty, setShowDifficulty] = useState(false);
-  const [editingTodo, setEditingTodo] = useState<any | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
 
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
+
+  const { hideTodoCompletedToggle } = useUserPreferencesStore();
+  const { defaultTodoCategoryId } = useUserPreferencesStore();
 
   useFocusEffect(
     useCallback(() => {
       loadCategories();
     }, [])
   );
+useEffect(() => {
+  if (!categories.length) return;
 
-  useEffect(() => {
-    if (!categories.length) {
-      setSelectedCategoryId(null);
+  // jeśli selectedCategoryId już ustawione → nic nie rób
+  if (selectedCategoryId !== null) return;
+
+  // jeśli jest default i istnieje → użyj go
+  if (defaultTodoCategoryId) {
+    const exists = categories.find(
+      c => c.id === defaultTodoCategoryId
+    );
+    if (exists) {
+      setSelectedCategoryId(defaultTodoCategoryId);
       return;
     }
+  }
 
-    if (
-      selectedCategoryId === null ||
-      !categories.some((c) => c.id === selectedCategoryId)
-    ) {
-      setSelectedCategoryId(categories[0].id);
-    }
-  }, [categories]);
+  // fallback
+  setSelectedCategoryId(categories[0].id);
+}, [categories]);
 
-  useEffect(() => {
-    if (selectedCategoryId !== null) {
-      loadTasks(selectedCategoryId);
-    }
-  }, [selectedCategoryId]);
+// load tasks when category changes
+useEffect(() => {
+  if (selectedCategoryId !== null) {
+    loadTasks(selectedCategoryId);
+  }
+}, [selectedCategoryId]);
+
 
   const onQuickAdd = async () => {
     if (!quickText.trim() || !selectedCategoryId) return;
@@ -103,87 +115,109 @@ export default function TodosScreen() {
         />
       )}
 
+<View
+  style={{
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#222",
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
 
-      {editingTodo && (
-        <EditTodoPopup
-          item={editingTodo}
-          onClose={() => setEditingTodo(null)}
-          onSaved={async () => {
-            setEditingTodo(null);
-            await loadTasks(selectedCategoryId!);
-          }}
-          onDelete={async (taskId: number) => {
-            try {
-              await deleteTask(taskId);
-            } catch {
-              Alert.alert("Error", "Failed to delete task");
-            }
-          }}
-        />
-      )}
+  {/* CENTERED CATEGORY */}
+  <TouchableOpacity
+    onPress={() => setShowCategoryDropdown(prev => !prev)}
+  >
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <AppText style={{ fontSize: 16 }}>
+        {
+          categories.find(c => c.id === selectedCategoryId)?.name
+          || "Select category"
+        }
+      </AppText>
+      <AppText style={{ marginLeft: 6 }}>▾</AppText>
+    </View>
+  </TouchableOpacity>
 
-      <View style={{ flexDirection: "row", marginBottom: 12, padding: 12 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {categories.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              onPress={() => setSelectedCategoryId(cat.id)}
-              onLongPress={() => router.push(`/editCategory/${cat.id}`)}
-              style={{
-                padding: 12,
-                marginRight: 8,
-                borderRadius: radius.md,
-                backgroundColor: cat.color || colors.card,
-                minWidth: 80,
-                alignItems: "center",
-                borderWidth: 2,
-                borderColor: selectedCategoryId === cat.id
-                  ? colors.light
-                  : "transparent",
-              }}
-            >
-              <AppText>{cat.name}</AppText>
-              {gamificationOn && (
-                <AppText style={{ fontSize: 12 }}>
-                  {cat.difficulty?.name}
-                </AppText>
-              )}
-            </TouchableOpacity>
-          ))}
+<View
+  style={{
+    position: "absolute",
+    right: 16,
+    top: 0,
+    bottom: 0,
+    flexDirection: "row",
+    alignItems: "center",
+  }}
+>
 
-          <TouchableOpacity
-            onPress={() => router.push("/addCategory")}
-            style={{
-              padding: 12,
-              borderRadius: radius.md,
-              backgroundColor: colors.buttonActive,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <AppText style={{ color: "#fff", fontSize: 18 }}>＋</AppText>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+  {/* TOGGLE COMPLETED */}
+    {!hideTodoCompletedToggle && (
+  <TouchableOpacity
+    onPress={() => setShowCompleted(prev => !prev)}
+    style={{
+      marginRight: 16,
+      opacity: showCompleted ? 1 : 0.5,
+    }}
+  >
+    
+    <AppText style={{ fontSize: 25 }}>
+      {showCompleted ? "☑" : "☐"}
+    </AppText>
+  </TouchableOpacity>
+  )}
 
+  {/* ADD CATEGORY */}
+  <TouchableOpacity
+    onPress={() => router.push("/addCategory")}
+  >
+    <AppText style={{ fontSize: 20 }}>＋</AppText>
+  </TouchableOpacity>
+    
+
+</View>
+
+</View>
+
+{showCategoryDropdown && (
+  <View
+    style={{
+      position: "absolute",
+      top: 60,
+      left: 0,
+      right: 0,
+      backgroundColor: colors.card,
+      zIndex: 100,
+      borderBottomWidth: 1,
+      borderBottomColor: "#222",
+    }}
+  >
+    {categories.map((cat) => (
       <TouchableOpacity
-        onPress={() => setShowCompleted((prev) => !prev)}
+        key={cat.id}
+        onPress={() => {
+          setSelectedCategoryId(cat.id);
+          setShowCategoryDropdown(false);
+        }}
         style={{
-          padding: 8,
-          marginBottom: 12,
-          backgroundColor: colors.buttonActive,
-          alignItems: "center",
+          paddingVertical: 14,
+          paddingHorizontal: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: "#222",
         }}
       >
-        <AppText style={{ color: "#fff" }}>
-          {showCompleted ? "Show todo" : "Show completed"}
-        </AppText>
+        <AppText>{cat.name}</AppText>
       </TouchableOpacity>
+    ))}
+  </View>
+)}
+
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 80}
+        keyboardVerticalOffset={20}
       >
         {loading.tasks ? (
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -205,6 +239,11 @@ export default function TodosScreen() {
       showCompleted ? t.is_completed : !t.is_completed
     )}
     keyExtractor={(item) => item.id.toString()}
+
+    ItemSeparatorComponent={() => (
+      <View style={{ height: 1, backgroundColor: "#575757" }} />
+    )}
+    
     renderItem={({ item }) => (
       <TodoItem
         item={item}
@@ -223,10 +262,10 @@ export default function TodosScreen() {
             Alert.alert("Error", "Cannot delete task");
           }
         }}
-        onLongPress={() => setEditingTodo(item)}
+        onLongPress={() => router.push(`/editTodo/${item.id}`)}
       />
     )}
-    contentContainerStyle={{ paddingBottom: 120 }}
+    contentContainerStyle={{ paddingBottom: 120, paddingTop: 0 }}
   />
         )}
 

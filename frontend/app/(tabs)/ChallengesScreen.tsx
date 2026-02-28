@@ -7,7 +7,7 @@ import AppText from "../../components/AppText";
 import { colors, radius } from "../../constants/theme";
 import FloatingButton from "../../components/FloatingButton";
 
-const ChallengesListScreen = () => {
+const ChallengesScreen = () => {
   const router = useRouter();
 
   const TYPES = [
@@ -244,4 +244,4 @@ const ChallengesListScreen = () => {
   );
 };
 
-export default ChallengesListScreen;
+export default ChallengesScreen;

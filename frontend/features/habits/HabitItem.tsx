@@ -41,6 +41,7 @@ export default function HabitItem({ item, onToggleToday, onToggleDay }: HabitPro
             height: 38,
             borderRadius: 12,
             marginRight: 10,
+            marginBottom: 12,
             backgroundColor: item.color || colors.buttonActive,
             justifyContent: "center",
             alignItems: "center",

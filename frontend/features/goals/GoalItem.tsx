@@ -4,12 +4,13 @@ import AppText from "../../components/AppText";
 import { colors, components, radius } from "../../constants/theme";
 import { ItemDetails } from "../../components/ItemDetails";
 import { useState } from "react";
-import { TextInput } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 type GoalItemProps = {
   item: any;
   isCompleted: boolean;
   isExpanded: boolean;
+  toggleArchive: (goalId: number) => Promise<boolean>;
   onToggleExpand: () => void;
   onComplete: () => void;
   onEdit: () => void;
@@ -24,6 +25,7 @@ export default function GoalItem({
   onComplete,
   onEdit,
   toggleStep,
+  toggleArchive
 }: GoalItemProps) {
 
   const [newStepTitle, setNewStepTitle] = useState("");
@@ -36,7 +38,7 @@ export default function GoalItem({
       <View
         style={{
           ...components.container,
-          opacity: isCompleted ? 0.5 : 1,
+          opacity: isCompleted || item.is_archived ? 0.5 : 1,
         }}
       >
         <View
@@ -50,6 +52,7 @@ export default function GoalItem({
             style={{
             fontWeight: "bold",
             textDecorationLine: isCompleted ? "line-through" : "none",
+              opacity: isCompleted || item.is_archived ? 0.5 : 1,
             }}
         >
             {item.title}
@@ -61,15 +64,34 @@ export default function GoalItem({
             </AppText>
         )}
         </View>
-          {!isCompleted && (
+          {!isCompleted && !item.is_archived && (
             <TouchableOpacity
               onPress={onComplete}
-              style={components.completeButton}
+              style={{ marginLeft: 8 }}
             >
-              <AppText style={{ color: "#fff" }}>complete</AppText>
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={22}
+                color={ colors.buttonActive }
+              />
+            </TouchableOpacity>
+          )}
+
+          {!item.is_completed && (
+            <TouchableOpacity
+              onPress={() => toggleArchive(item.id)}
+              style={{ marginLeft: 8 }}
+            >
+              <Ionicons
+                name={item.is_archived ? "refresh-circle-outline" : "archive-outline"}
+                size={22}
+                color="#888"
+              />
             </TouchableOpacity>
           )}
         </View>
+
+        
 {isExpanded && (
   <>
     <ItemDetails

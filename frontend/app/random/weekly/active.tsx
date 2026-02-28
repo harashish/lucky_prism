@@ -46,7 +46,7 @@ export default function WeeklyActiveScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    router.replace("/(tabs)/RandomHomeScreen");
+    router.replace("/(tabs)/RandomScreen");
   
   };
 
@@ -106,7 +106,7 @@ export default function WeeklyActiveScreen() {
         <AppText style={{textAlign: "center", color: "#fff", fontWeight: "bold" }}>Completed</AppText>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomHomeScreen")} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10 }}>
+      <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomScreen")} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10 }}>
         <AppText style={{ textAlign: "center", fontWeight: "bold" }}>Go back</AppText>
       </TouchableOpacity>
     </View>

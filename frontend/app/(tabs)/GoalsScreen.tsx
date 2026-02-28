@@ -31,6 +31,7 @@ export default function GoalsScreen() {
     toggleStep,
     showArchived,
     setShowArchived,
+    toggleArchive
   } = useGoalStore();
 
   const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
@@ -285,6 +286,7 @@ export default function GoalsScreen() {
             onEdit={() => router.push(`/editGoal/${goal.id}`)}
             onComplete={() => onComplete(goal.id, goal.title)}
             toggleStep={toggleStep}
+            toggleArchive={toggleArchive}
           />
         ))}
       </View>

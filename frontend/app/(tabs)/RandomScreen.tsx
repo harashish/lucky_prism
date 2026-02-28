@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useChallengeStore } from "../stores/useChallengeStore";
 import { useModuleSettingsStore } from "../stores/useModuleSettingsStore";
 
-export default function RandomHomeScreen() {
+export default function RandomScreen() {
   const router = useRouter();
 
   const { activeDaily, activeWeekly } = useChallengeStore();

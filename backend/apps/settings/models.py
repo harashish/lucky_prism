@@ -62,3 +62,20 @@ class DashboardTile(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.key}:{self.is_enabled}"
+
+class UserPreference(models.Model):
+    PREFERENCE_KEYS = [
+        ("hide_quick_add_difficulty", "Hide quick add difficulty"),
+        ("hide_todo_completed_toggle", "Hide todo completed toggle"),
+        ("default_todo_category_id", "Default todo category"),
+    ]
+
+    user = models.ForeignKey("gamification.User", on_delete=models.CASCADE)
+    key = models.CharField(max_length=50, choices=PREFERENCE_KEYS)
+    value = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        unique_together = ("user", "key")
+
+    def __str__(self):
+        return f"{self.user_id}:{self.key}:{self.value}"        

@@ -20,6 +20,25 @@ export default function TodoItem({
   const swipeRef = useRef<Swipeable>(null);
   const isCompleted = item.is_completed;
 
+  const getDifficultyLetter = (name?: string) => {
+    if (!name) return null;
+
+    const map: Record<string, string> = {
+      trivial: "T",
+      easy: "E",
+      medium: "M",
+      hard: "H",
+    };
+
+    return map[name.toLowerCase()] || name[0]?.toUpperCase();
+  };
+
+  const difficultyName =
+  item.custom_difficulty?.name ||
+  item.category?.difficulty?.name;
+
+  const difficultyLetter = getDifficultyLetter(difficultyName);
+
   const { modules } = useModuleSettingsStore();
   const gamificationOn = modules?.gamification;
 
@@ -90,28 +109,33 @@ export default function TodoItem({
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <View style={{ flex: 1, marginRight: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+
+              {difficultyLetter && (
+                <AppText
+                  style={{
+                    marginRight: 10,
+                    fontWeight: "600",
+                    color: colors.buttonActive,
+                    opacity: isCompleted ? 0.5 : 1,
+                  }}
+                >
+                  {difficultyLetter}
+                </AppText>
+              )}
+
               <AppText
                 style={{
+                  flex: 1,
                   textDecorationLine: isCompleted ? "line-through" : "none",
                   color: isCompleted ? "#777" : colors.text,
                 }}
               >
                 {item.content}
               </AppText>
+
             </View>
 
-            {gamificationOn && item.custom_difficulty && (
-              <AppText
-                style={{
-                  fontWeight: "normal",
-                  color: isCompleted ? "#777" : colors.light,
-                  textAlign: "right",
-                }}
-              >
-                ({item.custom_difficulty.name})
-              </AppText>
-            )}
           </View>
         </View>
       </Pressable>
@@ -120,13 +144,11 @@ export default function TodoItem({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...components.container,
-    marginBottom: spacing.s,
-    marginHorizontal: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
+container: {
+  paddingVertical: 12,
+  paddingHorizontal: 16,
+  backgroundColor: colors.background,
+},
   action: {
     justifyContent: "center",
     alignItems: "center",

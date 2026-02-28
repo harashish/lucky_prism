@@ -47,7 +47,7 @@ export default function DailyActiveScreen() {
       useGamificationStore.getState().applyXpResult(res);
     }
 
-    router.replace("/(tabs)/RandomHomeScreen");
+    router.replace("/(tabs)/RandomScreen");
   };
 
   if (loading) {
@@ -85,7 +85,7 @@ export default function DailyActiveScreen() {
         <AppText style={{ textAlign: "center", color: "#fff", fontWeight: "bold" }}>Completed</AppText>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomHomeScreen")} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10 }}>
+      <TouchableOpacity onPress={() => router.replace("/(tabs)/RandomScreen")} style={{ backgroundColor: colors.card, padding: 12, borderRadius: 10 }}>
         <AppText style={{ textAlign: "center", fontWeight: "bold" }}>Go back</AppText>
       </TouchableOpacity>
     </View>

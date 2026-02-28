@@ -1,6 +1,6 @@
 from rest_framework import generics
-from .models import ModuleDefinition, DashboardTile
-from .serializers import ModuleDefinitionSerializer, DashboardTileSerializer
+from .models import ModuleDefinition, DashboardTile, UserPreference
+from .serializers import ModuleDefinitionSerializer, DashboardTileSerializer, UserPreferenceSerializer
 from apps.gamification.utils import get_user
 
 class ModuleDefinitionList(generics.ListAPIView):
@@ -34,6 +34,27 @@ class DashboardTileList(generics.ListAPIView):
 class DashboardTileUpdate(generics.UpdateAPIView):
     queryset = DashboardTile.objects.all()
     serializer_class = DashboardTileSerializer
+
+class UserPreferenceList(generics.ListAPIView):
+    serializer_class = UserPreferenceSerializer
+
+    def get_queryset(self):
+        user = get_user()
+
+        # ensure default exists
+        for key in [
+            "hide_quick_add_difficulty",
+            "hide_todo_completed_toggle",
+            "default_todo_category_id",
+        ]:
+            UserPreference.objects.get_or_create(user=user, key=key)
+
+        return UserPreference.objects.filter(user=user)
+
+
+class UserPreferenceUpdate(generics.UpdateAPIView):
+    queryset = UserPreference.objects.all()
+    serializer_class = UserPreferenceSerializer    
 
 from django.core import serializers as django_serializers
 from rest_framework.views import APIView
